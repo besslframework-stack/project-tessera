@@ -1,5 +1,9 @@
 # Tessera
 
+<a href="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" />
+</a>
+
 **Make Claude Desktop remember your entire workspace.**
 
 You have hundreds of documents — PRDs, meeting notes, decision logs, session records. Claude Desktop can read files you attach, but it can't search across your whole workspace. Tessera bridges that gap.
