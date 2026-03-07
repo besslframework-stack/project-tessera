@@ -66,6 +66,8 @@ Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 | Tool | What it does |
 |------|-------------|
 | `search_documents` | Semantic + keyword hybrid search across all your docs |
+| `ingest_documents` | Index your documents (first-time setup or full rebuild) |
+| `sync_documents` | Incremental sync — only re-index changed files |
 | `read_file` | Read any file's full content |
 | `project_status` | See what's changed recently in each project |
 | `extract_decisions` | Find past decisions from logs |

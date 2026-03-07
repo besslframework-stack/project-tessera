@@ -99,7 +99,7 @@ def search_documents(
     results = search(query, top_k=top_k, project=project, doc_type=doc_type)
 
     if not results:
-        return "No results found. Run `python main.py ingest` to index documents first."
+        return "No results found. Try the `ingest_documents` tool to index your documents first."
 
     output_parts = []
     for i, r in enumerate(results, 1):
@@ -140,7 +140,7 @@ def list_sources() -> str:
     sources = list_indexed_sources()
 
     if not sources:
-        return "No indexed files. Run `python main.py ingest` to index documents first."
+        return "No indexed files. Try the `ingest_documents` tool to index your documents first."
 
     lines = [f"Indexed files ({len(sources)}):", ""]
     for s in sources:
@@ -296,6 +296,75 @@ def audit_prd(
             output += "\n\nNo cross-PRD consistency issues."
 
     return output
+
+
+# --- Indexing Tools ---
+
+
+@mcp.tool(
+    description=(
+        "Index (or re-index) all workspace documents into the vector store. "
+        "Run this when setting up Tessera for the first time, or when you want to "
+        "rebuild the entire index from scratch. "
+        "Optionally pass specific directory paths to index only those."
+    )
+)
+def ingest_documents(paths: list[str] | None = None) -> str:
+    """Full ingestion of workspace documents."""
+    from src.graph.vector_store import OntologyVectorStore
+    from src.ingestion.pipeline import IngestionPipeline
+
+    vector_store = OntologyVectorStore()
+    pipeline = IngestionPipeline(vector_store=vector_store)
+
+    source_paths = [Path(p) for p in paths] if paths else None
+    count, per_file = pipeline.run(source_paths=source_paths)
+
+    return (
+        f"Indexing complete: {count} documents from {len(per_file)} files.\n"
+        f"You can now use search_documents to search across them."
+    )
+
+
+@mcp.tool(
+    description=(
+        "Incrementally sync the index with your workspace. "
+        "Only processes new, changed, or deleted files since the last sync. "
+        "Much faster than full ingestion. Run this when you've updated some documents."
+    )
+)
+def sync_documents() -> str:
+    """Incremental sync — only new/changed/deleted files."""
+    from src.graph.vector_store import OntologyVectorStore
+    from src.ingestion.pipeline import IngestionPipeline
+    from src.sync import FileMetaDB, run_incremental_sync
+
+    meta_db = FileMetaDB(workspace.meta_db_path)
+    vector_store = OntologyVectorStore()
+    pipeline = IngestionPipeline(vector_store=vector_store)
+
+    def _ingest(file_paths: list[Path]) -> tuple[int, dict[str, int]]:
+        return pipeline.run(source_paths=file_paths)
+
+    result = run_incremental_sync(
+        ws=workspace,
+        meta_db=meta_db,
+        vector_store_delete_fn=vector_store.delete_by_source,
+        ingest_fn=_ingest,
+    )
+    meta_db.close()
+
+    parts = [f"Sync complete: {result.summary()}"]
+    if result.new:
+        parts.append(f"New: {', '.join(p.name for p in result.new[:10])}")
+        if len(result.new) > 10:
+            parts.append(f"  ...and {len(result.new) - 10} more")
+    if result.changed:
+        parts.append(f"Changed: {', '.join(p.name for p in result.changed[:10])}")
+    if result.deleted:
+        parts.append(f"Deleted: {', '.join(Path(p).name for p in result.deleted[:10])}")
+
+    return "\n".join(parts)
 
 
 # --- MCP Resources ---
