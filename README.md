@@ -1,55 +1,57 @@
 # Tessera
 
-Personal knowledge RAG as an MCP server for Claude Desktop.
+**Make Claude Desktop remember your entire workspace.**
 
-Tessera indexes your local workspace documents (Markdown, CSV, session logs) into a vector store and exposes them as MCP tools — so Claude Desktop can search, read, and reason over your own files.
+You have hundreds of documents — PRDs, meeting notes, decision logs, session records. Claude Desktop can read files you attach, but it can't search across your whole workspace. Tessera bridges that gap.
 
-## What it does
+It indexes your local documents into a vector store and connects to Claude Desktop via MCP. When you ask a question, Claude automatically searches your files and answers with context.
 
-- **Hybrid search** — semantic (vector) + keyword (FTS) search across your documents
-- **Incremental sync** — only re-indexes new or changed files
-- **MCP server** — 8 tools available directly in Claude Desktop
-- **Workspace management** — project status tracking, file organization, decision extraction, PRD auditing
-- **100% local** — Ollama for embeddings, LanceDB for storage. No data leaves your machine.
+```
+You: "What did we decide about the auth flow?"
 
-## Requirements
-
-- Python 3.11+
-- [Ollama](https://ollama.ai) running locally with an embedding model
-
-## Quick start
-
-```bash
-# Clone
-git clone https://github.com/YOUR_USERNAME/project-tessera.git
-cd project-tessera
-
-# Setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-
-# Pull embedding model
-ollama pull nomic-embed-text-v2-moe
-
-# Configure
-cp .env.example .env
-cp workspace.yaml.example workspace.yaml
-# Edit workspace.yaml — set root path and define your sources
-
-# Index your documents
-python main.py ingest
-
-# Or run incremental sync
-python main.py sync
-
-# Check status
-python main.py status
+Claude: [searches 2,600 documents] Based on your decision log from Jan 15...
 ```
 
-## Claude Desktop integration
+## How it works
 
-Add to your `claude_desktop_config.json`:
+1. **You point Tessera at your document folders** (Markdown, CSV, session logs)
+2. **Tessera indexes them locally** using Ollama embeddings + LanceDB
+3. **Claude Desktop searches them automatically** via MCP tools
+4. **Only changed files are re-indexed** on each sync
+
+Everything stays on your machine. No cloud, no API keys, no data leaves your laptop.
+
+## Get started
+
+### Prerequisites
+
+- Python 3.11+
+- [Ollama](https://ollama.ai) (running locally)
+
+### Install + Setup
+
+```bash
+git clone https://github.com/besslframework-stack/project-tessera.git
+cd project-tessera
+
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e .
+
+tessera init
+```
+
+`tessera init` walks you through everything:
+- Picks your document root directory
+- Scans for folders with documents
+- Lets you choose which to index
+- Downloads the embedding model (~700MB, once)
+- Generates `workspace.yaml` automatically
+- Shows you the Claude Desktop config snippet
+- Offers to index immediately
+
+### Connect to Claude Desktop
+
+`tessera init` prints the config snippet. Add it to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -62,68 +64,72 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop. Tessera will appear as an MCP integration with these tools:
+Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 
-| Tool | Description |
+## What Claude can do with Tessera
+
+| Tool | What it does |
 |------|-------------|
-| `search_documents` | Hybrid vector+keyword search with project/type filters |
-| `list_sources` | List all indexed files |
-| `read_file` | Read any file by path |
-| `organize_files` | Move, archive, rename files |
-| `suggest_cleanup` | Detect cleanup opportunities |
-| `project_status` | Project status from HANDOFF.md + recent changes |
-| `extract_decisions` | Extract decisions from logs |
-| `audit_prd` | Audit PRD quality against 13-section structure |
+| `search_documents` | Semantic + keyword hybrid search across all your docs |
+| `read_file` | Read any file's full content |
+| `project_status` | See what's changed recently in each project |
+| `extract_decisions` | Find past decisions from logs |
+| `audit_prd` | Check PRD quality (section coverage, versioning) |
+| `organize_files` | Move, rename, archive files |
+| `suggest_cleanup` | Detect backup files, empty dirs, misplaced files |
+| `list_sources` | See what's indexed |
 
-## Configuration
+## CLI commands
 
-### workspace.yaml
-
-Defines what to index and how. See `workspace.yaml.example` for the full schema.
-
-```yaml
-workspace:
-  root: /path/to/your/documents
-  name: "my-workspace"
-
-sources:
-  - path: projects/my-project
-    type: prd
-    project: my_project
-
-projects:
-  my_project:
-    display_name: "My Project"
-    root: projects/my-project
-```
-
-### .env
-
-```
-OLLAMA_BASE_URL=http://localhost:11434
-EMBED_MODEL=nomic-embed-text-v2-moe
+```bash
+tessera init                    # Interactive setup
+tessera ingest                  # Index all configured sources
+tessera ingest --path ./docs    # Index a specific directory
+tessera sync                    # Re-index only changed files
+tessera status                  # Show all projects
+tessera status my_project       # Show one project's status
 ```
 
 ## Architecture
 
 ```
-workspace.yaml          # What to index
+Your documents (Markdown, CSV)
         |
-   IngestionPipeline    # Parse markdown/CSV/session logs
+   Parse & chunk (~800 chars)
         |
-   MetadataExtractor    # Enrich with project, version, dates
+   Embed locally (Ollama)
         |
-   SentenceSplitter     # Chunk into ~800 char nodes
+   Store in LanceDB (local vector DB)
         |
-   OllamaEmbedding      # Local embeddings via Ollama
+   Expose via MCP server
         |
-   LanceDB              # Vector + FTS storage (local)
-        |
-   MCP Server           # Expose as tools to Claude Desktop
+   Claude Desktop searches automatically
 ```
+
+## Configuration
+
+After `tessera init`, your `workspace.yaml` looks like:
+
+```yaml
+workspace:
+  root: /Users/you/Documents
+  name: my-workspace
+
+sources:
+  - path: project-alpha
+    type: document
+    project: project_alpha
+
+projects:
+  project_alpha:
+    display_name: Project Alpha
+    root: project-alpha
+```
+
+Edit it anytime to add/remove sources. Run `tessera sync` after changes.
 
 ## License
 
 AGPL-3.0 — see [LICENSE](LICENSE).
 
-For commercial licensing, contact jsjeong.contact@gmail.com.
+For commercial licensing: jsjeong.contact@gmail.com

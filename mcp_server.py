@@ -172,7 +172,7 @@ def read_file(file_path: str) -> str:
         return f"Not a text file: {file_path}"
 
     if len(content) > 50000:
-        content = content[:50000] + "\n\n… (50,000자에서 잘림)"
+        content = content[:50000] + "\n\n… (truncated at 50,000 chars)"
 
     return content
 
@@ -282,24 +282,24 @@ def audit_prd(
         parent = Path(file_path).parent
         sprawl = find_prd_version_sprawl(parent)
         if sprawl:
-            output += "\n\n## 버전 스프롤 감지"
+            output += "\n\n## Version Sprawl Detected"
             for s in sprawl:
                 output += f"\n\n{s['base_name']}:"
                 for v in s["versions"]:
-                    marker = " ← 최신" if v["path"] == s["latest"] else " ← 아카이브 후보"
+                    marker = " <- latest" if v["path"] == s["latest"] else " <- archive candidate"
                     output += f"\n  v{v['version']}: {Path(v['path']).name}{marker}"
         else:
-            output += "\n\n버전 스프롤 없음."
+            output += "\n\nNo version sprawl detected."
 
     if check_consistency:
         parent = Path(file_path).parent
         issues = audit_cross_prd_consistency(parent)
         if issues:
-            output += "\n\n## 일관성 이슈"
+            output += "\n\n## Consistency Issues"
             for issue in issues:
                 output += f"\n  - {issue}"
         else:
-            output += "\n\nPRD 간 일관성 이슈 없음."
+            output += "\n\nNo cross-PRD consistency issues."
 
     return output
 
