@@ -10,6 +10,10 @@ It indexes your local documents into a vector store and connects to Claude Deskt
   <img src="assets/demo.svg" alt="Tessera demo — search documents, get answers with citations, remember across sessions" width="720"/>
 </p>
 
+<a href="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" alt="Project Tessera MCP server" />
+</a>
+
 ### Why Tessera?
 
 - **Zero external dependencies** — No Ollama, no Docker, no API keys. Just `pip install` and go.
