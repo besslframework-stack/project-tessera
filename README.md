@@ -4,13 +4,18 @@
 
 You have hundreds of documents — PRDs, meeting notes, decision logs, session records. Claude Desktop can read files you attach, but it can't search across your whole workspace. Tessera bridges that gap.
 
-It indexes your local documents into a vector store and connects to Claude Desktop via MCP. When you ask a question, Claude automatically searches your files and answers with context.
+It indexes your local documents into a vector store and connects to Claude Desktop via MCP. When you ask a question, Claude automatically searches your files and answers with context — and remembers across sessions.
 
-```
-You: "What did we decide about the auth flow?"
+<p align="center">
+  <img src="assets/demo.svg" alt="Tessera demo — search documents, get answers with citations, remember across sessions" width="720"/>
+</p>
 
-Claude: [searches 2,600 documents] Based on your decision log from Jan 15...
-```
+### Why Tessera?
+
+- **Zero external dependencies** — No Ollama, no Docker, no API keys. Just `pip install` and go.
+- **Cross-session memory** — Claude remembers your decisions, preferences, and context between conversations.
+- **Knowledge graph** — Visualize how your documents connect to each other.
+- **100% local** — Everything stays on your machine. Nothing leaves your laptop.
 
 ## How it works
 
@@ -18,8 +23,6 @@ Claude: [searches 2,600 documents] Based on your decision log from Jan 15...
 2. **Tessera indexes them locally** using fastembed (ONNX) + LanceDB
 3. **Claude Desktop searches them automatically** via MCP tools
 4. **Only changed files are re-indexed** on each sync
-
-Everything stays on your machine. No cloud, no API keys, no data leaves your laptop.
 
 ## Get started
 
@@ -65,16 +68,26 @@ Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 
 | Tool | What it does |
 |------|-------------|
+| **Search** | |
 | `search_documents` | Semantic + keyword hybrid search across all your docs |
+| `read_file` | Read any file's full content |
+| `list_sources` | See what's indexed |
+| **Memory** | |
+| `remember` | Save knowledge that persists across sessions |
+| `recall` | Search past memories from previous conversations |
+| `learn` | Auto-learn: save and immediately index new knowledge |
+| **Knowledge Graph** | |
+| `knowledge_graph` | Build a Mermaid diagram of document relationships |
+| `explore_connections` | Show connections around a specific topic |
+| **Indexing** | |
 | `ingest_documents` | Index your documents (first-time setup or full rebuild) |
 | `sync_documents` | Incremental sync — only re-index changed files |
-| `read_file` | Read any file's full content |
+| **Workspace** | |
 | `project_status` | See what's changed recently in each project |
 | `extract_decisions` | Find past decisions from logs |
 | `audit_prd` | Check PRD quality (section coverage, versioning) |
 | `organize_files` | Move, rename, archive files |
 | `suggest_cleanup` | Detect backup files, empty dirs, misplaced files |
-| `list_sources` | See what's indexed |
 
 ## CLI commands
 
