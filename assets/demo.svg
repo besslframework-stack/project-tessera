@@ -11,11 +11,11 @@
   <circle cx="54" cy="18" r="5.5" fill="#28c840"/>
 
   <!-- Top tabs -->
-  <rect x="340" y="6" width="160" height="26" rx="8" fill="#383838"/>
-  <rect x="344" y="9" width="50" height="20" rx="6" fill="#505050"/>
-  <text x="369" y="23" text-anchor="middle" fill="#fff" font-size="11.5" font-weight="600">Chat</text>
-  <text x="424" y="23" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Cowork</text>
-  <text x="484" y="23" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Code</text>
+  <rect x="330" y="6" width="180" height="26" rx="8" fill="#383838"/>
+  <rect x="335" y="9" width="52" height="20" rx="6" fill="#505050"/>
+  <text x="361" y="23" text-anchor="middle" fill="#fff" font-size="11.5" font-weight="600">Chat</text>
+  <text x="420" y="23" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Cowork</text>
+  <text x="486" y="23" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Code</text>
 
   <!-- LEFT SIDEBAR -->
   <rect x="0" y="36" width="220" height="524" fill="#191919"/>
