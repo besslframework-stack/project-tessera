@@ -1,127 +1,119 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" font-family="'SF Pro Display', -apple-system, 'Segoe UI', sans-serif">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="100%" style="stop-color:#16213e"/>
-    </linearGradient>
-    <linearGradient id="userBubble" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1"/>
-      <stop offset="100%" style="stop-color:#8b5cf6"/>
-    </linearGradient>
-    <linearGradient id="claudeBubble" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2a2a4a"/>
-      <stop offset="100%" style="stop-color:#252545"/>
-    </linearGradient>
-    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
-    </filter>
-    <clipPath id="roundClip">
-      <rect x="20" y="20" width="760" height="480" rx="16"/>
-    </clipPath>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 540" font-family="'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif">
+  <style>
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .t12 { font-size: 12px; }
+    .t13 { font-size: 13px; }
+    .t14 { font-size: 14px; }
+    .t11 { font-size: 11px; }
+    .t10 { font-size: 10px; }
+    .bold { font-weight: 600; }
+    .medium { font-weight: 500; }
+    .gray { fill: #8e8ea0; }
+    .light { fill: #d1d5db; }
+    .white { fill: #ececf1; }
+    .dim { fill: #6b7280; }
+  </style>
 
-  <!-- Window frame -->
-  <rect width="800" height="520" rx="16" fill="url(#bg)" filter="id(shadow)"/>
-  <rect x="0" y="0" width="800" height="44" rx="16" fill="#0f0f23"/>
-  <rect x="0" y="28" width="800" height="16" fill="#0f0f23"/>
+  <!-- Background -->
+  <rect width="780" height="540" fill="#212121"/>
 
-  <!-- Window dots -->
-  <circle cx="28" cy="22" r="6" fill="#ff5f57"/>
-  <circle cx="48" cy="22" r="6" fill="#febc2e"/>
-  <circle cx="68" cy="22" r="6" fill="#28c840"/>
+  <!-- Titlebar -->
+  <rect width="780" height="48" fill="#2f2f2f"/>
+  <circle cx="24" cy="24" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="24" r="6" fill="#febc2e"/>
+  <circle cx="64" cy="24" r="6" fill="#28c840"/>
+  <text x="390" y="28" text-anchor="middle" fill="#999" class="t13 medium">Claude</text>
 
-  <!-- Title -->
-  <text x="400" y="27" text-anchor="middle" fill="#888" font-size="13" font-weight="500">Claude Desktop — tessera</text>
+  <!-- Sidebar hint -->
+  <rect x="0" y="48" width="52" height="492" fill="#171717"/>
+  <rect x="10" y="62" width="32" height="32" rx="8" fill="#2a2a2a"/>
+  <text x="26" y="83" text-anchor="middle" fill="#888" class="t14 bold">T</text>
+  <rect x="14" y="104" width="24" height="2" rx="1" fill="#333"/>
+  <rect x="14" y="112" width="18" height="2" rx="1" fill="#333"/>
 
-  <!-- MCP badge -->
-  <rect x="618" y="10" width="80" height="22" rx="11" fill="#22c55e" opacity="0.15"/>
-  <circle cx="634" cy="21" r="3.5" fill="#22c55e"/>
-  <text x="644" y="25" fill="#22c55e" font-size="11" font-weight="600">tessera</text>
+  <!-- Chat area -->
+  <rect x="52" y="48" width="728" height="492" fill="#212121"/>
 
-  <!-- === SCENE 1: User question === -->
+  <!-- === USER MESSAGE 1 === -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;1;1;1;1;1;1;1;1" dur="12s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="16s" repeatCount="indefinite"/>
 
-    <!-- User bubble -->
-    <rect x="280" y="65" width="490" height="44" rx="18" fill="url(#userBubble)"/>
-    <text x="510" y="92" text-anchor="middle" fill="white" font-size="14" font-weight="500">What did we decide about the auth flow?</text>
+    <!-- User avatar -->
+    <circle cx="700" cy="90" r="14" fill="#6366f1"/>
+    <text x="700" y="95" text-anchor="middle" fill="white" class="t12 bold">J</text>
+
+    <!-- User message bubble -->
+    <rect x="340" y="76" width="345" height="42" rx="20" fill="#303030"/>
+    <text x="360" y="102" fill="#ececf1" class="t14">What did we decide about the auth flow?</text>
   </g>
 
-  <!-- === SCENE 2: Searching indicator === -->
+  <!-- === TOOL USE INDICATOR === -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;1;1;0;0;0;0;0" dur="12s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1" dur="16s" repeatCount="indefinite"/>
 
-    <rect x="30" y="125" width="220" height="32" rx="12" fill="#1e1e3a"/>
-    <text x="56" y="146" fill="#a78bfa" font-size="12" font-weight="500">
-      <tspan>Searching 2,600 documents</tspan>
-    </text>
+    <!-- Claude avatar -->
+    <circle cx="82" cy="148" r="14" fill="#d4956a"/>
+    <text x="82" y="153" text-anchor="middle" fill="white" class="t12 bold">C</text>
 
-    <!-- Spinner dots -->
-    <circle cx="42" cy="141" r="3" fill="#a78bfa">
-      <animate attributeName="opacity" values="1;0.3;0.3" dur="0.8s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="42" cy="141" r="3" fill="#a78bfa">
-      <animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" repeatCount="indefinite"/>
-    </circle>
+    <!-- Tool badge -->
+    <rect x="104" y="136" width="195" height="26" rx="13" fill="#2a2a2a" stroke="#404040" stroke-width="1"/>
+    <rect x="112" y="143" width="8" height="8" rx="2" fill="#a78bfa" opacity="0.8"/>
+    <text x="126" y="154" fill="#a78bfa" class="t11 medium">search_documents</text>
+    <text x="234" y="154" fill="#666" class="t11">· 5 results</text>
   </g>
 
-  <!-- === SCENE 3: Claude response === -->
+  <!-- === CLAUDE RESPONSE === -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;1;1;1;1;1" dur="12s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;0;1;1;1;1;1;1;1;1;1;1" dur="16s" repeatCount="indefinite"/>
 
-    <!-- Search badge -->
-    <rect x="30" y="125" width="270" height="28" rx="10" fill="#22c55e" opacity="0.1"/>
-    <text x="44" y="144" fill="#22c55e" font-size="11" font-weight="600">search_documents</text>
-    <text x="166" y="144" fill="#4ade80" font-size="11"> &#8226; 5 results (0.3s)</text>
+    <text x="104" y="192" fill="#ececf1" class="t14">Based on your <tspan fill="#a78bfa" class="bold">decision log from Jan 15</tspan>:</text>
 
-    <!-- Claude response bubble -->
-    <rect x="30" y="165" width="540" height="180" rx="18" fill="url(#claudeBubble)" stroke="#333366" stroke-width="1"/>
+    <text x="104" y="222" fill="#d1d5db" class="t13">The team decided to use OAuth 2.0 + PKCE for the auth</text>
+    <text x="104" y="242" fill="#d1d5db" class="t13">flow, replacing the session-based approach.</text>
 
-    <!-- Claude icon -->
-    <circle cx="52" cy="187" r="12" fill="#d4a574"/>
-    <text x="52" y="192" text-anchor="middle" fill="#1a1a2e" font-size="12" font-weight="700">C</text>
+    <text x="104" y="272" fill="#ececf1" class="t13 bold">Key reasons:</text>
+    <text x="104" y="294" fill="#b0b0b8" class="t13">1. Mobile app support without cookie issues</text>
+    <text x="104" y="314" fill="#b0b0b8" class="t13">2. Third-party integration readiness</text>
+    <text x="104" y="334" fill="#b0b0b8" class="t13">3. Token refresh without re-login</text>
 
-    <text x="72" y="192" fill="#e0e0e0" font-size="13" font-weight="600">Based on your decision log from Jan 15:</text>
-
-    <text x="50" y="218" fill="#c0c0d0" font-size="12.5">The team decided to use <tspan fill="#a78bfa" font-weight="600">OAuth 2.0 + PKCE</tspan> for the</text>
-    <text x="50" y="238" fill="#c0c0d0" font-size="12.5">auth flow, replacing the session-based approach.</text>
-
-    <text x="50" y="265" fill="#c0c0d0" font-size="12.5">Key reasons:</text>
-    <text x="50" y="285" fill="#94a3b8" font-size="12">  1. Mobile app support without cookie issues</text>
-    <text x="50" y="305" fill="#94a3b8" font-size="12">  2. Third-party integration readiness</text>
-    <text x="50" y="325" fill="#94a3b8" font-size="12">  3. Token refresh without re-login</text>
-
-    <!-- Source citation -->
-    <rect x="50" y="340" width="270" height="0.5" fill="#444"/>
-
-    <!-- Source files -->
-    <rect x="30" y="355" width="540" height="50" rx="12" fill="#1a1a35"/>
-    <text x="48" y="375" fill="#64748b" font-size="10.5" font-weight="600">SOURCES</text>
-    <text x="48" y="393" fill="#818cf8" font-size="11">decision-log-2025-01-15.md</text>
-    <text x="250" y="393" fill="#6b7280" font-size="11">(94.2%)</text>
-    <text x="310" y="393" fill="#818cf8" font-size="11">auth-prd-v2.md</text>
-    <text x="430" y="393" fill="#6b7280" font-size="11">(87.1%)</text>
+    <!-- Source citation box -->
+    <rect x="104" y="354" width="420" height="52" rx="10" fill="#2a2a2a" stroke="#383838" stroke-width="1"/>
+    <text x="120" y="374" fill="#6b7280" class="t10 bold">SOURCES</text>
+    <text x="120" y="393" fill="#818cf8" class="t11">decision-log-2025-01-15.md</text>
+    <text x="310" y="393" fill="#555" class="t11">94.2%</text>
+    <text x="356" y="393" fill="#818cf8" class="t11">auth-prd-v2.md</text>
+    <text x="470" y="393" fill="#555" class="t11">87.1%</text>
   </g>
 
-  <!-- === SCENE 4: Memory feature === -->
+  <!-- === USER MESSAGE 2: Remember === -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;1" dur="12s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;1;1;1;1;1;1;1" dur="16s" repeatCount="indefinite"/>
 
-    <!-- User bubble 2 -->
-    <rect x="380" y="415" width="390" height="44" rx="18" fill="url(#userBubble)"/>
-    <text x="566" y="442" text-anchor="middle" fill="white" font-size="14" font-weight="500">Remember this for next session.</text>
+    <circle cx="700" cy="440" r="14" fill="#6366f1"/>
+    <text x="700" y="445" text-anchor="middle" fill="white" class="t12 bold">J</text>
 
-    <!-- Memory saved badge -->
-    <rect x="30" y="468" width="260" height="28" rx="10" fill="#22c55e" opacity="0.1"/>
-    <text x="44" y="487" fill="#22c55e" font-size="11" font-weight="600">remember</text>
-    <text x="112" y="487" fill="#4ade80" font-size="11"> &#8226; saved &amp; indexed</text>
+    <rect x="390" y="426" width="295" height="42" rx="20" fill="#303030"/>
+    <text x="410" y="452" fill="#ececf1" class="t14">Remember this for next session.</text>
   </g>
 
-  <!-- Bottom gradient fade -->
-  <defs>
-    <linearGradient id="fadeBottom" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#16213e;stop-opacity:0"/>
-      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1"/>
-    </linearGradient>
-  </defs>
+  <!-- === MEMORY RESPONSE === -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1" dur="16s" repeatCount="indefinite"/>
+
+    <circle cx="82" cy="498" r="14" fill="#d4956a"/>
+    <text x="82" y="503" text-anchor="middle" fill="white" class="t12 bold">C</text>
+
+    <!-- Remember tool badge -->
+    <rect x="104" y="486" width="138" height="26" rx="13" fill="#2a2a2a" stroke="#404040" stroke-width="1"/>
+    <rect x="112" y="493" width="8" height="8" rx="2" fill="#22c55e" opacity="0.8"/>
+    <text x="126" y="504" fill="#22c55e" class="t11 medium">remember</text>
+    <text x="192" y="504" fill="#666" class="t11">· saved</text>
+
+    <!-- Checkmark response -->
+    <text x="104" y="530" fill="#d1d5db" class="t13">Saved. I'll remember the OAuth 2.0 + PKCE decision.</text>
+  </g>
+
+  <!-- Input bar -->
+  <rect x="52" y="496" width="728" height="44" fill="#2f2f2f" opacity="0"/>
 </svg>
