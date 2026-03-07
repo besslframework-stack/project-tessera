@@ -7,11 +7,11 @@ import logging
 import re
 from pathlib import Path
 
-import httpx
 import lancedb
 from lancedb.rerankers import LinearCombinationReranker
 
 from src.config import settings
+from src.embedding import get_embed_model
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +20,10 @@ _FTS_READY = False  # Module-level cache for FTS index status
 
 
 def _embed_query(text: str) -> list[float]:
-    """Get embedding vector from Ollama /api/embed endpoint."""
-    resp = httpx.post(
-        f"{settings.models.ollama_base_url}/api/embed",
-        json={"model": settings.models.embed_model, "input": text},
-        timeout=30.0,
-    )
-    resp.raise_for_status()
-    return resp.json()["embeddings"][0]
+    """Get embedding vector using the configured embedding model."""
+    model = get_embed_model()
+    embeddings = list(model.embed([text]))
+    return embeddings[0].tolist()
 
 
 def _ensure_fts_index(table) -> bool:

@@ -14,8 +14,10 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class ModelConfig:
-    embed_model: str = os.getenv("EMBED_MODEL", "nomic-embed-text-v2-moe")
-    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    embed_model: str = os.getenv(
+        "EMBED_MODEL",
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    )
 
 
 @dataclass(frozen=True)
@@ -86,7 +88,6 @@ class WorkspaceConfig:
     lancedb_path: Path
     meta_db_path: Path
     embed_model: str
-    ollama_base_url: str
 
     def resolve_source_path(self, source: SourceConfig) -> Path:
         return self.root / source.path
@@ -142,7 +143,6 @@ def load_workspace_config() -> WorkspaceConfig:
 
     models_cfg = raw.get("models", {})
     embed_model = models_cfg.get("embed_model", settings.models.embed_model)
-    ollama_base_url = models_cfg.get("ollama_base_url", settings.models.ollama_base_url)
 
     sync_cfg = raw.get("sync", {})
     sync_auto = sync_cfg.get("auto_sync", True)
@@ -161,7 +161,6 @@ def load_workspace_config() -> WorkspaceConfig:
         lancedb_path=project_root / "data" / "lancedb",
         meta_db_path=project_root / "data" / "file_meta.db",
         embed_model=embed_model,
-        ollama_base_url=ollama_base_url,
     )
 
 

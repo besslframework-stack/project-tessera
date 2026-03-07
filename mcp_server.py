@@ -28,18 +28,12 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
     ctx = {}
     if workspace.sync_auto:
         try:
-            from llama_index.embeddings.ollama import OllamaEmbedding
-
             from src.graph.vector_store import OntologyVectorStore
             from src.ingestion.pipeline import IngestionPipeline
             from src.sync import FileMetaDB, run_incremental_sync
 
             meta_db = FileMetaDB(workspace.meta_db_path)
-            embed_model = OllamaEmbedding(
-                model_name=workspace.embed_model,
-                base_url=workspace.ollama_base_url,
-            )
-            vector_store = OntologyVectorStore(embed_model=embed_model)
+            vector_store = OntologyVectorStore()
             pipeline = IngestionPipeline(vector_store=vector_store)
 
             def _ingest(paths: list[Path]) -> tuple[int, dict[str, int]]:

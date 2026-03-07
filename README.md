@@ -23,11 +23,6 @@ Everything stays on your machine. No cloud, no API keys, no data leaves your lap
 
 ## Get started
 
-### Prerequisites
-
-- Python 3.11+
-- [Ollama](https://ollama.ai) (running locally)
-
 ### Install + Setup
 
 ```bash
@@ -44,7 +39,7 @@ tessera init
 - Picks your document root directory
 - Scans for folders with documents
 - Lets you choose which to index
-- Downloads the embedding model (~700MB, once)
+- Downloads the embedding model (~220MB, once)
 - Generates `workspace.yaml` automatically
 - Shows you the Claude Desktop config snippet
 - Offers to index immediately
@@ -97,7 +92,7 @@ Your documents (Markdown, CSV)
         |
    Parse & chunk (~800 chars)
         |
-   Embed locally (Ollama)
+   Embed locally (fastembed/ONNX)
         |
    Store in LanceDB (local vector DB)
         |
@@ -132,4 +127,4 @@ Edit it anytime to add/remove sources. Run `tessera sync` after changes.
 
 AGPL-3.0 — see [LICENSE](LICENSE).
 
-For commercial licensing: jsjeong.contact@gmail.com
+For commercial licensing: bessl.framework@gmail.com

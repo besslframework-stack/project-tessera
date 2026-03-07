@@ -36,3 +36,7 @@ HANDOFF.md
 
 # User-specific workspace config (use workspace.yaml.example as template)
 workspace.yaml
+
+# iCloud artifacts
+site/
+personal_ontology_rag/

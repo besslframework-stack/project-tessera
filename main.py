@@ -1,7 +1,7 @@
 """Tessera CLI — personal knowledge RAG system.
 
 Usage:
-    tessera init                          Interactive setup (workspace.yaml + model download)
+    tessera init                          Interactive setup (workspace.yaml + first index)
     tessera ingest [--path PATH]          Ingest documents into the vector store
     tessera sync                          Incremental sync (new/changed/deleted files only)
     tessera status [PROJECT_ID]           Show project status
@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import logging
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -20,47 +19,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def _create_embed_model():
-    from llama_index.embeddings.ollama import OllamaEmbedding
-
-    from src.config import settings
-
-    return OllamaEmbedding(
-        model_name=settings.models.embed_model,
-        base_url=settings.models.ollama_base_url,
-    )
-
-
-def _ensure_ollama_model(model_name: str, base_url: str) -> bool:
-    """Check if Ollama model is available, pull if not."""
-    import httpx
-
-    try:
-        resp = httpx.post(f"{base_url}/api/show", json={"name": model_name}, timeout=10.0)
-        if resp.status_code == 200:
-            return True
-    except httpx.ConnectError:
-        print(f"\nOllama is not running at {base_url}")
-        print("Start Ollama first: https://ollama.ai")
-        return False
-    except Exception:
-        pass
-
-    print(f"\nDownloading embedding model: {model_name}")
-    print("This only happens once (about 700MB)...")
-    try:
-        subprocess.run(["ollama", "pull", model_name], check=True)
-        return True
-    except FileNotFoundError:
-        print("Ollama CLI not found. Install from https://ollama.ai")
-        return False
-    except subprocess.CalledProcessError:
-        print(f"Failed to pull {model_name}. Run manually: ollama pull {model_name}")
-        return False
-
-
 def cmd_init(args: argparse.Namespace) -> None:
-    """Interactive setup: create workspace.yaml and download model."""
+    """Interactive setup: create workspace.yaml and optionally index."""
     project_root = Path(__file__).parent
     yaml_path = project_root / "workspace.yaml"
     env_path = project_root / ".env"
@@ -76,7 +36,6 @@ def cmd_init(args: argparse.Namespace) -> None:
         overwrite = input("Overwrite? [y/N] ").strip().lower()
         if overwrite != "y":
             print("Keeping existing workspace.yaml")
-            _step_model(project_root)
             _step_claude_desktop(project_root)
             return
 
@@ -101,12 +60,15 @@ def cmd_init(args: argparse.Namespace) -> None:
     sources = []
     projects = {}
 
+    skip_dirs = {
+        "node_modules", ".venv", "__pycache__", ".git", "archive",
+        ".next", "dist", "build", ".cache",
+    }
+
     for child in sorted(root_path.iterdir()):
         if not child.is_dir():
             continue
-        if child.name.startswith(".") or child.name in (
-            "node_modules", ".venv", "__pycache__", ".git", "archive",
-        ):
+        if child.name.startswith(".") or child.name in skip_dirs:
             continue
 
         md_count = len(list(child.rglob("*.md")))
@@ -130,7 +92,6 @@ def cmd_init(args: argparse.Namespace) -> None:
         }
 
     if not sources:
-        # Fallback: index the root itself
         print("\nNo subdirectories with documents found.")
         print(f"Will index {root_path} directly.")
         sources.append({"path": ".", "type": "document", "project": "_global"})
@@ -144,20 +105,15 @@ def cmd_init(args: argparse.Namespace) -> None:
         "projects": projects,
         "archive": {"directory": "archive"},
         "models": {
-            "embed_model": "nomic-embed-text-v2-moe",
-            "ollama_base_url": "http://localhost:11434",
+            "embed_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         },
         "sync": {
             "auto_sync": True,
             "extensions": [".md", ".csv"],
             "ignore": [
-                "**/.venv/**",
-                "**/.next/**",
-                "**/node_modules/**",
-                "**/__pycache__/**",
-                "**/data/lancedb/**",
-                "**/archive/**",
-                "**/.git/**",
+                "**/.venv/**", "**/.next/**", "**/node_modules/**",
+                "**/__pycache__/**", "**/data/lancedb/**",
+                "**/archive/**", "**/.git/**",
             ],
         },
     }
@@ -174,35 +130,23 @@ def cmd_init(args: argparse.Namespace) -> None:
             shutil.copy(example, env_path)
             print(f"Created: {env_path}")
 
-    # Step 5: Model download
-    _step_model(project_root)
-
-    # Step 6: Claude Desktop config hint
+    # Step 5: Claude Desktop config hint
     _step_claude_desktop(project_root)
 
-    # Step 7: Offer to ingest now
+    # Step 6: Offer to ingest now
     print()
     ingest_now = input("Index your documents now? [Y/n] ").strip().lower()
     if ingest_now != "n":
-        # Re-import config after workspace.yaml is created
+        print("\nEmbedding model will be downloaded on first run (~220MB)...")
         import importlib
-
         import src.config
         importlib.reload(src.config)
-        from src.config import workspace as ws  # noqa: F811
-
         args_ns = argparse.Namespace(path=None)
         cmd_ingest(args_ns)
     else:
         print("\nRun later: tessera ingest")
 
     print("\nSetup complete!")
-
-
-def _step_model(project_root: Path) -> None:
-    """Ensure embedding model is downloaded."""
-    print("\nChecking embedding model...")
-    _ensure_ollama_model("nomic-embed-text-v2-moe", "http://localhost:11434")
 
 
 def _step_claude_desktop(project_root: Path) -> None:
@@ -222,7 +166,6 @@ def _step_claude_desktop(project_root: Path) -> None:
     print("  }")
     print()
 
-    # Try to find the config file
     config_locations = [
         Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
         Path.home() / ".config" / "claude" / "claude_desktop_config.json",
@@ -235,15 +178,10 @@ def _step_claude_desktop(project_root: Path) -> None:
 
 def cmd_ingest(args: argparse.Namespace) -> None:
     """Run the ingestion pipeline."""
-    from src.config import settings, workspace
     from src.graph.vector_store import OntologyVectorStore
     from src.ingestion.pipeline import IngestionPipeline
 
-    if not _ensure_ollama_model(settings.models.embed_model, settings.models.ollama_base_url):
-        sys.exit(1)
-
-    embed_model = _create_embed_model()
-    vector_store = OntologyVectorStore(embed_model=embed_model)
+    vector_store = OntologyVectorStore()
     pipeline = IngestionPipeline(vector_store=vector_store)
 
     source_paths = [Path(p) for p in args.path] if args.path else None
@@ -253,17 +191,13 @@ def cmd_ingest(args: argparse.Namespace) -> None:
 
 def cmd_sync(args: argparse.Namespace) -> None:
     """Run incremental sync."""
-    from src.config import settings, workspace
+    from src.config import workspace
     from src.graph.vector_store import OntologyVectorStore
     from src.ingestion.pipeline import IngestionPipeline
     from src.sync import FileMetaDB, run_incremental_sync
 
-    if not _ensure_ollama_model(settings.models.embed_model, settings.models.ollama_base_url):
-        sys.exit(1)
-
     meta_db = FileMetaDB(workspace.meta_db_path)
-    embed_model = _create_embed_model()
-    vector_store = OntologyVectorStore(embed_model=embed_model)
+    vector_store = OntologyVectorStore()
     pipeline = IngestionPipeline(vector_store=vector_store)
 
     def _ingest(paths: list[Path]) -> tuple[int, dict[str, int]]:
