@@ -12,7 +12,7 @@
 
   <!-- Model pill center -->
   <rect x="300" y="7" width="120" height="24" rx="12" fill="#ddd8d0"/>
-  <text x="360" y="23" text-anchor="middle" fill="#6b6560" font-size="11.5" font-weight="500">Claude 4 Sonnet</text>
+  <text x="360" y="23" text-anchor="middle" fill="#6b6560" font-size="11.5" font-weight="500">Claude Opus 4.6</text>
 
   <!-- Chat area — cream/warm white -->
   <rect x="0" y="36" width="720" height="440" fill="#f3f2ef"/>
