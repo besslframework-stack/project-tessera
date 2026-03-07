@@ -1,134 +1,120 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560" font-family="-apple-system, 'Helvetica Neue', sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" font-family="'Söhne', -apple-system, 'Helvetica Neue', sans-serif">
 
-  <!-- Window background -->
-  <rect width="800" height="560" rx="12" fill="#2b2b2b"/>
+  <!-- Window -->
+  <rect width="720" height="520" rx="10" fill="#f3f2ef"/>
 
   <!-- macOS titlebar -->
-  <rect width="800" height="38" rx="12" fill="#333"/>
-  <rect x="0" y="24" width="800" height="14" fill="#333"/>
-  <circle cx="20" cy="19" r="5.5" fill="#ff5f57"/>
-  <circle cx="38" cy="19" r="5.5" fill="#febc2e"/>
-  <circle cx="56" cy="19" r="5.5" fill="#28c840"/>
-  <text x="400" y="24" text-anchor="middle" fill="#9a9a9a" font-size="13" font-weight="500">Claude</text>
+  <rect width="720" height="36" rx="10" fill="#e8e6e1"/>
+  <rect x="0" y="22" width="720" height="14" fill="#e8e6e1"/>
+  <circle cx="18" cy="18" r="5" fill="#ff5f57"/>
+  <circle cx="34" cy="18" r="5" fill="#febc2e"/>
+  <circle cx="50" cy="18" r="5" fill="#28c840"/>
 
-  <!-- Left sidebar -->
-  <rect x="0" y="38" width="56" height="522" fill="#1a1a1a"/>
-  <!-- Sidebar icons -->
-  <rect x="12" y="52" width="32" height="32" rx="8" fill="#333"/>
-  <text x="28" y="73" text-anchor="middle" fill="#aaa" font-size="15" font-weight="600">T</text>
+  <!-- Model pill center -->
+  <rect x="300" y="7" width="120" height="24" rx="12" fill="#ddd8d0"/>
+  <text x="360" y="23" text-anchor="middle" fill="#6b6560" font-size="11.5" font-weight="500">Claude 4 Sonnet</text>
 
-  <!-- Main chat area -->
-  <rect x="56" y="38" width="744" height="480" fill="#2b2b2b"/>
+  <!-- Chat area — cream/warm white -->
+  <rect x="0" y="36" width="720" height="440" fill="#f3f2ef"/>
 
-  <!-- Model selector top -->
-  <rect x="56" y="38" width="744" height="36" fill="#2b2b2b"/>
-  <text x="80" y="61" fill="#d1d1d1" font-size="13" font-weight="600">Claude 3.5 Sonnet</text>
-  <text x="200" y="61" fill="#666" font-size="11">▾</text>
-
-  <!-- =================== -->
-  <!-- CONVERSATION        -->
-  <!-- =================== -->
-
-  <!-- USER MESSAGE 1 -->
+  <!-- ===== TURN 1: HUMAN ===== -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <text x="80" y="106" fill="#d1d1d1" font-size="14">What did we decide about the auth flow?</text>
+    <!-- Human icon -->
+    <circle cx="88" cy="72" r="14" fill="#c4b5a6"/>
+    <text x="88" y="77" text-anchor="middle" fill="white" font-size="12" font-weight="600">J</text>
+
+    <!-- Human label -->
+    <text x="110" y="76" fill="#2d2926" font-size="13" font-weight="600">You</text>
+
+    <!-- Human message -->
+    <text x="88" y="100" fill="#2d2926" font-size="14.5" font-weight="400">What did we decide about the auth flow?</text>
   </g>
 
-  <!-- CLAUDE RESPONSE with tool use -->
+  <!-- ===== TURN 2: CLAUDE ===== -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <!-- Divider -->
-    <rect x="80" y="122" width="660" height="1" fill="#383838"/>
+    <!-- Separator -->
+    <rect x="0" y="118" width="720" height="1" fill="#e0ddd7"/>
 
-    <!-- Claude icon -->
-    <rect x="80" y="140" width="24" height="24" rx="6" fill="#e07b55"/>
-    <text x="92" y="157" text-anchor="middle" fill="white" font-size="11" font-weight="700">C</text>
-    <text x="112" y="157" fill="#d1d1d1" font-size="13" font-weight="600">Claude</text>
+    <!-- Claude icon — terracotta circle -->
+    <circle cx="88" cy="146" r="14" fill="#da7b56"/>
+    <!-- Simplified Claude sparkle mark -->
+    <path d="M84.5 146 Q88 139 91.5 146 Q88 153 84.5 146Z" fill="white" opacity="0.9"/>
+
+    <!-- Claude label -->
+    <text x="110" y="150" fill="#2d2926" font-size="13" font-weight="600">Claude</text>
   </g>
 
   <!-- Tool use accordion -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <rect x="80" y="170" width="400" height="32" rx="8" fill="#353535"/>
-    <text x="96" y="190" fill="#888" font-size="12">▶</text>
-    <text x="114" y="191" fill="#aaa" font-size="12" font-weight="500">Used </text>
-    <text x="148" y="191" fill="#c4b5fd" font-size="12" font-weight="600">search_documents</text>
-    <text x="280" y="191" fill="#666" font-size="12"> from tessera</text>
+    <rect x="88" y="164" width="320" height="30" rx="6" fill="none" stroke="#d5d0c8" stroke-width="1"/>
+    <text x="102" y="183" fill="#8b857d" font-size="11">▶</text>
+    <text x="118" y="184" fill="#8b857d" font-size="12" font-weight="400">Used</text>
+    <text x="148" y="184" fill="#da7b56" font-size="12" font-weight="500"> search_documents</text>
+    <text x="288" y="184" fill="#b0aaa2" font-size="12"> from tessera</text>
   </g>
 
-  <!-- Response text -->
+  <!-- Claude response body -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;1;1;1;1;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <text x="80" y="228" fill="#d4d4d4" font-size="14">Based on your </text>
-    <text x="188" y="228" fill="#c4b5fd" font-size="14" font-weight="600">decision log from January 15</text>
-    <text x="480" y="228" fill="#d4d4d4" font-size="14">:</text>
+    <text x="88" y="220" fill="#2d2926" font-size="14">Based on your decision log from January 15:</text>
 
-    <text x="80" y="258" fill="#b8b8b8" font-size="13.5" font-weight="400">The team decided to use </text>
-    <text x="280" y="258" fill="#d4d4d4" font-size="13.5" font-weight="600">OAuth 2.0 + PKCE</text>
-    <text x="430" y="258" fill="#b8b8b8" font-size="13.5"> for the auth flow,</text>
-    <text x="80" y="278" fill="#b8b8b8" font-size="13.5">replacing the session-based approach. Key reasons:</text>
+    <text x="88" y="248" fill="#403d38" font-size="13.5">The team decided to use </text>
+    <text x="286" y="248" fill="#2d2926" font-size="13.5" font-weight="600">OAuth 2.0 + PKCE</text>
+    <text x="420" y="248" fill="#403d38" font-size="13.5"> for the auth</text>
+    <text x="88" y="268" fill="#403d38" font-size="13.5">flow, replacing the session-based approach.</text>
 
-    <!-- Numbered list -->
-    <text x="100" y="308" fill="#a0a0a0" font-size="13">1.</text>
-    <text x="118" y="308" fill="#b8b8b8" font-size="13">Mobile app support without cookie issues</text>
-    <text x="100" y="330" fill="#a0a0a0" font-size="13">2.</text>
-    <text x="118" y="330" fill="#b8b8b8" font-size="13">Third-party integration readiness</text>
-    <text x="100" y="352" fill="#a0a0a0" font-size="13">3.</text>
-    <text x="118" y="352" fill="#b8b8b8" font-size="13">Token refresh without re-login</text>
+    <text x="88" y="298" fill="#2d2926" font-size="13.5" font-weight="600">Key reasons:</text>
 
-    <!-- Source citation -->
-    <text x="80" y="382" fill="#888" font-size="11" font-style="italic">Sources: decision-log-2025-01-15.md (94.2%), auth-prd-v2.md (87.1%)</text>
+    <text x="102" y="320" fill="#555" font-size="13">1. Mobile app support without cookie issues</text>
+    <text x="102" y="342" fill="#555" font-size="13">2. Third-party integration readiness</text>
+    <text x="102" y="364" fill="#555" font-size="13">3. Token refresh without re-login</text>
+
+    <!-- Inline source -->
+    <text x="88" y="392" fill="#9a948c" font-size="11.5" font-style="italic">Sources: decision-log-2025-01-15.md · auth-prd-v2.md</text>
   </g>
 
-  <!-- USER MESSAGE 2 -->
+  <!-- ===== TURN 3: HUMAN (remember) ===== -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <rect x="80" y="400" width="660" height="1" fill="#383838"/>
-    <text x="80" y="428" fill="#d1d1d1" font-size="14">Remember this for our next session.</text>
+    <rect x="0" y="406" width="720" height="1" fill="#e0ddd7"/>
+
+    <circle cx="88" cy="434" r="14" fill="#c4b5a6"/>
+    <text x="88" y="439" text-anchor="middle" fill="white" font-size="12" font-weight="600">J</text>
+    <text x="110" y="438" fill="#2d2926" font-size="13" font-weight="600">You</text>
+
+    <text x="88" y="462" fill="#2d2926" font-size="14.5">Remember this for next session.</text>
   </g>
 
-  <!-- CLAUDE RESPONSE 2 -->
+  <!-- ===== TURN 4: CLAUDE (remember tool) ===== -->
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <rect x="80" y="442" width="660" height="1" fill="#383838"/>
+    <rect x="0" y="478" width="720" height="1" fill="#e0ddd7"/>
 
-    <!-- Claude icon -->
-    <rect x="80" y="456" width="24" height="24" rx="6" fill="#e07b55"/>
-    <text x="92" y="473" text-anchor="middle" fill="white" font-size="11" font-weight="700">C</text>
-    <text x="112" y="473" fill="#d1d1d1" font-size="13" font-weight="600">Claude</text>
-  </g>
-
-  <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1" dur="18s" repeatCount="indefinite"/>
-
-    <!-- Tool badge -->
-    <rect x="80" y="486" width="300" height="32" rx="8" fill="#353535"/>
-    <text x="96" y="506" fill="#888" font-size="12">▶</text>
-    <text x="114" y="507" fill="#aaa" font-size="12" font-weight="500">Used </text>
-    <text x="148" y="507" fill="#86efac" font-size="12" font-weight="600">remember</text>
-    <text x="214" y="507" fill="#666" font-size="12"> from tessera</text>
+    <circle cx="88" cy="504" r="14" fill="#da7b56"/>
+    <path d="M84.5 504 Q88 497 91.5 504 Q88 511 84.5 504Z" fill="white" opacity="0.9"/>
+    <text x="110" y="508" fill="#2d2926" font-size="13" font-weight="600">Claude</text>
   </g>
 
   <g opacity="0">
-    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;1" dur="18s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <text x="80" y="540" fill="#b8b8b8" font-size="13.5">Saved! I'll remember the OAuth 2.0 + PKCE decision for next time. ✓</text>
+    <rect x="88" y="520" width="240" height="30" rx="6" fill="none" stroke="#d5d0c8" stroke-width="1"/>
+    <text x="102" y="539" fill="#8b857d" font-size="11">▶</text>
+    <text x="118" y="540" fill="#8b857d" font-size="12">Used</text>
+    <text x="148" y="540" fill="#da7b56" font-size="12" font-weight="500"> remember</text>
+    <text x="218" y="540" fill="#b0aaa2" font-size="12"> from tessera</text>
   </g>
 
-  <!-- Input bar at bottom -->
-  <rect x="56" y="518" width="744" height="42" fill="#2b2b2b"/>
-  <rect x="72" y="524" width="712" height="30" rx="15" fill="#383838" stroke="#444" stroke-width="1"/>
-  <text x="92" y="543" fill="#666" font-size="13">Reply to Claude...</text>
+  <!-- Bottom input area -->
+  <rect x="0" y="476" width="720" height="44" fill="#f3f2ef" opacity="0"/>
 
-  <!-- MCP indicator in sidebar -->
-  <rect x="8" y="496" width="40" height="20" rx="4" fill="#1f3a24"/>
-  <circle cx="18" cy="506" r="3" fill="#4ade80"/>
-  <text x="25" y="510" fill="#4ade80" font-size="8" font-weight="600">MCP</text>
 </svg>
