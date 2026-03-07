@@ -15,7 +15,7 @@ Claude: [searches 2,600 documents] Based on your decision log from Jan 15...
 ## How it works
 
 1. **You point Tessera at your document folders** (Markdown, CSV, session logs)
-2. **Tessera indexes them locally** using Ollama embeddings + LanceDB
+2. **Tessera indexes them locally** using fastembed (ONNX) + LanceDB
 3. **Claude Desktop searches them automatically** via MCP tools
 4. **Only changed files are re-indexed** on each sync
 

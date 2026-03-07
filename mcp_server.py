@@ -298,6 +298,108 @@ def audit_prd(
     return output
 
 
+# --- Memory Tools ---
+
+
+@mcp.tool(
+    description=(
+        "Save a piece of knowledge for cross-session persistence. "
+        "Use this when the user says 'remember this' or when important decisions, "
+        "preferences, or facts should be preserved across conversations."
+    )
+)
+def remember(content: str, tags: list[str] | None = None) -> str:
+    """Save a memory for cross-session persistence."""
+    from src.memory import learn_and_index
+
+    result = learn_and_index(content, tags=tags, source="user-request")
+    status = "indexed" if result["indexed"] else "saved (not yet indexed)"
+    return f"Remembered and {status}:\n{content}"
+
+
+@mcp.tool(
+    description=(
+        "Search past memories from previous sessions. "
+        "Call this when the user asks 'what did I say about...', "
+        "'do you remember...', or references past conversations."
+    )
+)
+def recall(query: str, top_k: int = 5) -> str:
+    """Search past memories using semantic similarity."""
+    from src.memory import recall_memories
+
+    memories = recall_memories(query, top_k=top_k)
+
+    if not memories:
+        return "No memories found. Nothing has been saved yet."
+
+    parts = []
+    for i, m in enumerate(memories, 1):
+        sim = m["similarity"] * 100
+        header = f"[{i}] (similarity: {sim:.1f}%)"
+        if m["date"]:
+            header += f"  date: {m['date']}"
+        if m["tags"]:
+            header += f"  tags: {m['tags']}"
+        parts.append(f"{header}\n{m['content']}")
+
+    return "\n\n---\n\n".join(parts)
+
+
+@mcp.tool(
+    description=(
+        "Auto-learn: save new knowledge and immediately index it for search. "
+        "Use this to capture insights, patterns, or facts discovered during conversation."
+    )
+)
+def learn(content: str, tags: list[str] | None = None, source: str = "auto-learn") -> str:
+    """Save and immediately index new knowledge."""
+    from src.memory import learn_and_index
+
+    result = learn_and_index(content, tags=tags, source=source)
+    status = "indexed" if result["indexed"] else "saved (indexing failed)"
+    return f"Learned and {status}:\n{content}"
+
+
+# --- Knowledge Graph Tools ---
+
+
+@mcp.tool(
+    description=(
+        "Build a knowledge graph from indexed documents showing relationships "
+        "between concepts, decisions, and entities. "
+        "Returns a Mermaid diagram of the document relationships.\n\n"
+        "scope: 'project' (single project) or 'all' (entire workspace)\n"
+        "max_nodes: limit the number of nodes in the graph (default 30)"
+    )
+)
+def knowledge_graph(
+    query: str | None = None,
+    project: str | None = None,
+    scope: str = "all",
+    max_nodes: int = 30,
+) -> str:
+    """Build and return a knowledge graph as Mermaid diagram."""
+    from src.knowledge_graph import build_knowledge_graph
+
+    return build_knowledge_graph(
+        query=query, project=project, scope=scope, max_nodes=max_nodes
+    )
+
+
+@mcp.tool(
+    description=(
+        "Show connections for a specific document or concept in the knowledge graph. "
+        "Returns related documents, shared topics, and a focused Mermaid subgraph."
+    )
+)
+def explore_connections(query: str, top_k: int = 10) -> str:
+    """Explore connections around a specific topic or document."""
+    from src.knowledge_graph import explore_connections as _explore
+
+    return _explore(query=query, top_k=top_k)
+
+
 # --- Indexing Tools ---
 
 
