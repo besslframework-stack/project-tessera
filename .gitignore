@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+
+# Virtual environment
+.venv/
+
+# Data (user-specific index and metadata)
+data/lancedb/
+data/file_meta.db
+data/file_meta*.db
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Session logs (personal)
+session_logs/
+
+# Internal
+.files/
+.claude/
+HANDOFF.md
+
+# User-specific workspace config (use workspace.yaml.example as template)
+workspace.yaml

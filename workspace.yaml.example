@@ -1,0 +1,43 @@
+# Tessera workspace configuration
+# Copy this to workspace.yaml and adjust paths to your workspace.
+
+workspace:
+  root: /path/to/your/workspace  # Absolute path to your document root
+  name: "my-workspace"
+
+# Define which directories to index
+sources:
+  - path: projects/my-project
+    type: prd
+    project: my_project
+  - path: notes
+    type: document
+    project: _global
+  - path: session-logs
+    type: session_log
+    project: _global
+
+# Project definitions (for status tracking and filtering)
+projects:
+  my_project:
+    display_name: "My Project"
+    root: projects/my-project
+
+archive:
+  directory: archive
+
+models:
+  embed_model: nomic-embed-text-v2-moe
+  ollama_base_url: http://localhost:11434
+
+sync:
+  auto_sync: true
+  extensions: [".md", ".csv"]
+  ignore:
+    - "**/.venv/**"
+    - "**/.next/**"
+    - "**/node_modules/**"
+    - "**/__pycache__/**"
+    - "**/data/lancedb/**"
+    - "**/archive/**"
+    - "**/.git/**"

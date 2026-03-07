@@ -1,0 +1,53 @@
+[project]
+name = "project-tessera"
+version = "0.3.0"
+description = "Tessera — Personal knowledge RAG as an MCP server for Claude Desktop"
+requires-python = ">=3.11"
+license = "AGPL-3.0-or-later"
+authors = [
+    { name = "Jae-seong Jeong", email = "jsjeong.contact@gmail.com" },
+]
+readme = "README.md"
+keywords = ["rag", "mcp", "claude", "knowledge-base", "vector-search", "ollama"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Indexing",
+]
+dependencies = [
+    "llama-index-core>=0.12.0",
+    "llama-index-embeddings-ollama>=0.5.0",
+    "llama-index-vector-stores-lancedb>=0.4.0",
+    "lancedb>=0.17.0",
+    "mcp>=1.0.0",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "pandas>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jaeseongDev/project-tessera"
+Repository = "https://github.com/jaeseongDev/project-tessera"
+Issues = "https://github.com/jaeseongDev/project-tessera/issues"
+
+[project.scripts]
+tessera = "main:cli"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
