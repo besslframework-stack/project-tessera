@@ -1,99 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 560" font-family="-apple-system, 'Helvetica Neue', sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 600" font-family="-apple-system, 'Helvetica Neue', sans-serif">
 
   <!-- Window -->
-  <rect width="840" height="560" rx="10" fill="#1e1e1e"/>
+  <rect width="880" height="600" rx="10" fill="#1e1e1e"/>
 
   <!-- macOS titlebar -->
-  <rect width="840" height="36" rx="10" fill="#282828"/>
-  <rect x="0" y="22" width="840" height="14" fill="#282828"/>
-  <circle cx="18" cy="18" r="5.5" fill="#ff5f57"/>
-  <circle cx="36" cy="18" r="5.5" fill="#febc2e"/>
-  <circle cx="54" cy="18" r="5.5" fill="#28c840"/>
+  <rect width="880" height="40" rx="10" fill="#282828"/>
+  <rect x="0" y="26" width="880" height="14" fill="#282828"/>
+  <circle cx="20" cy="20" r="5.5" fill="#ff5f57"/>
+  <circle cx="38" cy="20" r="5.5" fill="#febc2e"/>
+  <circle cx="56" cy="20" r="5.5" fill="#28c840"/>
 
   <!-- Top tabs -->
-  <rect x="330" y="6" width="180" height="26" rx="8" fill="#383838"/>
-  <rect x="335" y="9" width="52" height="20" rx="6" fill="#505050"/>
-  <text x="361" y="23" text-anchor="middle" fill="#fff" font-size="11.5" font-weight="600">Chat</text>
-  <text x="420" y="23" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Cowork</text>
-  <text x="486" y="23" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Code</text>
+  <rect x="360" y="8" width="180" height="26" rx="8" fill="#383838"/>
+  <rect x="365" y="11" width="52" height="20" rx="6" fill="#505050"/>
+  <text x="391" y="25" text-anchor="middle" fill="#fff" font-size="11.5" font-weight="600">Chat</text>
+  <text x="450" y="25" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Cowork</text>
+  <text x="516" y="25" text-anchor="middle" fill="#888" font-size="11.5" font-weight="500">Code</text>
 
   <!-- LEFT SIDEBAR -->
-  <rect x="0" y="36" width="220" height="524" fill="#191919"/>
+  <rect x="0" y="40" width="240" height="560" fill="#191919"/>
 
-  <text x="14" y="68" fill="#aaa" font-size="13">+ New chat</text>
-  <text x="14" y="94" fill="#777" font-size="12.5">Search</text>
-  <text x="14" y="116" fill="#777" font-size="12.5">Projects</text>
+  <text x="20" y="78" fill="#aaa" font-size="13">+ New chat</text>
+  <text x="20" y="108" fill="#777" font-size="12.5">Search</text>
+  <text x="20" y="134" fill="#777" font-size="12.5">Projects</text>
 
-  <text x="14" y="148" fill="#666" font-size="10.5" font-weight="600">Recent</text>
-  <rect x="4" y="156" width="212" height="30" rx="6" fill="#2a2a2a"/>
-  <text x="16" y="176" fill="#ddd" font-size="12">Auth flow decision search</text>
-  <text x="16" y="204" fill="#888" font-size="12">Document search</text>
-  <text x="16" y="226" fill="#888" font-size="12">Project status check</text>
-  <text x="16" y="248" fill="#888" font-size="12">PRD audit results</text>
+  <text x="16" y="172" fill="#666" font-size="10.5" font-weight="600">Recent</text>
+  <rect x="6" y="182" width="228" height="32" rx="6" fill="#2a2a2a"/>
+  <text x="18" y="203" fill="#ddd" font-size="12">Auth flow decision search</text>
+  <text x="18" y="234" fill="#888" font-size="12">Document search</text>
+  <text x="18" y="260" fill="#888" font-size="12">Project status check</text>
+  <text x="18" y="286" fill="#888" font-size="12">PRD audit results</text>
 
-  <rect x="10" y="264" width="200" height="1" fill="#333"/>
+  <rect x="12" y="306" width="216" height="1" fill="#333"/>
 
   <!-- User profile -->
-  <circle cx="30" cy="530" r="12" fill="#6366f1"/>
-  <text x="30" y="534" text-anchor="middle" fill="white" font-size="10" font-weight="700">U</text>
-  <text x="50" y="527" fill="#ccc" font-size="12" font-weight="500">User</text>
-  <text x="50" y="542" fill="#777" font-size="10">Pro plan</text>
+  <circle cx="32" cy="572" r="13" fill="#6366f1"/>
+  <text x="32" y="576" text-anchor="middle" fill="white" font-size="10" font-weight="700">U</text>
+  <text x="54" y="569" fill="#ccc" font-size="12" font-weight="500">User</text>
+  <text x="54" y="584" fill="#777" font-size="10">Pro plan</text>
 
   <!-- MAIN CHAT AREA -->
-  <rect x="220" y="36" width="620" height="476" fill="#212121"/>
+  <rect x="240" y="40" width="640" height="512" fill="#212121"/>
 
   <!-- Conversation title -->
-  <text x="244" y="62" fill="#ddd" font-size="14" font-weight="500">Auth flow decision search</text>
-  <text x="428" y="62" fill="#666" font-size="12"> ∨</text>
+  <text x="272" y="72" fill="#ddd" font-size="14" font-weight="500">Auth flow decision search</text>
+  <text x="458" y="72" fill="#666" font-size="12"> ∨</text>
 
   <!-- ===== USER MESSAGE 1 ===== -->
   <g opacity="0">
     <animate attributeName="opacity" values="0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
-    <rect x="434" y="82" width="370" height="40" rx="18" fill="#303030"/>
-    <text x="454" y="107" fill="#e8e8e8" font-size="14">What did we decide about the auth flow?</text>
+    <rect x="480" y="96" width="376" height="42" rx="20" fill="#303030"/>
+    <text x="502" y="122" fill="#e8e8e8" font-size="14">What did we decide about the auth flow?</text>
   </g>
 
   <!-- ===== TOOL USE ===== -->
   <g opacity="0">
     <animate attributeName="opacity" values="0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
-    <text x="244" y="150" fill="#888" font-size="12">tessera integration used, tool used ›</text>
+    <text x="272" y="172" fill="#888" font-size="12">tessera integration used, tool used ›</text>
   </g>
 
   <!-- ===== CLAUDE RESPONSE ===== -->
   <g opacity="0">
     <animate attributeName="opacity" values="0;0;0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
 
-    <text x="244" y="178" fill="#e0e0e0" font-size="14" font-weight="600">Based on your decision log from January 15:</text>
+    <text x="272" y="204" fill="#e0e0e0" font-size="14" font-weight="600">Based on your decision log from January 15:</text>
 
-    <text x="244" y="206" fill="#c0c0c0" font-size="13.5">The team decided to use <tspan font-weight="600" fill="#e0e0e0">OAuth 2.0 + PKCE</tspan> for the</text>
-    <text x="244" y="224" fill="#c0c0c0" font-size="13.5">auth flow, replacing the session-based approach.</text>
+    <text x="272" y="236" fill="#c0c0c0" font-size="13.5">The team decided to use <tspan font-weight="600" fill="#e0e0e0">OAuth 2.0 + PKCE</tspan> for the</text>
+    <text x="272" y="256" fill="#c0c0c0" font-size="13.5">auth flow, replacing the session-based approach.</text>
 
-    <text x="244" y="252" fill="#c0c0c0" font-size="13.5">Key reasons:</text>
+    <text x="272" y="290" fill="#c0c0c0" font-size="13.5">Key reasons:</text>
 
-    <circle cx="262" cy="272" r="2.5" fill="#888"/>
-    <text x="274" y="276" fill="#aaa" font-size="13">Mobile app support without cookie issues</text>
+    <circle cx="292" cy="314" r="2.5" fill="#888"/>
+    <text x="304" y="318" fill="#aaa" font-size="13">Mobile app support without cookie issues</text>
 
-    <circle cx="262" cy="296" r="2.5" fill="#888"/>
-    <text x="274" y="300" fill="#aaa" font-size="13">Third-party integration readiness</text>
+    <circle cx="292" cy="340" r="2.5" fill="#888"/>
+    <text x="304" y="344" fill="#aaa" font-size="13">Third-party integration readiness</text>
 
-    <circle cx="262" cy="320" r="2.5" fill="#888"/>
-    <text x="274" y="324" fill="#aaa" font-size="13">Token refresh without re-login</text>
+    <circle cx="292" cy="366" r="2.5" fill="#888"/>
+    <text x="304" y="370" fill="#aaa" font-size="13">Token refresh without re-login</text>
 
-    <text x="244" y="352" fill="#aaa" font-size="13.5">Let me know if you need more details!</text>
+    <text x="272" y="404" fill="#aaa" font-size="13.5">Let me know if you need more details!</text>
 
-    <!-- Action buttons — simple SVG shapes -->
-    <!-- Copy -->
-    <rect x="244" y="368" width="16" height="16" rx="2" fill="none" stroke="#555" stroke-width="1.2"/>
-    <rect x="248" y="372" width="16" height="16" rx="2" fill="none" stroke="#555" stroke-width="1.2"/>
-    <!-- Thumbs up -->
-    <text x="278" y="383" fill="#555" font-size="15">△</text>
-    <!-- Thumbs down -->
-    <text x="302" y="383" fill="#555" font-size="15">▽</text>
-    <!-- Retry -->
-    <text x="326" y="383" fill="#555" font-size="13">↻</text>
+    <!-- Action buttons -->
+    <rect x="272" y="420" width="14" height="14" rx="2" fill="none" stroke="#555" stroke-width="1.2"/>
+    <rect x="276" y="424" width="14" height="14" rx="2" fill="none" stroke="#555" stroke-width="1.2"/>
+    <text x="306" y="435" fill="#555" font-size="14">△</text>
+    <text x="330" y="435" fill="#555" font-size="14">▽</text>
+    <text x="354" y="435" fill="#555" font-size="13">↻</text>
 
-    <!-- Claude sparkle icon -->
-    <g transform="translate(244, 400)">
+    <!-- Claude sparkle -->
+    <g transform="translate(272, 452)">
       <line x1="8" y1="0" x2="8" y2="16" stroke="#da7b56" stroke-width="2" stroke-linecap="round"/>
       <line x1="0" y1="8" x2="16" y2="8" stroke="#da7b56" stroke-width="2" stroke-linecap="round"/>
       <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" stroke="#da7b56" stroke-width="1.5" stroke-linecap="round"/>
@@ -104,18 +100,18 @@
   <!-- ===== USER MESSAGE 2 ===== -->
   <g opacity="0">
     <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1;1;1;1" dur="20s" repeatCount="indefinite"/>
-    <rect x="484" y="434" width="320" height="40" rx="18" fill="#303030"/>
-    <text x="504" y="459" fill="#e8e8e8" font-size="14">Remember this for next session.</text>
+    <rect x="524" y="486" width="332" height="42" rx="20" fill="#303030"/>
+    <text x="546" y="512" fill="#e8e8e8" font-size="14">Remember this for next session.</text>
   </g>
 
   <!-- ===== INPUT BAR ===== -->
-  <rect x="220" y="512" width="620" height="48" fill="#212121"/>
-  <rect x="244" y="516" width="572" height="38" rx="19" fill="#2c2c2c" stroke="#444" stroke-width="1"/>
-  <text x="264" y="540" fill="#888" font-size="15">+</text>
-  <text x="290" y="540" fill="#666" font-size="13">Reply...</text>
-  <text x="696" y="540" fill="#999" font-size="11.5" font-weight="500">Opus 4.6</text>
-  <text x="748" y="540" fill="#666" font-size="10">∨</text>
-  <circle cx="780" cy="535" r="14" fill="#da7b56"/>
-  <text x="780" y="540" text-anchor="middle" fill="white" font-size="14" font-weight="600">↑</text>
+  <rect x="240" y="552" width="640" height="48" fill="#212121"/>
+  <rect x="268" y="556" width="588" height="40" rx="20" fill="#2c2c2c" stroke="#444" stroke-width="1"/>
+  <text x="292" y="581" fill="#888" font-size="15">+</text>
+  <text x="318" y="581" fill="#666" font-size="13">Reply...</text>
+  <text x="738" y="581" fill="#999" font-size="11.5" font-weight="500">Opus 4.6</text>
+  <text x="792" y="581" fill="#666" font-size="10">∨</text>
+  <circle cx="824" cy="576" r="14" fill="#da7b56"/>
+  <text x="824" y="581" text-anchor="middle" fill="white" font-size="14" font-weight="600">↑</text>
 
 </svg>
