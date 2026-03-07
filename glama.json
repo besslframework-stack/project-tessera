@@ -1,10 +1,6 @@
 {
-  "name": "project-tessera",
-  "display_name": "Project Tessera",
-  "description": "Local workspace memory for Claude Desktop. Indexes documents into a vector store with hybrid search, cross-session memory, auto-learn, and knowledge graph.",
-  "license": "AGPL-3.0",
-  "repository": "https://github.com/besslframework-stack/project-tessera",
-  "authors": ["besslframework-stack"],
-  "tags": ["memory", "search", "rag", "knowledge-graph", "claude-desktop", "local"],
-  "runtime": "python"
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": [
+    "besslframework-stack"
+  ]
 }
