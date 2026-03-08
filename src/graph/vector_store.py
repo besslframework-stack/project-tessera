@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -9,7 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import lancedb
 
-from src.config import settings
+from src.config import settings, workspace
 from src.embedding import get_embed_model
 
 if TYPE_CHECKING:
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _TABLE_NAME = "ontology_chunks"
-_MAX_NODE_CHARS = 800
 
 # Metadata keys to exclude from embedding text
 _EXCLUDE_KEYS = [
@@ -42,14 +42,19 @@ class OntologyVectorStore:
         """Split documents into chunks, embed, and store in LanceDB."""
         from llama_index.core.node_parser import SentenceSplitter
 
+        ing = workspace.ingestion
         # Split into nodes
-        splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=100)
+        splitter = SentenceSplitter(
+            chunk_size=ing.chunk_size,
+            chunk_overlap=ing.chunk_overlap,
+        )
         nodes = splitter.get_nodes_from_documents(documents, show_progress=True)
 
         # Truncate + exclude metadata
+        max_chars = ing.max_node_chars
         for node in nodes:
-            if len(node.text) > _MAX_NODE_CHARS:
-                node.text = node.text[:_MAX_NODE_CHARS]
+            if len(node.text) > max_chars:
+                node.text = node.text[:max_chars]
             node.excluded_embed_metadata_keys = _EXCLUDE_KEYS
             node.excluded_llm_metadata_keys = _EXCLUDE_KEYS
 
@@ -62,16 +67,25 @@ class OntologyVectorStore:
         texts = [node.text for node in nodes]
         embeddings = list(self._embed_model.embed(texts))
 
-        # Build records for LanceDB
+        # Build records for LanceDB with content hash for dedup
         records = []
+        seen_hashes: set[str] = set()
         for node, embedding in zip(nodes, embeddings):
+            content_hash = hashlib.sha256(node.text.encode("utf-8")).hexdigest()[:16]
+            if content_hash in seen_hashes:
+                continue  # Skip duplicate within same batch
+            seen_hashes.add(content_hash)
             records.append({
                 "id": node.node_id,
                 "doc_id": node.ref_doc_id or "",
                 "vector": np.array(embedding, dtype=np.float32),
                 "text": node.text,
                 "metadata": node.metadata,
+                "content_hash": content_hash,
             })
+
+        if not records:
+            return
 
         # Upsert into LanceDB
         if _TABLE_NAME in self._db.table_names():

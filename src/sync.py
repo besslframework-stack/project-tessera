@@ -5,6 +5,7 @@ from __future__ import annotations
 import fnmatch
 import logging
 import sqlite3
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,71 +39,97 @@ class SyncResult:
 
 
 class FileMetaDB:
-    """SQLite database for tracking file metadata (mtime, size)."""
+    """SQLite database for tracking file metadata (mtime, size).
+
+    Thread-safe: all DB operations are protected by a reentrant lock
+    so the file watcher thread and MCP tool calls don't collide.
+    """
 
     def __init__(self, db_path: Path) -> None:
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(db_path))
+        self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._lock = threading.RLock()
         self._init_tables()
 
     def _init_tables(self) -> None:
-        self._conn.executescript("""
-            CREATE TABLE IF NOT EXISTS file_meta (
-                file_path TEXT PRIMARY KEY,
-                mtime REAL NOT NULL,
-                size INTEGER NOT NULL,
-                last_indexed_at TEXT NOT NULL,
-                chunk_count INTEGER DEFAULT 0
-            );
-            CREATE TABLE IF NOT EXISTS sync_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                new_count INTEGER DEFAULT 0,
-                changed_count INTEGER DEFAULT 0,
-                deleted_count INTEGER DEFAULT 0
-            );
-        """)
-        self._conn.commit()
+        with self._lock:
+            self._conn.executescript("""
+                CREATE TABLE IF NOT EXISTS file_meta (
+                    file_path TEXT PRIMARY KEY,
+                    mtime REAL NOT NULL,
+                    size INTEGER NOT NULL,
+                    last_indexed_at TEXT NOT NULL,
+                    chunk_count INTEGER DEFAULT 0
+                );
+                CREATE TABLE IF NOT EXISTS sync_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    new_count INTEGER DEFAULT 0,
+                    changed_count INTEGER DEFAULT 0,
+                    deleted_count INTEGER DEFAULT 0
+                );
+            """)
+            self._conn.commit()
 
     def get_file_meta(self, file_path: str) -> dict | None:
-        row = self._conn.execute(
-            "SELECT * FROM file_meta WHERE file_path = ?", (file_path,)
-        ).fetchone()
-        return dict(row) if row else None
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM file_meta WHERE file_path = ?", (file_path,)
+            ).fetchone()
+            return dict(row) if row else None
 
     def upsert_file(self, file_path: str, mtime: float, size: int, chunk_count: int = 0) -> None:
-        now = datetime.now(timezone.utc).isoformat()
-        self._conn.execute(
-            """INSERT INTO file_meta (file_path, mtime, size, last_indexed_at, chunk_count)
-               VALUES (?, ?, ?, ?, ?)
-               ON CONFLICT(file_path) DO UPDATE SET
-                   mtime = excluded.mtime,
-                   size = excluded.size,
-                   last_indexed_at = excluded.last_indexed_at,
-                   chunk_count = excluded.chunk_count""",
-            (file_path, mtime, size, now, chunk_count),
-        )
-        self._conn.commit()
+        with self._lock:
+            now = datetime.now(timezone.utc).isoformat()
+            self._conn.execute(
+                """INSERT INTO file_meta (file_path, mtime, size, last_indexed_at, chunk_count)
+                   VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(file_path) DO UPDATE SET
+                       mtime = excluded.mtime,
+                       size = excluded.size,
+                       last_indexed_at = excluded.last_indexed_at,
+                       chunk_count = excluded.chunk_count""",
+                (file_path, mtime, size, now, chunk_count),
+            )
+            self._conn.commit()
 
     def delete_file(self, file_path: str) -> None:
-        self._conn.execute("DELETE FROM file_meta WHERE file_path = ?", (file_path,))
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute("DELETE FROM file_meta WHERE file_path = ?", (file_path,))
+            self._conn.commit()
 
     def all_tracked_paths(self) -> set[str]:
-        rows = self._conn.execute("SELECT file_path FROM file_meta").fetchall()
-        return {r["file_path"] for r in rows}
+        with self._lock:
+            rows = self._conn.execute("SELECT file_path FROM file_meta").fetchall()
+            return {r["file_path"] for r in rows}
 
     def record_sync(self, result: SyncResult) -> None:
-        now = datetime.now(timezone.utc).isoformat()
-        self._conn.execute(
-            "INSERT INTO sync_history (timestamp, new_count, changed_count, deleted_count) VALUES (?, ?, ?, ?)",
-            (now, len(result.new), len(result.changed), len(result.deleted)),
-        )
-        self._conn.commit()
+        with self._lock:
+            now = datetime.now(timezone.utc).isoformat()
+            self._conn.execute(
+                "INSERT INTO sync_history (timestamp, new_count, changed_count, deleted_count) VALUES (?, ?, ?, ?)",
+                (now, len(result.new), len(result.changed), len(result.deleted)),
+            )
+            self._conn.commit()
+
+    def sync_history(self, limit: int = 10) -> list[dict]:
+        """Return recent sync history entries."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM sync_history ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def file_count(self) -> int:
+        """Return number of tracked files."""
+        with self._lock:
+            row = self._conn.execute("SELECT COUNT(*) as cnt FROM file_meta").fetchone()
+            return row["cnt"] if row else 0
 
     def close(self) -> None:
-        self._conn.close()
+        with self._lock:
+            self._conn.close()
 
 
 def _should_ignore(path: Path, ignore_patterns: list[str]) -> bool:
@@ -199,34 +226,55 @@ def run_incremental_sync(
 
     logger.info("Sync diff: %s", diff.summary())
 
+    errors: list[str] = []
+
     # 1. Handle deleted files
     for deleted_path in diff.deleted:
-        if vector_store_delete_fn:
-            count = vector_store_delete_fn(deleted_path)
-            logger.info("Deleted %d vectors for removed file: %s", count, deleted_path)
-        meta_db.delete_file(deleted_path)
+        try:
+            if vector_store_delete_fn:
+                count = vector_store_delete_fn(deleted_path)
+                logger.info("Deleted %d vectors for removed file: %s", count, deleted_path)
+            meta_db.delete_file(deleted_path)
+        except Exception as exc:
+            logger.warning("Failed to process deleted file %s: %s", deleted_path, exc)
+            errors.append(f"delete:{deleted_path}")
 
     # 2. Handle changed files (delete old vectors first)
     for changed_file in diff.changed:
-        if vector_store_delete_fn:
-            vector_store_delete_fn(str(changed_file))
+        try:
+            if vector_store_delete_fn:
+                vector_store_delete_fn(str(changed_file))
+        except Exception as exc:
+            logger.warning("Failed to delete old vectors for %s: %s", changed_file, exc)
+            errors.append(f"pre-delete:{changed_file}")
 
     # 3. Ingest new + changed files
     files_to_ingest = diff.new + diff.changed
     per_file_counts: dict[str, int] = {}
     if files_to_ingest and ingest_fn:
-        result = ingest_fn(files_to_ingest)
-        if isinstance(result, tuple):
-            count, per_file_counts = result
-        else:
-            count = result
-        logger.info("Ingested %d documents from %d files", count, len(files_to_ingest))
+        try:
+            result = ingest_fn(files_to_ingest)
+            if isinstance(result, tuple):
+                count, per_file_counts = result
+            else:
+                count = result
+            logger.info("Ingested %d documents from %d files", count, len(files_to_ingest))
+        except Exception as exc:
+            logger.error("Ingestion failed: %s", exc)
+            errors.append(f"ingest:{exc}")
 
     # 4. Update metadata DB with per-file chunk counts
     for f in files_to_ingest:
-        stat = f.stat()
-        chunk_count = per_file_counts.get(str(f), 0)
-        meta_db.upsert_file(str(f), stat.st_mtime, stat.st_size, chunk_count=chunk_count)
+        try:
+            stat = f.stat()
+            chunk_count = per_file_counts.get(str(f), 0)
+            meta_db.upsert_file(str(f), stat.st_mtime, stat.st_size, chunk_count=chunk_count)
+        except Exception as exc:
+            logger.warning("Failed to update metadata for %s: %s", f, exc)
+            errors.append(f"meta:{f}")
+
+    if errors:
+        logger.warning("Sync completed with %d errors: %s", len(errors), errors)
 
     meta_db.record_sync(diff)
     return diff

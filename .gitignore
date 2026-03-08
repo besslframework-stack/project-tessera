@@ -14,6 +14,9 @@ build/
 data/lancedb/
 data/file_meta.db
 data/file_meta*.db
+data/search_analytics.db
+data/logs/
+data/memories/
 
 # Environment
 .env
@@ -33,9 +36,15 @@ session_logs/
 .files/
 .claude/
 HANDOFF.md
+HANDOFF-*.md
+promotion-posts.md
+conversation-logs/
 
 # User-specific workspace config (use workspace.yaml.example as template)
 workspace.yaml
+
+# Promotion assets
+assets/twitter-*
 
 # iCloud artifacts
 site/

@@ -1,5 +1,6 @@
 # Tessera workspace configuration
 # Copy this to workspace.yaml and adjust paths to your workspace.
+# Or run `tessera init` to generate it interactively.
 
 workspace:
   root: /path/to/your/workspace  # Absolute path to your document root
@@ -8,7 +9,7 @@ workspace:
 # Define which directories to index
 sources:
   - path: projects/my-project
-    type: prd
+    type: prd                    # prd, document, session_log
     project: my_project
   - path: notes
     type: document
@@ -29,6 +30,25 @@ archive:
 models:
   embed_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 
+# Search tuning
+search:
+  max_top_k: 50                  # Upper bound for top_k parameter
+  reranker_weight: 0.7           # Semantic vs keyword (0.0-1.0, higher = more semantic)
+  fetch_multiplier: 6            # Over-fetch factor before reranking
+  result_text_limit: 1500        # Max chars per search result
+  unified_text_limit: 800        # Max chars per unified search result
+
+# Ingestion tuning
+ingestion:
+  chunk_size: 1024               # Text chunk size for indexing
+  chunk_overlap: 100             # Overlap between chunks
+  max_node_chars: 800            # Truncate chunk text to this length
+
+# File watcher (auto-sync in background)
+watcher:
+  poll_interval: 30.0            # Seconds between file system scans
+  debounce: 5.0                  # Wait after change before syncing
+
 sync:
   auto_sync: true
   extensions: [".md", ".csv"]
@@ -38,5 +58,6 @@ sync:
     - "**/node_modules/**"
     - "**/__pycache__/**"
     - "**/data/lancedb/**"
+    - "**/data/logs/**"
     - "**/archive/**"
     - "**/.git/**"

@@ -23,6 +23,7 @@ It indexes your local documents into a vector store and connects to Claude Deskt
 - **Zero external dependencies** — No Ollama, no Docker, no API keys. Just `pip install` and go.
 - **Cross-session memory** — Claude remembers your decisions, preferences, and context between conversations.
 - **Knowledge graph** — Visualize how your documents connect to each other.
+- **Auto-sync** — File watcher detects changes and re-indexes automatically in the background.
 - **100% local** — Everything stays on your machine. Nothing leaves your laptop.
 
 ## How it works
@@ -78,13 +79,21 @@ Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 |------|-------------|
 | **Search** | |
 | `search_documents` | Semantic + keyword hybrid search across all your docs |
+| `unified_search` | Search documents AND memories in one call |
 | `read_file` | Read any file's full content |
 | `list_sources` | See what's indexed |
 | **Memory** | |
 | `remember` | Save knowledge that persists across sessions |
 | `recall` | Search past memories from previous conversations |
 | `learn` | Auto-learn: save and immediately index new knowledge |
+| `list_memories` | Browse saved memories with previews |
+| `forget_memory` | Delete a specific memory |
+| `export_memories` | Batch export all memories as JSON |
+| `import_memories` | Batch import memories from JSON |
+| `memory_tags` | List all unique tags with counts |
+| `search_by_tag` | Filter memories by specific tag |
 | **Knowledge Graph** | |
+| `find_similar` | Find documents similar to a given file |
 | `knowledge_graph` | Build a Mermaid diagram of document relationships |
 | `explore_connections` | Show connections around a specific topic |
 | **Indexing** | |
@@ -96,6 +105,10 @@ Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 | `audit_prd` | Check PRD quality (section coverage, versioning) |
 | `organize_files` | Move, rename, archive files |
 | `suggest_cleanup` | Detect backup files, empty dirs, misplaced files |
+| `tessera_status` | Server health: tracked files, sync history, cache stats |
+| `health_check` | Comprehensive workspace diagnostics with recommendations |
+| `search_analytics` | Search usage patterns, top queries, response times |
+| `check_document_freshness` | Detect stale documents older than N days |
 
 ## CLI commands
 
@@ -106,6 +119,8 @@ tessera ingest --path ./docs    # Index a specific directory
 tessera sync                    # Re-index only changed files
 tessera status                  # Show all projects
 tessera status my_project       # Show one project's status
+tessera check                   # Check workspace health
+tessera version                 # Show version
 ```
 
 ## Architecture
@@ -145,6 +160,24 @@ projects:
 ```
 
 Edit it anytime to add/remove sources. Run `tessera sync` after changes.
+
+### Tuning
+
+All parameters are configurable in `workspace.yaml`:
+
+```yaml
+search:
+  reranker_weight: 0.7       # Semantic vs keyword balance (1.0 = pure semantic)
+  max_top_k: 50              # Max results per search
+
+ingestion:
+  chunk_size: 1024           # Text chunk size for indexing
+  chunk_overlap: 100         # Overlap between chunks
+
+watcher:
+  poll_interval: 30.0        # Seconds between file system scans
+  debounce: 5.0              # Wait before syncing after changes
+```
 
 ## License
 

@@ -36,7 +36,11 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     return [e.tolist() for e in model.embed(texts)]
 
 
+@lru_cache(maxsize=128)
 def embed_query(text: str) -> list[float]:
-    """Embed a single query text. Returns float vector."""
+    """Embed a single query text. Returns float vector.
+
+    Cached: repeated queries skip the embedding model entirely.
+    """
     model = get_embed_model()
     return list(model.embed([text]))[0].tolist()

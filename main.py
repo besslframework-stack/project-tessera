@@ -5,6 +5,8 @@ Usage:
     tessera ingest [--path PATH]          Ingest documents into the vector store
     tessera sync                          Incremental sync (new/changed/deleted files only)
     tessera status [PROJECT_ID]           Show project status
+    tessera version                       Show version
+    tessera check                         Check workspace health
 """
 
 from __future__ import annotations
@@ -107,13 +109,29 @@ def cmd_init(args: argparse.Namespace) -> None:
         "models": {
             "embed_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         },
+        "search": {
+            "max_top_k": 50,
+            "reranker_weight": 0.7,
+            "fetch_multiplier": 6,
+            "result_text_limit": 1500,
+            "unified_text_limit": 800,
+        },
+        "ingestion": {
+            "chunk_size": 1024,
+            "chunk_overlap": 100,
+            "max_node_chars": 800,
+        },
+        "watcher": {
+            "poll_interval": 30.0,
+            "debounce": 5.0,
+        },
         "sync": {
             "auto_sync": True,
             "extensions": [".md", ".csv"],
             "ignore": [
                 "**/.venv/**", "**/.next/**", "**/node_modules/**",
                 "**/__pycache__/**", "**/data/lancedb/**",
-                "**/archive/**", "**/.git/**",
+                "**/data/logs/**", "**/archive/**", "**/.git/**",
             ],
         },
     }
@@ -231,6 +249,86 @@ def cmd_status(args: argparse.Namespace) -> None:
         print(get_all_projects_summary())
 
 
+def cmd_version(args: argparse.Namespace) -> None:
+    """Show Tessera version."""
+    try:
+        from importlib.metadata import version
+        v = version("project-tessera")
+    except Exception:
+        import tomllib
+        with open(Path(__file__).parent / "pyproject.toml", "rb") as f:
+            v = tomllib.load(f)["project"]["version"]
+    print(f"Tessera v{v}")
+
+
+def cmd_check(args: argparse.Namespace) -> None:
+    """Check workspace health: config, dependencies, index."""
+    project_root = Path(__file__).parent
+    yaml_path = project_root / "workspace.yaml"
+    issues = []
+    ok = []
+
+    # 1. workspace.yaml
+    if yaml_path.exists():
+        ok.append("workspace.yaml exists")
+        try:
+            from src.config import load_workspace_config
+            ws = load_workspace_config()
+            ok.append(f"Config valid ({len(ws.sources)} sources, {len(ws.projects)} projects)")
+        except Exception as exc:
+            issues.append(f"Config error: {exc}")
+    else:
+        issues.append("workspace.yaml not found — run `tessera init`")
+
+    # 2. Dependencies
+    deps = {"fastembed": "Embedding model", "lancedb": "Vector store", "mcp": "MCP server"}
+    for mod, desc in deps.items():
+        try:
+            __import__(mod)
+            ok.append(f"{desc} ({mod}) installed")
+        except ImportError:
+            issues.append(f"{desc} ({mod}) not installed — run `pip install -e .`")
+
+    # 3. Data directory
+    data_dir = project_root / "data"
+    lancedb_dir = data_dir / "lancedb"
+    meta_db = data_dir / "file_meta.db"
+
+    if lancedb_dir.exists():
+        ok.append("LanceDB data directory exists")
+    else:
+        issues.append("No index found — run `tessera ingest`")
+
+    if meta_db.exists():
+        try:
+            from src.sync import FileMetaDB
+            db = FileMetaDB(meta_db)
+            count = db.file_count()
+            ok.append(f"Metadata DB: {count} tracked files")
+            db.close()
+        except Exception as exc:
+            issues.append(f"Metadata DB error: {exc}")
+
+    # 4. Memory directory
+    mem_dir = data_dir / "memories"
+    if mem_dir.exists():
+        mem_count = len(list(mem_dir.glob("*.md")))
+        ok.append(f"Memories: {mem_count} saved")
+
+    # Output
+    print("Tessera Health Check")
+    print("=" * 40)
+    for item in ok:
+        print(f"  [OK] {item}")
+    for item in issues:
+        print(f"  [!!] {item}")
+    print()
+    if issues:
+        print(f"{len(issues)} issue(s) found.")
+    else:
+        print("All checks passed.")
+
+
 def cli() -> None:
     """Main CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -260,6 +358,14 @@ def cli() -> None:
         "project", nargs="?", default=None, help="Project ID (default: all projects)"
     )
     status_parser.set_defaults(func=cmd_status)
+
+    # version
+    version_parser = subparsers.add_parser("version", help="Show version")
+    version_parser.set_defaults(func=cmd_version)
+
+    # check
+    check_parser = subparsers.add_parser("check", help="Check workspace health")
+    check_parser.set_defaults(func=cmd_check)
 
     args = parser.parse_args()
     args.func(args)

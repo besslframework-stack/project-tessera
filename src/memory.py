@@ -189,3 +189,219 @@ def learn_and_index(content: str, tags: list[str] | None = None, source: str = "
         "file_path": str(file_path),
         "indexed": indexed > 0,
     }
+
+
+def export_memories(format: str = "json") -> str:
+    """Export all saved memories as a JSON string.
+
+    Reads every .md file from the memories directory, parses frontmatter
+    (date, source, tags) and body, and returns a serialised list.
+
+    Args:
+        format: Export format. Only ``"json"`` is supported.
+
+    Returns:
+        A JSON string containing a list of memory dicts, each with keys
+        ``content``, ``date``, ``source``, ``tags``, and ``filename``.
+
+    Raises:
+        ValueError: If an unsupported format is requested.
+    """
+    if format != "json":
+        raise ValueError(f"Unsupported export format: {format!r}. Only 'json' is supported.")
+
+    mem_dir = _memory_dir()
+    memories: list[dict] = []
+
+    for md_file in sorted(mem_dir.glob("*.md")):
+        text = md_file.read_text(encoding="utf-8")
+
+        date_str = ""
+        source = ""
+        tags = ""
+        body = text
+
+        if text.startswith("---"):
+            parts = text.split("---", 2)
+            if len(parts) >= 3:
+                frontmatter = parts[1]
+                body = parts[2].strip()
+                for line in frontmatter.strip().splitlines():
+                    if line.startswith("date:"):
+                        date_str = line.split(":", 1)[1].strip()
+                    elif line.startswith("source:"):
+                        source = line.split(":", 1)[1].strip()
+                    elif line.startswith("tags:"):
+                        tags = line.split(":", 1)[1].strip()
+
+        memories.append({
+            "content": body,
+            "date": date_str,
+            "source": source,
+            "tags": tags,
+            "filename": md_file.name,
+        })
+
+    return json.dumps(memories, ensure_ascii=False, indent=2)
+
+
+def import_memories(data: str, format: str = "json") -> dict:
+    """Batch-import memories from a JSON string.
+
+    Each entry in the JSON list must contain at least a ``content`` key.
+    Optional keys: ``tags`` (list of strings) and ``source`` (string).
+
+    Entries with empty or missing ``content`` are silently skipped.
+    Errors on individual entries are collected without aborting the batch.
+
+    Args:
+        data: A JSON string representing a list of memory dicts.
+        format: Import format. Only ``"json"`` is supported.
+
+    Returns:
+        A dict with ``imported`` (int), ``indexed`` (int), and
+        ``errors`` (list of error description strings).
+
+    Raises:
+        ValueError: If an unsupported format is requested or *data*
+            cannot be parsed as a JSON list.
+    """
+    if format != "json":
+        raise ValueError(f"Unsupported import format: {format!r}. Only 'json' is supported.")
+
+    try:
+        entries = json.loads(data)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON data: {exc}") from exc
+
+    if not isinstance(entries, list):
+        raise ValueError("Expected a JSON list of memory objects.")
+
+    imported = 0
+    indexed = 0
+    errors: list[str] = []
+
+    for idx, entry in enumerate(entries):
+        try:
+            if not isinstance(entry, dict):
+                errors.append(f"Entry {idx}: not a dict, skipped.")
+                continue
+
+            content = (entry.get("content") or "").strip()
+            if not content:
+                continue
+
+            tags = entry.get("tags")
+            if isinstance(tags, str):
+                tags = [t.strip() for t in tags.split(",") if t.strip()]
+            source = entry.get("source", "import")
+
+            file_path = save_memory(content, tags=tags, source=source)
+            imported += 1
+
+            try:
+                indexed += index_memory(file_path)
+            except Exception as index_exc:
+                errors.append(f"Entry {idx}: saved but indexing failed — {index_exc}")
+        except Exception as exc:
+            errors.append(f"Entry {idx}: {exc}")
+
+    return {"imported": imported, "indexed": indexed, "errors": errors}
+
+
+def _parse_tags_bracket(raw: str) -> list[str]:
+    """Parse a bracket-style tags string like ``[tag1, tag2]`` into a list.
+
+    Args:
+        raw: The raw tags value from frontmatter (may include brackets).
+
+    Returns:
+        List of stripped, non-empty tag strings.
+    """
+    stripped = raw.strip()
+    if stripped.startswith("[") and stripped.endswith("]"):
+        stripped = stripped[1:-1]
+    return [t.strip() for t in stripped.split(",") if t.strip()]
+
+
+def list_memory_tags() -> dict[str, int]:
+    """List all unique tags across saved memories with their counts.
+
+    Returns:
+        Dict mapping tag name to count of memories with that tag.
+        Sorted by count descending.
+    """
+    from collections import Counter
+
+    mem_dir = _memory_dir()
+    counter: Counter[str] = Counter()
+
+    for md_file in mem_dir.glob("*.md"):
+        text = md_file.read_text(encoding="utf-8")
+
+        if not text.startswith("---"):
+            continue
+
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            continue
+
+        frontmatter = parts[1]
+        for line in frontmatter.strip().splitlines():
+            if line.startswith("tags:"):
+                raw_tags = line.split(":", 1)[1].strip()
+                tags = _parse_tags_bracket(raw_tags)
+                counter.update(tags)
+                break
+
+    return dict(counter.most_common())
+
+
+def search_memories_by_tag(tag: str) -> list[dict]:
+    """Find all memories that have a specific tag.
+
+    Args:
+        tag: Tag to filter by (case-insensitive).
+
+    Returns:
+        List of dicts with 'filename', 'content', 'date', 'tags', 'source'.
+        Sorted by date descending (newest first).
+    """
+    mem_dir = _memory_dir()
+    results: list[dict] = []
+
+    for md_file in mem_dir.glob("*.md"):
+        text = md_file.read_text(encoding="utf-8")
+
+        date_str = ""
+        source = ""
+        tags_raw = ""
+        body = text
+
+        if text.startswith("---"):
+            parts = text.split("---", 2)
+            if len(parts) >= 3:
+                frontmatter = parts[1]
+                body = parts[2].strip()
+                for line in frontmatter.strip().splitlines():
+                    if line.startswith("date:"):
+                        date_str = line.split(":", 1)[1].strip()
+                    elif line.startswith("source:"):
+                        source = line.split(":", 1)[1].strip()
+                    elif line.startswith("tags:"):
+                        tags_raw = line.split(":", 1)[1].strip()
+
+        parsed_tags = _parse_tags_bracket(tags_raw)
+        if not any(t.lower() == tag.lower() for t in parsed_tags):
+            continue
+
+        results.append({
+            "filename": md_file.stem,
+            "content": body,
+            "date": date_str,
+            "tags": tags_raw,
+            "source": source,
+        })
+
+    results.sort(key=lambda m: m["date"], reverse=True)
+    return results

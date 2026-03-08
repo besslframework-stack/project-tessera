@@ -75,6 +75,42 @@ class ProjectConfig:
     root: str
 
 
+@dataclass(frozen=True)
+class SearchConfig:
+    max_top_k: int = 50
+    reranker_weight: float = 0.7
+    fetch_multiplier: int = 6
+    result_text_limit: int = 1500
+    unified_text_limit: int = 800
+
+
+@dataclass(frozen=True)
+class IngestionConfig:
+    chunk_size: int = 1024
+    chunk_overlap: int = 100
+    max_node_chars: int = 800
+    max_meta_value_len: int = 200
+
+
+@dataclass(frozen=True)
+class WatcherConfig:
+    poll_interval: float = 30.0
+    debounce: float = 5.0
+
+
+@dataclass(frozen=True)
+class KnowledgeGraphConfig:
+    default_max_nodes: int = 30
+    max_max_nodes: int = 100
+    max_topics: int = 10
+    min_word_length: int = 4
+
+
+@dataclass(frozen=True)
+class LimitsConfig:
+    max_file_read: int = 50000
+
+
 @dataclass
 class WorkspaceConfig:
     root: Path
@@ -88,6 +124,11 @@ class WorkspaceConfig:
     lancedb_path: Path
     meta_db_path: Path
     embed_model: str
+    search: SearchConfig = SearchConfig()
+    ingestion: IngestionConfig = IngestionConfig()
+    watcher: WatcherConfig = WatcherConfig()
+    knowledge_graph: KnowledgeGraphConfig = KnowledgeGraphConfig()
+    limits: LimitsConfig = LimitsConfig()
 
     def resolve_source_path(self, source: SourceConfig) -> Path:
         return self.root / source.path
@@ -100,6 +141,24 @@ class WorkspaceConfig:
 
     def all_source_paths(self) -> list[Path]:
         return [self.resolve_source_path(s) for s in self.sources]
+
+
+class ConfigValidationError(ValueError):
+    """Raised when workspace.yaml has invalid values."""
+
+
+def _validate_positive(name: str, value, min_val=0) -> None:
+    if not isinstance(value, (int, float)) or value <= min_val:
+        raise ConfigValidationError(
+            f"Invalid config: {name} must be > {min_val}, got {value}"
+        )
+
+
+def _validate_range(name: str, value, lo, hi) -> None:
+    if not isinstance(value, (int, float)) or value < lo or value > hi:
+        raise ConfigValidationError(
+            f"Invalid config: {name} must be between {lo} and {hi}, got {value}"
+        )
 
 
 def load_workspace_config() -> WorkspaceConfig:
@@ -149,6 +208,62 @@ def load_workspace_config() -> WorkspaceConfig:
     extensions = sync_cfg.get("extensions", [".md", ".csv"])
     ignore_patterns = sync_cfg.get("ignore", [])
 
+    # Search config
+    search_cfg = raw.get("search", {})
+    search_config = SearchConfig(
+        max_top_k=search_cfg.get("max_top_k", 50),
+        reranker_weight=search_cfg.get("reranker_weight", 0.7),
+        fetch_multiplier=search_cfg.get("fetch_multiplier", 6),
+        result_text_limit=search_cfg.get("result_text_limit", 1500),
+        unified_text_limit=search_cfg.get("unified_text_limit", 800),
+    )
+
+    # Ingestion config
+    ingest_cfg = raw.get("ingestion", {})
+    ingestion_config = IngestionConfig(
+        chunk_size=ingest_cfg.get("chunk_size", 1024),
+        chunk_overlap=ingest_cfg.get("chunk_overlap", 100),
+        max_node_chars=ingest_cfg.get("max_node_chars", 800),
+        max_meta_value_len=ingest_cfg.get("max_meta_value_len", 200),
+    )
+
+    # Watcher config
+    watcher_cfg = raw.get("watcher", {})
+    watcher_config = WatcherConfig(
+        poll_interval=watcher_cfg.get("poll_interval", 30.0),
+        debounce=watcher_cfg.get("debounce", 5.0),
+    )
+
+    # Knowledge graph config
+    kg_cfg = raw.get("knowledge_graph", {})
+    kg_config = KnowledgeGraphConfig(
+        default_max_nodes=kg_cfg.get("default_max_nodes", 30),
+        max_max_nodes=kg_cfg.get("max_max_nodes", 100),
+        max_topics=kg_cfg.get("max_topics", 10),
+        min_word_length=kg_cfg.get("min_word_length", 4),
+    )
+
+    # Limits config
+    limits_cfg = raw.get("limits", {})
+    limits_config = LimitsConfig(
+        max_file_read=limits_cfg.get("max_file_read", 50000),
+    )
+
+    # Validate configs
+    _validate_positive("search.max_top_k", search_config.max_top_k)
+    _validate_range("search.reranker_weight", search_config.reranker_weight, 0.0, 1.0)
+    _validate_positive("search.fetch_multiplier", search_config.fetch_multiplier)
+    _validate_positive("ingestion.chunk_size", ingestion_config.chunk_size)
+    _validate_positive("ingestion.chunk_overlap", ingestion_config.chunk_overlap, min_val=-1)
+    if ingestion_config.chunk_overlap >= ingestion_config.chunk_size:
+        raise ConfigValidationError(
+            f"ingestion.chunk_overlap ({ingestion_config.chunk_overlap}) "
+            f"must be less than chunk_size ({ingestion_config.chunk_size})"
+        )
+    _validate_positive("watcher.poll_interval", watcher_config.poll_interval)
+    _validate_positive("watcher.debounce", watcher_config.debounce, min_val=-1)
+    _validate_positive("limits.max_file_read", limits_config.max_file_read)
+
     return WorkspaceConfig(
         root=root,
         name=name,
@@ -161,6 +276,11 @@ def load_workspace_config() -> WorkspaceConfig:
         lancedb_path=project_root / "data" / "lancedb",
         meta_db_path=project_root / "data" / "file_meta.db",
         embed_model=embed_model,
+        search=search_config,
+        ingestion=ingestion_config,
+        watcher=watcher_config,
+        knowledge_graph=kg_config,
+        limits=limits_config,
     )
 
 
