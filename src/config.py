@@ -110,6 +110,13 @@ class KnowledgeGraphConfig:
 
 
 @dataclass(frozen=True)
+class AutoLearnConfig:
+    enabled: bool = True
+    min_confidence: float = 0.75
+    min_interactions_for_summary: int = 3
+
+
+@dataclass(frozen=True)
 class LimitsConfig:
     max_file_read: int = 50000
 
@@ -132,6 +139,7 @@ class WorkspaceConfig:
     watcher: WatcherConfig = WatcherConfig()
     knowledge_graph: KnowledgeGraphConfig = KnowledgeGraphConfig()
     limits: LimitsConfig = LimitsConfig()
+    auto_learn: AutoLearnConfig = AutoLearnConfig()
 
     def resolve_source_path(self, source: SourceConfig) -> Path:
         return self.root / source.path
@@ -295,6 +303,14 @@ def load_workspace_config() -> WorkspaceConfig:
         max_file_read=limits_cfg.get("max_file_read", 50000),
     )
 
+    # Auto-learn config
+    al_cfg = raw.get("auto_learn", {})
+    auto_learn_config = AutoLearnConfig(
+        enabled=al_cfg.get("enabled", True),
+        min_confidence=al_cfg.get("min_confidence", 0.75),
+        min_interactions_for_summary=al_cfg.get("min_interactions_for_summary", 3),
+    )
+
     # Validate configs
     _validate_positive("search.max_top_k", search_config.max_top_k)
     _validate_range("search.reranker_weight", search_config.reranker_weight, 0.0, 1.0)
@@ -327,6 +343,7 @@ def load_workspace_config() -> WorkspaceConfig:
         watcher=watcher_config,
         knowledge_graph=kg_config,
         limits=limits_config,
+        auto_learn=auto_learn_config,
     )
 
 

@@ -1034,6 +1034,97 @@ def digest_conversation(summary: str = "") -> str:
     return f"{header}\n" + "\n".join(results)
 
 
+def toggle_auto_learn(enabled: bool | None = None) -> str:
+    """Toggle or check auto-learning status.
+
+    If enabled is None, returns current status.
+    Otherwise, sets auto-learning on or off.
+    """
+    from src.config import workspace
+
+    if enabled is None:
+        status = "ON" if workspace.auto_learn.enabled else "OFF"
+        return (
+            f"Auto-learn is {status}\n"
+            f"Min confidence: {workspace.auto_learn.min_confidence}\n"
+            f"Min interactions for summary: {workspace.auto_learn.min_interactions_for_summary}"
+        )
+
+    # WorkspaceConfig is not frozen, so we can replace the auto_learn field
+    from src.config import AutoLearnConfig
+
+    workspace.auto_learn = AutoLearnConfig(
+        enabled=enabled,
+        min_confidence=workspace.auto_learn.min_confidence,
+        min_interactions_for_summary=workspace.auto_learn.min_interactions_for_summary,
+    )
+    status = "ON" if enabled else "OFF"
+    _log_interaction("toggle_auto_learn", f"enabled={enabled}", status)
+    return f"Auto-learn is now {status}."
+
+
+def review_learned(limit: int = 20) -> str:
+    """Review recently auto-learned memories.
+
+    Shows memories with source containing 'auto' — these are the ones
+    created by auto-extract, digest, or session summary.
+    """
+    from src.memory import _memory_dir
+
+    mem_dir = _memory_dir()
+    auto_memories: list[dict] = []
+
+    for md_file in sorted(mem_dir.glob("*.md"), reverse=True):
+        text = md_file.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            continue
+
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            continue
+
+        frontmatter = parts[1]
+        body = parts[2].strip()
+        source = ""
+        category = ""
+        date_str = ""
+
+        for line in frontmatter.strip().splitlines():
+            if line.startswith("source:"):
+                source = line.split(":", 1)[1].strip()
+            elif line.startswith("category:"):
+                category = line.split(":", 1)[1].strip()
+            elif line.startswith("date:"):
+                date_str = line.split(":", 1)[1].strip()
+
+        if "auto" in source or "session" in source or "digest" in source:
+            auto_memories.append({
+                "filename": md_file.stem,
+                "content": body,
+                "source": source,
+                "category": category,
+                "date": date_str,
+            })
+
+        if len(auto_memories) >= limit:
+            break
+
+    if not auto_memories:
+        return "No auto-learned memories found yet."
+
+    lines = [f"# Auto-learned memories ({len(auto_memories)})", ""]
+    for m in auto_memories:
+        date = m["date"][:10] if m["date"] else ""
+        cat = f"[{m['category']}]" if m["category"] else ""
+        lines.append(f"- **{m['filename']}** {cat} ({date})")
+        preview = m["content"][:120].replace("\n", " ")
+        if len(m["content"]) > 120:
+            preview += "..."
+        lines.append(f"  {preview}")
+        lines.append(f"  source: {m['source']}")
+    return "\n".join(lines)
+
+
 # --- Interaction Log Tools ---
 
 

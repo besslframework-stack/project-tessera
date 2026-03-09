@@ -577,6 +577,29 @@ def search_by_category(category: str) -> str:
     return core.search_by_category(category)
 
 
+@mcp.tool(
+    description=(
+        "Toggle or check auto-learning status. "
+        "When enabled, Tessera automatically extracts decisions, preferences, "
+        "and facts from conversations. Call without arguments to check status."
+    )
+)
+def toggle_auto_learn(enabled: bool | None = None) -> str:
+    """Toggle or check auto-learning on/off."""
+    return core.toggle_auto_learn(enabled)
+
+
+@mcp.tool(
+    description=(
+        "Review recently auto-learned memories. "
+        "Shows memories created by auto-extract, digest, or session summary."
+    )
+)
+def review_learned(limit: int = 20) -> str:
+    """Review auto-learned memories."""
+    return core.review_learned(limit)
+
+
 # --- MCP Resources ---
 
 

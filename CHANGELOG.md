@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.7.0] - 2026-03-10
+
+### Sponge Phase Complete — Tessera now learns automatically
+
+Tessera no longer requires manual "remember this" commands. It auto-detects decisions,
+preferences, and facts from every conversation and saves them with deduplication.
+
+### Added
+- **`toggle_auto_learn` tool** — turn auto-learning on/off or check status
+- **`review_learned` tool** — review recently auto-learned memories (auto-digest, session summary)
+- **`AutoLearnConfig` dataclass** — `enabled`, `min_confidence`, `min_interactions_for_summary` settings in workspace.yaml
+- **workspace.yaml `auto_learn` section** — configure auto-learning behavior
+- **`tests/test_auto_learn.py`** — 9 tests for toggle, review, and config
+- Total tools: 39, total tests: 267
+
+### Sponge Phase summary (v0.6.4 → v0.7.0)
+| Version | Feature | Tests added |
+|---------|---------|-------------|
+| v0.6.4 | Interaction Log + Session Boundary | 9 |
+| v0.6.5 | Auto-Extract engine + Core extraction | 0 |
+| v0.6.6 | Memory Dedup + Auto-Extract tests | 36 |
+| v0.6.7 | Memory Categories | 17 |
+| v0.6.9 | Session Summary | 12 |
+| v0.7.0 | Sponge Complete (toggle + review) | 9 |
+
 ## [0.6.9] - 2026-03-10
 
 ### Added

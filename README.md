@@ -87,7 +87,7 @@ Ask Claude about your documents. It searches automatically.
 | Word | `.docx` | `pip install project-tessera[docx]` |
 | PDF | `.pdf` | `pip install project-tessera[pdf]` |
 
-## Tools (37)
+## Tools (39)
 
 ### Search
 | Tool | What it does |
@@ -125,6 +125,8 @@ Ask Claude about your documents. It searches automatically.
 | Tool | What it does |
 |------|-------------|
 | `digest_conversation` | Extract and save knowledge from the current session |
+| `toggle_auto_learn` | Turn auto-learning on/off or check status |
+| `review_learned` | Review recently auto-learned memories |
 | `session_interactions` | View tool calls from current/past sessions |
 | `recent_sessions` | Session history with interaction counts |
 
