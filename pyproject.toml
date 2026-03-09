@@ -57,6 +57,12 @@ tessera = "src.cli:cli"
 where = ["."]
 include = ["src*"]
 
+[tool.setuptools.package-data]
+"src" = ["*.py"]
+
+[tool.setuptools]
+py-modules = ["mcp_server", "main"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
