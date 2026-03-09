@@ -10,84 +10,63 @@ You have hundreds of documents — PRDs, meeting notes, decision logs, session r
 
 It indexes your local documents into a vector store and connects to Claude Desktop via MCP. When you ask a question, Claude automatically searches your files and answers with context — and remembers across sessions.
 
-<p align="center">
-  <img src="assets/demo.svg" alt="Tessera demo — search documents, get answers with citations, remember across sessions" width="720"/>
-</p>
-
-<a href="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" alt="Project Tessera MCP server" />
-</a>
-
 ### Why Tessera?
 
-- **Zero external dependencies** — No Ollama, no Docker, no API keys. Just `pip install` and go.
-- **Cross-session memory** — Claude remembers your decisions, preferences, and context between conversations.
-- **Knowledge graph** — Visualize how your documents connect to each other.
-- **Auto-sync** — File watcher detects changes and re-indexes automatically in the background.
-- **100% local** — Everything stays on your machine. Nothing leaves your laptop.
-
-## How it works
-
-1. **You point Tessera at your document folders** (Markdown, CSV, session logs)
-2. **Tessera indexes them locally** using fastembed (ONNX) + LanceDB
-3. **Claude Desktop searches them automatically** via MCP tools
-4. **Only changed files are re-indexed** on each sync
+- **No servers to run** — No Ollama, no Docker, no API keys. Everything runs locally.
+- **Cross-session memory** — Claude remembers your decisions and preferences between conversations.
+- **Auto-sync** — File watcher detects changes and re-indexes in the background.
+- **100% local** — Nothing leaves your machine.
 
 ## Get started
 
-### Install + Setup
+### 1. Install
 
 ```bash
-git clone https://github.com/besslframework-stack/project-tessera.git
-cd project-tessera
-
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
-
-tessera init
+pip install project-tessera
 ```
 
-`tessera init` walks you through everything:
-- Picks your document root directory
-- Scans for folders with documents
-- Lets you choose which to index
-- Downloads the embedding model (~220MB, once)
-- Generates `workspace.yaml` automatically
-- Shows you the Claude Desktop config snippet
-- Offers to index immediately
+### 2. Setup
 
-### Connect to Claude Desktop
-
-`tessera init` prints the config snippet. Add it to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "tessera": {
-      "command": "/path/to/project-tessera/.venv/bin/python",
-      "args": ["/path/to/project-tessera/mcp_server.py"],
-      "cwd": "/path/to/project-tessera"
-    }
-  }
-}
+```bash
+tessera setup
 ```
 
-Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
+This does everything for you:
+- Creates a workspace config
+- Downloads the embedding model (~220MB, first time only)
+- Configures Claude Desktop automatically
+
+### 3. Restart Claude Desktop
+
+That's it. Ask Claude about your documents and it will search them automatically.
+
+## Supported file types
+
+| Type | Extension | Install |
+|------|-----------|---------|
+| Markdown | `.md` | included |
+| CSV | `.csv` | included |
+| Excel | `.xlsx` | `pip install project-tessera[xlsx]` |
+| Word | `.docx` | `pip install project-tessera[docx]` |
+| PDF | `.pdf` | `pip install project-tessera[pdf]` |
 
 ## What Claude can do with Tessera
+
+31 tools across search, memory, knowledge graph, and workspace management.
 
 | Tool | What it does |
 |------|-------------|
 | **Search** | |
 | `search_documents` | Semantic + keyword hybrid search across all your docs |
 | `unified_search` | Search documents AND memories in one call |
+| `view_file_full` | Full file view (CSV as table, XLSX per sheet, etc.) |
 | `read_file` | Read any file's full content |
 | `list_sources` | See what's indexed |
 | **Memory** | |
 | `remember` | Save knowledge that persists across sessions |
 | `recall` | Search past memories from previous conversations |
 | `learn` | Auto-learn: save and immediately index new knowledge |
-| `list_memories` | Browse saved memories with previews |
+| `list_memories` | Browse saved memories |
 | `forget_memory` | Delete a specific memory |
 | `export_memories` | Batch export all memories as JSON |
 | `import_memories` | Batch import memories from JSON |
@@ -98,7 +77,7 @@ Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 | `knowledge_graph` | Build a Mermaid diagram of document relationships |
 | `explore_connections` | Show connections around a specific topic |
 | **Indexing** | |
-| `ingest_documents` | Index your documents (first-time setup or full rebuild) |
+| `ingest_documents` | Index your documents (first-time or full rebuild) |
 | `sync_documents` | Incremental sync — only re-index changed files |
 | **Workspace** | |
 | `project_status` | See what's changed recently in each project |
@@ -107,29 +86,29 @@ Restart Claude Desktop. You'll see "tessera" in the MCP integrations.
 | `organize_files` | Move, rename, archive files |
 | `suggest_cleanup` | Detect backup files, empty dirs, misplaced files |
 | `tessera_status` | Server health: tracked files, sync history, cache stats |
-| `health_check` | Comprehensive workspace diagnostics with recommendations |
+| `health_check` | Comprehensive workspace diagnostics |
 | `search_analytics` | Search usage patterns, top queries, response times |
 | `check_document_freshness` | Detect stale documents older than N days |
 
 ## CLI commands
 
 ```bash
-tessera init                    # Interactive setup
+tessera setup                   # One-command setup (recommended)
+tessera init                    # Interactive setup with more options
 tessera ingest                  # Index all configured sources
-tessera ingest --path ./docs    # Index a specific directory
 tessera sync                    # Re-index only changed files
-tessera status                  # Show all projects
-tessera status my_project       # Show one project's status
 tessera check                   # Check workspace health
+tessera status                  # Show project status
+tessera install-mcp             # Configure Claude Desktop
 tessera version                 # Show version
 ```
 
-## Architecture
+## How it works
 
 ```
-Your documents (Markdown, CSV)
+Your documents (Markdown, CSV, XLSX, DOCX, PDF)
         |
-   Parse & chunk (~800 chars)
+   Parse & chunk
         |
    Embed locally (fastembed/ONNX)
         |
@@ -140,9 +119,29 @@ Your documents (Markdown, CSV)
    Claude Desktop searches automatically
 ```
 
+## Advanced: Manual Claude Desktop config
+
+If `tessera setup` didn't configure Claude Desktop automatically, add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "tessera": {
+      "command": "python",
+      "args": ["-m", "mcp_server"],
+      "cwd": "/path/to/your/workspace"
+    }
+  }
+}
+```
+
+Config file location:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ## Configuration
 
-After `tessera init`, your `workspace.yaml` looks like:
+`tessera setup` creates a `workspace.yaml` with sensible defaults. You can edit it:
 
 ```yaml
 workspace:
@@ -150,34 +149,24 @@ workspace:
   name: my-workspace
 
 sources:
-  - path: project-alpha
+  - path: .
     type: document
-    project: project_alpha
-
-projects:
-  project_alpha:
-    display_name: Project Alpha
-    root: project-alpha
 ```
 
-Edit it anytime to add/remove sources. Run `tessera sync` after changes.
-
-### Tuning
-
-All parameters are configurable in `workspace.yaml`:
+All parameters are configurable:
 
 ```yaml
 search:
-  reranker_weight: 0.7       # Semantic vs keyword balance (1.0 = pure semantic)
+  reranker_weight: 0.7       # Semantic vs keyword balance
   max_top_k: 50              # Max results per search
 
 ingestion:
-  chunk_size: 1024           # Text chunk size for indexing
+  chunk_size: 1024           # Text chunk size
   chunk_overlap: 100         # Overlap between chunks
 
 watcher:
-  poll_interval: 30.0        # Seconds between file system scans
-  debounce: 5.0              # Wait before syncing after changes
+  poll_interval: 30.0        # Seconds between scans
+  debounce: 5.0              # Wait before syncing
 ```
 
 ## License
