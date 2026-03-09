@@ -8,18 +8,45 @@
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" />
 </a>
 
-**Make Claude Desktop remember your entire workspace.**
+**Personal Knowledge Layer for AI. Own your memory across every AI tool.**
 
-You have hundreds of documents — PRDs, meeting notes, decision logs, session records. Claude Desktop can read files you attach, but it can't search across your whole workspace. Tessera bridges that gap.
+You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge that disappears when the session ends. Tessera captures that knowledge, stores it locally, and serves it back to any AI. Your memory, your machine, your data.
 
-It indexes your local documents into a vector store and connects to Claude Desktop via MCP. When you ask a question, Claude automatically searches your files and answers with context — and remembers across sessions.
+## What makes Tessera different
 
-### Why Tessera?
+- **Auto-learning** -- Tessera records every interaction and extracts decisions, preferences, and facts automatically. No manual "remember this."
+- **Interface-agnostic core** -- One knowledge engine, multiple interfaces. MCP today, HTTP API for ChatGPT/Gemini/extensions coming next.
+- **Cross-session memory** -- AI remembers your decisions and context between conversations.
+- **100% local** -- No cloud, no API keys, no data leaving your machine. LanceDB + fastembed/ONNX.
+- **Hybrid search** -- Semantic + keyword search with reranking. Not just vector similarity.
 
-- **No servers to run** — No Ollama, no Docker, no API keys. Everything runs locally.
-- **Cross-session memory** — Claude remembers your decisions and preferences between conversations.
-- **Auto-sync** — File watcher detects changes and re-indexes in the background.
-- **100% local** — Nothing leaves your machine.
+## Architecture
+
+```
+                    +-----------------+
+                    |    src/core.py  |   Business logic (35 functions)
+                    |                 |   Search, memory, knowledge graph,
+                    |                 |   auto-extract, interaction log
+                    +-----------------+
+                     /        |        \
+    +-------------+  +----------------+  +----------+
+    | mcp_server  |  | http_server.py |  | cli.py   |
+    | (stdio/MCP) |  | (REST API)     |  | (CLI)    |
+    | Claude      |  | ChatGPT,       |  |          |
+    | Desktop     |  | Gemini, etc.   |  |          |
+    +-------------+  +----------------+  +----------+
+                          (planned)
+
+    Core engine:
+    +--------------------------------------------------+
+    | LanceDB (vectors) | SQLite (metadata, analytics) |
+    | fastembed/ONNX (local embeddings, no API keys)   |
+    | Auto-extract (pattern-based fact detection)       |
+    | Interaction log (every tool call recorded)        |
+    +--------------------------------------------------+
+```
+
+One core, multiple interfaces. The same knowledge base works regardless of which AI tool you use.
 
 ## Get started
 
@@ -41,14 +68,14 @@ uvx --from project-tessera tessera setup
 tessera setup
 ```
 
-This does everything for you:
+This does everything:
 - Creates a workspace config
 - Downloads the embedding model (~220MB, first time only)
 - Configures Claude Desktop automatically
 
 ### 3. Restart Claude Desktop
 
-That's it. Ask Claude about your documents and it will search them automatically.
+Ask Claude about your documents. It searches automatically.
 
 ## Supported file types
 
@@ -60,80 +87,93 @@ That's it. Ask Claude about your documents and it will search them automatically
 | Word | `.docx` | `pip install project-tessera[docx]` |
 | PDF | `.pdf` | `pip install project-tessera[pdf]` |
 
-## What Claude can do with Tessera
+## Tools (35)
 
-31 tools across search, memory, knowledge graph, and workspace management.
-
+### Search
 | Tool | What it does |
 |------|-------------|
-| **Search** | |
-| `search_documents` | Semantic + keyword hybrid search across all your docs |
+| `search_documents` | Semantic + keyword hybrid search across all docs |
 | `unified_search` | Search documents AND memories in one call |
 | `view_file_full` | Full file view (CSV as table, XLSX per sheet, etc.) |
 | `read_file` | Read any file's full content |
 | `list_sources` | See what's indexed |
-| **Memory** | |
+
+### Memory
+| Tool | What it does |
+|------|-------------|
 | `remember` | Save knowledge that persists across sessions |
 | `recall` | Search past memories from previous conversations |
-| `learn` | Auto-learn: save and immediately index new knowledge |
+| `learn` | Save and immediately index new knowledge |
+| `digest_conversation` | Auto-extract decisions/facts from the current session |
 | `list_memories` | Browse saved memories |
 | `forget_memory` | Delete a specific memory |
 | `export_memories` | Batch export all memories as JSON |
 | `import_memories` | Batch import memories from JSON |
 | `memory_tags` | List all unique tags with counts |
 | `search_by_tag` | Filter memories by specific tag |
-| **Knowledge Graph** | |
+
+### Knowledge graph
+| Tool | What it does |
+|------|-------------|
 | `find_similar` | Find documents similar to a given file |
 | `knowledge_graph` | Build a Mermaid diagram of document relationships |
 | `explore_connections` | Show connections around a specific topic |
-| **Indexing** | |
-| `ingest_documents` | Index your documents (first-time or full rebuild) |
-| `sync_documents` | Incremental sync — only re-index changed files |
-| **Workspace** | |
-| `project_status` | See what's changed recently in each project |
+
+### Auto-learn
+| Tool | What it does |
+|------|-------------|
+| `digest_conversation` | Extract and save knowledge from the current session |
+| `session_interactions` | View tool calls from current/past sessions |
+| `recent_sessions` | Session history with interaction counts |
+
+### Workspace
+| Tool | What it does |
+|------|-------------|
+| `ingest_documents` | Index documents (first-time or full rebuild) |
+| `sync_documents` | Incremental sync (only changed files) |
+| `project_status` | Recent changes per project |
 | `extract_decisions` | Find past decisions from logs |
-| `audit_prd` | Check PRD quality (section coverage, versioning) |
+| `audit_prd` | Check PRD quality (13-section structure) |
 | `organize_files` | Move, rename, archive files |
 | `suggest_cleanup` | Detect backup files, empty dirs, misplaced files |
-| `tessera_status` | Server health: tracked files, sync history, cache stats |
+| `tessera_status` | Server health: tracked files, sync history, cache |
 | `health_check` | Comprehensive workspace diagnostics |
 | `search_analytics` | Search usage patterns, top queries, response times |
 | `check_document_freshness` | Detect stale documents older than N days |
 
-## CLI commands
+## CLI
 
 ```bash
-tessera setup                   # One-command setup (recommended)
-tessera init                    # Interactive setup with more options
-tessera ingest                  # Index all configured sources
-tessera sync                    # Re-index only changed files
-tessera check                   # Check workspace health
-tessera status                  # Show project status
-tessera install-mcp             # Configure Claude Desktop
-tessera version                 # Show version
+tessera setup          # One-command setup
+tessera init           # Interactive setup
+tessera ingest         # Index all sources
+tessera sync           # Re-index changed files
+tessera check          # Workspace health
+tessera status         # Project status
+tessera install-mcp    # Configure Claude Desktop
+tessera version        # Show version
 ```
 
 ## How it works
 
 ```
-Your documents (Markdown, CSV, XLSX, DOCX, PDF)
-        |
-   Parse & chunk
-        |
-   Embed locally (fastembed/ONNX)
-        |
-   Store in LanceDB (local vector DB)
-        |
-   Expose via MCP server
-        |
-   Claude Desktop searches automatically
+Documents (Markdown, CSV, XLSX, DOCX, PDF)
+    |
+    v
+Parse & chunk --> Embed locally (fastembed/ONNX) --> LanceDB (local vector DB)
+    |
+    v
+src/core.py (search, memory, knowledge graph, auto-extract)
+    |
+    v
+MCP server (Claude Desktop) / HTTP API (ChatGPT, Gemini, extensions)
 ```
 
-## Advanced: Manual Claude Desktop config
+Everything runs on your machine. No external API calls for search or embedding.
 
-If `tessera setup` didn't configure Claude Desktop automatically, add this to your `claude_desktop_config.json`:
+## Claude Desktop config
 
-**With uvx (recommended — no venv needed):**
+**With uvx (recommended):**
 
 ```json
 {
@@ -146,7 +186,7 @@ If `tessera setup` didn't configure Claude Desktop automatically, add this to yo
 }
 ```
 
-**With pip install:**
+**With pip:**
 
 ```json
 {
@@ -158,13 +198,13 @@ If `tessera setup` didn't configure Claude Desktop automatically, add this to yo
 }
 ```
 
-Config file location:
+Config location:
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ## Configuration
 
-`tessera setup` creates a `workspace.yaml` with sensible defaults. You can edit it:
+`tessera setup` creates `workspace.yaml`. All parameters are tunable:
 
 ```yaml
 workspace:
@@ -174,26 +214,35 @@ workspace:
 sources:
   - path: .
     type: document
-```
 
-All parameters are configurable:
-
-```yaml
 search:
-  reranker_weight: 0.7       # Semantic vs keyword balance
-  max_top_k: 50              # Max results per search
+  reranker_weight: 0.7     # Semantic vs keyword balance
+  max_top_k: 50            # Max results per search
 
 ingestion:
-  chunk_size: 1024           # Text chunk size
-  chunk_overlap: 100         # Overlap between chunks
+  chunk_size: 1024         # Text chunk size
+  chunk_overlap: 100       # Overlap between chunks
 
 watcher:
-  poll_interval: 30.0        # Seconds between scans
-  debounce: 5.0              # Wait before syncing
+  poll_interval: 30.0      # Seconds between scans
+  debounce: 5.0            # Wait before syncing
 ```
+
+Or skip config entirely -- Tessera auto-detects your workspace. Set `TESSERA_WORKSPACE=/path/to/docs` to specify a folder.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for the full plan from v0.6 to v1.0.
+
+| Phase | Version | What changes |
+|-------|---------|-------------|
+| Sponge | v0.7 | Manual memory becomes automatic learning |
+| Radar | v0.8 | Reactive search becomes proactive intelligence |
+| Gateway | v0.9 | MCP-only becomes multi-interface (HTTP API) |
+| Cortex | v1.0 | Search tool becomes Claude's persistent brain |
 
 ## License
 
-AGPL-3.0 — see [LICENSE](LICENSE).
+AGPL-3.0 -- see [LICENSE](LICENSE).
 
-For commercial licensing: bessl.framework@gmail.com
+Commercial licensing: bessl.framework@gmail.com

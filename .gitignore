@@ -39,3 +39,4 @@ workspace.yaml
 # iCloud artifacts
 site/
 personal_ontology_rag/
+data/interactions.db

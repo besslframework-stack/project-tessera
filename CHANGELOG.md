@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.5] - 2026-03-10
+
+### Added
+- **Auto-Extract engine** (`src/auto_extract.py`) — regex + heuristic pattern matching to detect decisions, preferences, and facts from text (Korean + English)
+- **`digest_conversation` tool** — extracts and saves knowledge from current session automatically
+- **`src/core.py`** — interface-agnostic business logic layer (35 functions), enabling future HTTP API for ChatGPT/Gemini/extensions
+- Architecture diagram in README
+
+### Changed
+- **`mcp_server.py` refactored** — 1315 lines → 608 lines. Now a thin MCP wrapper over `src/core.py`
+- **`remember` tool** — auto-detects category (decision/preference/fact) from content
+- README rewritten with new vision: "Personal Knowledge Layer for AI"
+- Total tools: 35, total tests: 193
+
 ## [0.6.4] - 2026-03-10
 
 ### Added
