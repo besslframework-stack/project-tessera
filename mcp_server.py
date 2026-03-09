@@ -18,6 +18,7 @@ if _project_root not in sys.path:
 from mcp.server.fastmcp import FastMCP
 
 from src.config import workspace
+from src.interaction_log import InteractionLog
 from src.search import highlight_matches, invalidate_search_cache, list_indexed_sources, search, suggest_alternative_queries
 from src.search_analytics import SearchAnalyticsDB
 
@@ -45,6 +46,9 @@ logger = logging.getLogger(__name__)
 
 # Search analytics (singleton)
 _analytics = SearchAnalyticsDB()
+
+# Interaction log (singleton) — records every tool call for auto-learning
+_interaction_log = InteractionLog()
 
 
 @asynccontextmanager
@@ -193,6 +197,12 @@ def search_documents(
         return "Couldn't search yet — your documents haven't been indexed. Try asking me to 'index my documents' first."
     _elapsed = (_time.monotonic() - _t0) * 1000
     _analytics.log_query(query.strip(), top_k, len(results), _elapsed, project, doc_type, "search")
+    _interaction_log.log(
+        "search_documents",
+        f"query={query.strip()!r} top_k={top_k} project={project}",
+        f"{len(results)} results in {_elapsed:.0f}ms",
+        int(_elapsed),
+    )
 
     if not results:
         msg = "I couldn't find anything matching that."
@@ -466,6 +476,7 @@ def remember(content: str, tags: list[str] | None = None) -> str:
 
     result = learn_and_index(content.strip(), tags=tags, source="user-request")
     status = "indexed" if result["indexed"] else "saved (not yet indexed)"
+    _interaction_log.log("remember", f"content={content.strip()[:100]!r} tags={tags}", status)
     return f"Remembered and {status}:\n{content}"
 
 
@@ -484,6 +495,7 @@ def recall(query: str, top_k: int = 5) -> str:
     from src.memory import recall_memories
 
     memories = recall_memories(query.strip(), top_k=top_k)
+    _interaction_log.log("recall", f"query={query.strip()!r} top_k={top_k}", f"{len(memories)} memories found")
 
     if not memories:
         return "I don't have any memories yet. You can ask me to remember something first."
@@ -515,6 +527,7 @@ def learn(content: str, tags: list[str] | None = None, source: str = "auto-learn
 
     result = learn_and_index(content.strip(), tags=tags, source=source)
     status = "indexed" if result["indexed"] else "saved (indexing failed)"
+    _interaction_log.log("learn", f"content={content.strip()[:100]!r} tags={tags}", status)
     return f"Learned and {status}:\n{content}"
 
 
@@ -639,6 +652,12 @@ def unified_search(
 
     _elapsed = (_time.monotonic() - _t0) * 1000
     _analytics.log_query(query, top_k, len(doc_results) + mem_count, _elapsed, project, doc_type, "unified")
+    _interaction_log.log(
+        "unified_search",
+        f"query={query!r} top_k={top_k} project={project}",
+        f"{len(doc_results)} docs + {mem_count} memories in {_elapsed:.0f}ms",
+        int(_elapsed),
+    )
 
     if not parts:
         return "No results found in documents or memories."
@@ -1173,6 +1192,56 @@ def workspace_status() -> str:
     from src.project_status import get_all_projects_summary
 
     return get_all_projects_summary()
+
+
+# --- Interaction Log Tools ---
+
+
+@mcp.tool(
+    description=(
+        "View what happened in the current or past sessions. "
+        "Shows tool calls, queries, and results — useful for reviewing "
+        "what was discussed and decided."
+    )
+)
+def session_interactions(session_id: str | None = None, limit: int = 20) -> str:
+    """List tool interactions from a session."""
+    interactions = _interaction_log.get_session_interactions(session_id, limit)
+    if not interactions:
+        return "No interactions recorded yet in this session."
+
+    lines = [f"## Session Interactions (latest {len(interactions)})"]
+    for ix in interactions:
+        lines.append(
+            f"- **{ix['tool_name']}** ({ix['timestamp'][:19]})\n"
+            f"  Input: {ix['input_summary']}\n"
+            f"  Output: {ix['output_summary']}"
+        )
+    return "\n".join(lines)
+
+
+@mcp.tool(
+    description=(
+        "View summary of recent sessions — when they started, ended, "
+        "and how many tool calls were made. Useful for understanding "
+        "usage patterns over time."
+    )
+)
+def recent_sessions(limit: int = 10) -> str:
+    """List recent session summaries."""
+    sessions = _interaction_log.get_recent_sessions(limit)
+    if not sessions:
+        return "No sessions recorded yet."
+
+    lines = ["## Recent Sessions"]
+    for s in sessions:
+        started = s["started"][:19] if s["started"] else "?"
+        ended = s["ended"][:19] if s["ended"] else "?"
+        lines.append(
+            f"- **{s['session_id']}**: {started} → {ended} "
+            f"({s['interaction_count']} interactions)"
+        )
+    return "\n".join(lines)
 
 
 def main() -> None:

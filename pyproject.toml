@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "0.6.3"
-description = "Tessera — Personal knowledge RAG as an MCP server for Claude Desktop"
+version = "0.6.4"
+description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
 authors = [

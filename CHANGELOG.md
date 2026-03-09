@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.4] - 2026-03-10
+
+### Added
+- **Interaction Log** — every MCP tool call is automatically recorded to SQLite (tool name, input, output, duration, session ID)
+- **`session_interactions` tool** — view what happened in the current or past sessions
+- **`recent_sessions` tool** — view summary of recent sessions with interaction counts
+- Logging added to core tools: `search_documents`, `unified_search`, `remember`, `recall`, `learn`
+- Total tools: 33, total tests: 193
+
+### Changed
+- Package description updated to "Personal Knowledge Layer for AI"
+
 ## [0.6.3] - 2026-03-10
 
 ### Added
