@@ -1213,6 +1213,37 @@ def context_window(
     return format_context_summary(result)
 
 
+def smart_suggest(max_suggestions: int = 5) -> str:
+    """Get personalized query suggestions based on past interactions and memories.
+
+    Analyzes search history and memory patterns to recommend what to explore next.
+    """
+    from src.smart_suggest import format_suggestions, suggest_from_history
+
+    # Get past queries from search analytics
+    past_queries: list[str] = []
+    try:
+        analytics = _get_analytics()
+        recent = analytics.get_recent_queries(limit=50)
+        past_queries = [r["query"] for r in recent if r.get("query")]
+    except Exception:
+        logger.debug("Could not load search analytics for suggestions")
+
+    # Get memories for topic analysis
+    memories: list[dict] = []
+    try:
+        from src.memory import list_memories
+        memories = list_memories(limit=50)
+    except Exception:
+        logger.debug("Could not load memories for suggestions")
+
+    suggestions = suggest_from_history(
+        past_queries, memories=memories, max_suggestions=max_suggestions,
+    )
+    _log_interaction("smart_suggest", f"max={max_suggestions}", f"{len(suggestions)} suggestions")
+    return format_suggestions(suggestions)
+
+
 # --- Interaction Log Tools ---
 
 

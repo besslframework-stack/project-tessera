@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.5] - 2026-03-10
+
+### Added
+- **Smart Suggest** — personalized query suggestions based on past search history and memory patterns
+- **`smart_suggest` MCP tool** — recommends topics to explore based on frequency, unvisited memory topics, and popular tags
+- **`src/smart_suggest.py`** — `suggest_from_history()`, `format_suggestions()` with 3 suggestion strategies
+- **Suggestion strategies**: frequent-but-not-recent keywords, memory topics not yet searched, popular tags
+- **`tests/test_smart_suggest.py`** — 15 tests (keyword extraction, frequency, tags, dedup, ordering)
+- Total tools: 42, total tests: 360
+
 ## [0.7.4] - 2026-03-10
 
 ### Added

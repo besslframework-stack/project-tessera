@@ -614,6 +614,17 @@ def context_window(
 
 @mcp.tool(
     description=(
+        "Get personalized query suggestions based on your past searches and memories. "
+        "Analyzes patterns to recommend what you might want to explore next."
+    )
+)
+def smart_suggest(max_suggestions: int = 5) -> str:
+    """Get personalized query suggestions."""
+    return core.smart_suggest(max_suggestions)
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."
