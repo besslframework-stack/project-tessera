@@ -579,6 +579,12 @@ def cmd_install_mcp(args: argparse.Namespace) -> None:
     print("Restart Claude Desktop to apply changes.")
 
 
+def cmd_serve(_args: argparse.Namespace) -> None:
+    """Start the MCP server."""
+    from mcp_server import main as mcp_main
+    mcp_main()
+
+
 def cli() -> None:
     """Main CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -586,6 +592,10 @@ def cli() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # serve
+    serve_parser = subparsers.add_parser("serve", help="Start MCP server")
+    serve_parser.set_defaults(func=cmd_serve)
 
     # setup
     setup_parser = subparsers.add_parser("setup", help="One-command setup for new users")
