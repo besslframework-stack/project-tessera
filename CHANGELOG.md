@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.4] - 2026-03-10
+
+### Added
+- **Context Window Builder** — assembles optimal context (memories + documents) within a token budget for cross-AI use
+- **`context_window` MCP tool** — query-based context assembly with configurable token budget and document inclusion
+- **`src/context_window.py`** — `estimate_tokens()`, `build_context_window()`, `format_context_summary()`
+- **Token estimation** — chars/4 heuristic for mixed English/Korean text
+- **Priority ordering** — highest-relevance memories first, documents second, truncation when budget exceeded
+- **`tests/test_context_window.py`** — 24 tests (estimation, formatting, budget, truncation, ordering)
+- Total tools: 41, total tests: 345
+
 ## [0.7.3] - 2026-03-10
 
 ### Added

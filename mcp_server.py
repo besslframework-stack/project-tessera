@@ -598,6 +598,22 @@ def decision_timeline() -> str:
 
 @mcp.tool(
     description=(
+        "Build an optimal context window for a query within a token budget. "
+        "Retrieves relevant memories and documents, assembles them in priority order, "
+        "and truncates to fit. Use this to prepare context for another AI tool."
+    )
+)
+def context_window(
+    query: str,
+    token_budget: int = 4000,
+    include_documents: bool = True,
+) -> str:
+    """Build context window for a query."""
+    return core.context_window(query, token_budget, include_documents)
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

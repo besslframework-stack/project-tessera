@@ -1167,6 +1167,52 @@ def review_learned(limit: int = 20) -> str:
     return "\n".join(lines)
 
 
+def context_window(
+    query: str,
+    token_budget: int = 4000,
+    include_documents: bool = True,
+) -> str:
+    """Build an optimal context window for a query within a token budget.
+
+    Retrieves relevant memories (and optionally documents), assembles them
+    in priority order, and truncates to fit the budget.
+
+    Args:
+        query: What context to assemble for.
+        token_budget: Max tokens for the context window.
+        include_documents: Whether to also search documents.
+    """
+    from src.context_window import build_context_window, format_context_summary
+    from src.memory import recall_memories
+
+    memories = recall_memories(query.strip(), top_k=20)
+
+    documents = []
+    if include_documents:
+        try:
+            results = search(query.strip(), top_k=10)
+            documents = [
+                {"content": r.get("text", ""), "score": r.get("score", 0), "source": r.get("source", "")}
+                for r in results
+                if r.get("text")
+            ]
+        except Exception:
+            logger.debug("Document search failed for context window, continuing with memories only")
+
+    result = build_context_window(
+        memories=memories,
+        documents=documents,
+        token_budget=token_budget,
+    )
+
+    _log_interaction(
+        "context_window",
+        f"query={query!r} budget={token_budget}",
+        f"{result['included_memories']}mem + {result['included_documents']}doc, ~{result['token_count']}tok",
+    )
+    return format_context_summary(result)
+
+
 # --- Interaction Log Tools ---
 
 
