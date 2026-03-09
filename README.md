@@ -25,6 +25,12 @@ It indexes your local documents into a vector store and connects to Claude Deskt
 pip install project-tessera
 ```
 
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uvx --from project-tessera tessera setup
+```
+
 ### 2. Setup
 
 ```bash
