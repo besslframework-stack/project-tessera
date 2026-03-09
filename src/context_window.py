@@ -25,6 +25,8 @@ def build_context_window(
     documents: list[dict] | None = None,
     token_budget: int = 4000,
     reserve_tokens: int = 500,
+    apply_time_decay: bool = False,
+    decay_half_life_days: float = 30,
 ) -> dict:
     """Build an optimal context window within a token budget.
 
@@ -33,11 +35,17 @@ def build_context_window(
         documents: Optional list of document dicts with 'content', 'score'.
         token_budget: Total token budget for the context window.
         reserve_tokens: Tokens reserved for system prompt / instructions.
+        apply_time_decay: If True, apply time-based relevance decay to scores.
+        decay_half_life_days: Half-life for decay (days).
 
     Returns:
         Dict with 'context' (assembled text), 'token_count', 'included_memories',
         'included_documents', 'truncated' flag.
     """
+    if apply_time_decay and memories:
+        from src.relevance_decay import apply_decay
+        memories = apply_decay(memories, half_life_days=decay_half_life_days)
+
     available = token_budget - reserve_tokens
     if available <= 0:
         return {

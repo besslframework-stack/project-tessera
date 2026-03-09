@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.6] - 2026-03-10
+
+### Added
+- **Relevance Decay** — time-based exponential decay for memory scores (older memories rank lower)
+- **`src/relevance_decay.py`** — `compute_decay_factor()`, `apply_decay()` with configurable half-life (default 30 days)
+- **Context Window integration** — `build_context_window()` now accepts `apply_time_decay` and `decay_half_life_days` params
+- **Minimum factor floor** — prevents ancient memories from getting zero relevance (default min 0.1)
+- **`tests/test_relevance_decay.py`** — 22 tests (date parsing, decay math, reordering, edge cases)
+- Total tools: 42, total tests: 382
+
 ## [0.7.5] - 2026-03-10
 
 ### Added
