@@ -199,7 +199,20 @@ def _build_auto_detected_defaults() -> dict:
         ],
         "sync": {
             "auto_sync": True,
-            "extensions": [".md", ".csv", ".xlsx", ".docx", ".pdf"],
+            "extensions": [
+                    # Documents
+                    ".md", ".csv", ".xlsx", ".docx", ".pdf", ".txt", ".rst",
+                    # Code
+                    ".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".go", ".rs",
+                    ".rb", ".php", ".c", ".cpp", ".h", ".swift", ".kt", ".sh",
+                    ".sql", ".cs", ".dart", ".r",
+                    # Config
+                    ".json", ".yaml", ".yml", ".toml", ".xml", ".ini", ".env",
+                    # Web
+                    ".html", ".htm", ".css", ".scss",
+                    # Images (OCR)
+                    ".png", ".jpg", ".jpeg", ".webp",
+                ],
         },
     }
 
@@ -259,7 +272,16 @@ def load_workspace_config() -> WorkspaceConfig:
 
     sync_cfg = raw.get("sync", {})
     sync_auto = sync_cfg.get("auto_sync", True)
-    extensions = sync_cfg.get("extensions", [".md", ".csv"])
+    _default_extensions = [
+        ".md", ".csv", ".xlsx", ".docx", ".pdf", ".txt", ".rst",
+        ".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".go", ".rs",
+        ".rb", ".php", ".c", ".cpp", ".h", ".swift", ".kt", ".sh",
+        ".sql", ".cs", ".dart",
+        ".json", ".yaml", ".yml", ".toml", ".xml",
+        ".html", ".css",
+        ".png", ".jpg", ".jpeg", ".webp",
+    ]
+    extensions = sync_cfg.get("extensions", _default_extensions)
     ignore_patterns = sync_cfg.get("ignore", [])
 
     # Search config

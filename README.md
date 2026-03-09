@@ -77,15 +77,16 @@ This does everything:
 
 Ask Claude about your documents. It searches automatically.
 
-## Supported file types
+## Supported file types (40+)
 
-| Type | Extension | Install |
-|------|-----------|---------|
-| Markdown | `.md` | included |
-| CSV | `.csv` | included |
-| Excel | `.xlsx` | `pip install project-tessera[xlsx]` |
-| Word | `.docx` | `pip install project-tessera[docx]` |
-| PDF | `.pdf` | `pip install project-tessera[pdf]` |
+| Category | Extensions | Install |
+|----------|-----------|---------|
+| Documents | `.md` `.txt` `.rst` `.csv` | included |
+| Office | `.xlsx` `.docx` `.pdf` | `pip install project-tessera[xlsx,docx,pdf]` |
+| Code | `.py` `.js` `.ts` `.tsx` `.jsx` `.java` `.go` `.rs` `.rb` `.php` `.c` `.cpp` `.h` `.swift` `.kt` `.sh` `.sql` `.cs` `.dart` `.r` `.lua` `.scala` | included |
+| Config | `.json` `.yaml` `.yml` `.toml` `.xml` `.ini` `.cfg` `.env` | included |
+| Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
+| Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` (for text extraction) |
 
 ## Tools (39)
 

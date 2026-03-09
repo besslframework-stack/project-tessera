@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.7.1] - 2026-03-10
+
+### Added
+- **40+ file type support** — massively expanded from 5 to 40+ supported formats
+- **Universal text/code parser** (`src/ingestion/text_parser.py`) — handles 50+ extensions:
+  - Code: `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.java`, `.go`, `.rs`, `.rb`, `.php`, `.c`, `.cpp`, `.h`, `.swift`, `.kt`, `.sh`, `.sql`, `.cs`, `.dart`, `.r`, `.lua`, `.scala`, `.pl`
+  - Config: `.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.conf`, `.env`
+  - Text: `.txt`, `.rst`, `.log`
+  - Web: `.html`, `.htm`, `.css`, `.scss`, `.less`, `.svg` (with HTML tag stripping)
+  - DevOps: `.dockerfile`, `.makefile`, `.tf`, `.hcl`, `.proto`, `.graphql`
+- **Image OCR parser** (`src/ingestion/image_parser.py`) — `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`
+  - OCR via pytesseract (Korean + English), optional dep: `pip install project-tessera[ocr]`
+  - Falls back to metadata-only Document with EXIF extraction when OCR unavailable
+- **`[ocr]` and `[images]` optional deps** in pyproject.toml
+- **Language detection** — auto-detects programming language from extension
+- **`tests/test_text_parser.py`** — 25 tests (detection, HTML stripping, parsing)
+- **`tests/test_image_parser.py`** — 4 tests (metadata, OCR mock, no-OCR fallback)
+- Total tools: 39, total tests: 296
+
+### Changed
+- **Default extensions** — expanded from `[".md", ".csv"]` to 30+ formats including code, config, images
+- **Ingestion pipeline** — routes new file types to appropriate parsers
+- **README** — updated supported file types table
+
 ## [0.7.0] - 2026-03-10
 
 ### Sponge Phase Complete — Tessera now learns automatically

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "0.7.0"
+version = "0.7.1"
 description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
@@ -43,6 +43,13 @@ xlsx = [
 ]
 pdf = [
     "pymupdf>=1.24.0",
+]
+ocr = [
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0.0",
+]
+images = [
+    "Pillow>=10.0.0",
 ]
 
 [project.urls]

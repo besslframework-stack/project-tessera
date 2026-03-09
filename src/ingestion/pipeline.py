@@ -9,11 +9,15 @@ from typing import TYPE_CHECKING
 from src.config import settings, workspace
 from src.ingestion.csv_parser import parse_csv_file
 from src.ingestion.docx_parser import parse_docx_file
-from src.ingestion.pdf_parser import parse_pdf_file
-from src.ingestion.xlsx_parser import parse_xlsx_file
+from src.ingestion.image_parser import SUPPORTED_EXTENSIONS as IMAGE_EXTENSIONS
+from src.ingestion.image_parser import parse_image_file
 from src.ingestion.markdown_parser import parse_markdown_directory, parse_markdown_file
 from src.ingestion.metadata_extractor import enrich_documents
+from src.ingestion.pdf_parser import parse_pdf_file
 from src.ingestion.session_parser import parse_session_directory, parse_session_file
+from src.ingestion.text_parser import SUPPORTED_EXTENSIONS as TEXT_EXTENSIONS
+from src.ingestion.text_parser import parse_text_file
+from src.ingestion.xlsx_parser import parse_xlsx_file
 
 if TYPE_CHECKING:
     from llama_index.core.schema import Document
@@ -112,7 +116,6 @@ class IngestionPipeline:
         """Load a single file based on its extension."""
         suffix = file_path.suffix.lower()
         if suffix == ".md":
-            # Determine if it's a session log by its parent directory name
             if _is_session_dir(file_path.parent):
                 return parse_session_file(file_path)
             return parse_markdown_file(file_path)
@@ -124,6 +127,10 @@ class IngestionPipeline:
             return parse_xlsx_file(file_path)
         elif suffix == ".pdf":
             return parse_pdf_file(file_path)
+        elif suffix in IMAGE_EXTENSIONS:
+            return parse_image_file(file_path)
+        elif suffix in TEXT_EXTENSIONS:
+            return parse_text_file(file_path)
         logger.debug("Unsupported file type, skipping: %s", file_path)
         return []
 
@@ -163,6 +170,22 @@ class IngestionPipeline:
                 docs.extend(parse_xlsx_file(xlsx_file))
             except Exception as exc:
                 logger.error("Failed to parse XLSX %s: %s", xlsx_file, exc)
+
+        # Pick up text/code files
+        for ext in TEXT_EXTENSIONS:
+            for text_file in sorted(dir_path.rglob(f"*{ext}")):
+                try:
+                    docs.extend(parse_text_file(text_file))
+                except Exception as exc:
+                    logger.error("Failed to parse %s: %s", text_file, exc)
+
+        # Pick up image files
+        for ext in IMAGE_EXTENSIONS:
+            for img_file in sorted(dir_path.rglob(f"*{ext}")):
+                try:
+                    docs.extend(parse_image_file(img_file))
+                except Exception as exc:
+                    logger.error("Failed to parse image %s: %s", img_file, exc)
 
         return docs
 
