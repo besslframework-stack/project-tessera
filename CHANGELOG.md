@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.8] - 2026-03-10
+
+### Added
+- **Knowledge Stats** — aggregate statistics dashboard for memories and documents
+- **`knowledge_stats` MCP tool** — total counts, category breakdown, tag distribution, monthly growth, date range
+- **`src/knowledge_stats.py`** — `compute_stats()`, `format_stats()` with percentage and bar chart
+- **`tests/test_knowledge_stats.py`** — 13 tests (counts, categories, tags, growth, formatting)
+- Total tools: 44, total tests: 413
+
 ## [0.7.7] - 2026-03-10
 
 ### Added

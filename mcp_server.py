@@ -637,6 +637,18 @@ def topic_map(output_format: str = "text") -> str:
 
 @mcp.tool(
     description=(
+        "Get knowledge statistics — total memories, category breakdown, "
+        "tag distribution, growth by month, and date range. "
+        "A dashboard overview of everything Tessera knows."
+    )
+)
+def knowledge_stats() -> str:
+    """Get aggregate knowledge statistics."""
+    return core.knowledge_stats()
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

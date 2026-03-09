@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "0.7.7"
+version = "0.7.8"
 description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"

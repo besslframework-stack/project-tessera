@@ -1268,6 +1268,29 @@ def topic_map(output_format: str = "text") -> str:
     return format_topic_map_text(topics)
 
 
+def knowledge_stats() -> str:
+    """Get aggregate statistics about stored knowledge."""
+    from src.knowledge_stats import compute_stats, format_stats
+
+    memories: list[dict] = []
+    try:
+        from src.memory import list_memories
+        memories = list_memories(limit=500)
+    except Exception:
+        logger.debug("Could not load memories for stats")
+
+    documents: list[dict] = []
+    try:
+        from src.ingestion.pipeline import get_indexed_count
+        documents = [{}] * get_indexed_count()
+    except Exception:
+        pass
+
+    stats = compute_stats(memories, documents)
+    _log_interaction("knowledge_stats", "", f"{stats['total_memories']} memories, {stats['total_documents']} docs")
+    return format_stats(stats)
+
+
 # --- Interaction Log Tools ---
 
 
