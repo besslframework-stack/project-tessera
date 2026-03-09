@@ -29,10 +29,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Session logs
-session_logs/
-conversation-logs/
-
 # Internal
 .files/
 .claude/
