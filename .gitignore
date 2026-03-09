@@ -49,3 +49,6 @@ assets/twitter-*
 # iCloud artifacts
 site/
 personal_ontology_rag/
+
+HANDOFF*.md
+tessera_improvement_requirements.md

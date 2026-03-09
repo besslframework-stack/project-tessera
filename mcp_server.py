@@ -231,6 +231,7 @@ def search_documents(
         header += f"  (similarity: {similarity * 100:.1f}%)"
 
         text = r["text"]
+        text = highlight_matches(text, query.strip())
         if len(text) > text_limit:
             text = text[:text_limit] + "…"
 
@@ -271,6 +272,9 @@ def view_file_full(file_path: str) -> str:
     elif suffix in (".xlsx", ".xls"):
         from src.ingestion.xlsx_parser import format_xlsx_as_table
         return format_xlsx_as_table(p)
+    elif suffix == ".pdf":
+        from src.ingestion.pdf_parser import format_pdf_as_text
+        return format_pdf_as_text(p)
     elif suffix == ".md":
         return read_file(str(p))
     elif suffix == ".docx":
@@ -606,7 +610,10 @@ def unified_search(
                     meta = {}
             source = meta.get("source_path", "unknown")
             similarity = r.get("similarity", 0.0)
-            text = r["text"][:text_limit] + "…" if len(r["text"]) > text_limit else r["text"]
+            raw_text = r["text"]
+            text = highlight_matches(raw_text, query)
+            if len(text) > text_limit:
+                text = text[:text_limit] + "…"
             parts.append(f"[D{i}] {source} ({similarity * 100:.0f}%)\n{text}")
 
     # 2. Memory search

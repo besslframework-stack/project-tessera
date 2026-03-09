@@ -267,68 +267,130 @@ def cmd_version(args: argparse.Namespace) -> None:
 
 def cmd_check(args: argparse.Namespace) -> None:
     """Check workspace health: config, dependencies, index."""
+    import json
+    import platform
+
     project_root = PROJECT_ROOT
     yaml_path = project_root / "workspace.yaml"
-    issues: list[str] = []
-    ok: list[str] = []
+
+    # --- Version ---
+    try:
+        from importlib.metadata import version
+        ver = version("project-tessera")
+    except Exception:
+        try:
+            import tomllib
+            with open(project_root / "pyproject.toml", "rb") as f:
+                ver = tomllib.load(f)["project"]["version"]
+        except Exception:
+            ver = "unknown"
+
+    print(f"Tessera v{ver}")
+    print()
+
+    ok_sym = "\u2713"
+    fail_sym = "\u2717"
+    issues = 0
+
+    def _ok(msg: str) -> None:
+        print(f"{ok_sym} {msg}")
+
+    def _fail(msg: str) -> None:
+        nonlocal issues
+        issues += 1
+        print(f"{fail_sym} {msg}")
 
     # 1. workspace.yaml
     if yaml_path.exists():
-        ok.append("workspace.yaml exists")
-        try:
-            from src.config import load_workspace_config
-            ws = load_workspace_config()
-            ok.append(f"Config valid ({len(ws.sources)} sources, {len(ws.projects)} projects)")
-        except Exception as exc:
-            issues.append(f"Config error: {exc}")
+        _ok("workspace.yaml found")
     else:
-        issues.append("workspace.yaml not found — run `tessera init`")
+        _fail("workspace.yaml not found -- run `tessera init`")
 
-    # 2. Dependencies
-    deps = {"fastembed": "Embedding model", "lancedb": "Vector store", "mcp": "MCP server"}
-    for mod, desc in deps.items():
+    # 2. LanceDB index
+    lancedb_dir = project_root / "data" / "lancedb"
+    if lancedb_dir.exists():
+        try:
+            import lancedb as _lancedb
+            db = _lancedb.connect(str(lancedb_dir))
+            table_names = db.table_names()
+            total_rows = 0
+            for tname in table_names:
+                tbl = db.open_table(tname)
+                total_rows += tbl.count_rows()
+            _ok(f"LanceDB index: {total_rows:,} nodes")
+        except Exception:
+            _ok("LanceDB index: directory exists (could not read row count)")
+    else:
+        _fail("LanceDB index not found -- run `tessera ingest`")
+
+    # 3. Embedding model cached
+    fastembed_cache = Path.home() / ".cache" / "fastembed"
+    if fastembed_cache.exists() and any(fastembed_cache.iterdir()):
+        _ok("Embedding model cached")
+    else:
+        _fail("Embedding model not cached -- will download on first ingest (~220MB)")
+
+    # 4. Claude Desktop config
+    if platform.system() == "Darwin":
+        config_path = (
+            Path.home() / "Library" / "Application Support" / "Claude"
+            / "claude_desktop_config.json"
+        )
+    else:
+        config_path = Path.home() / ".config" / "claude" / "claude_desktop_config.json"
+
+    if config_path.exists():
+        try:
+            with open(config_path) as f:
+                desktop_cfg = json.load(f)
+            tessera_cfg = desktop_cfg.get("mcpServers", {}).get("tessera")
+            if tessera_cfg:
+                _ok("Claude Desktop config: tessera registered")
+                cwd_val = tessera_cfg.get("cwd", "")
+                cwd_match = Path(cwd_val).resolve() == project_root.resolve() if cwd_val else False
+                sym = ok_sym if cwd_match else fail_sym
+                if not cwd_match:
+                    issues += 1
+                print(f"  cwd: {cwd_val or '(not set)'} {sym}")
+            else:
+                _fail("Claude Desktop config: tessera not registered -- run `tessera install-mcp`")
+        except Exception as exc:
+            _fail(f"Claude Desktop config: parse error ({exc})")
+    else:
+        _fail("Claude Desktop config not found")
+
+    # 5. Required Python dependencies
+    print()
+    required_deps = {
+        "fastembed": "fastembed",
+        "lancedb": "lancedb",
+        "mcp": "mcp",
+    }
+    for mod, label in required_deps.items():
         try:
             __import__(mod)
-            ok.append(f"{desc} ({mod}) installed")
+            _ok(f"{label} installed")
         except ImportError:
-            issues.append(f"{desc} ({mod}) not installed — run `pip install -e .`")
+            _fail(f"{label} not installed -- run `pip install -e .`")
 
-    # 3. Data directory
-    data_dir = project_root / "data"
-    lancedb_dir = data_dir / "lancedb"
-    meta_db = data_dir / "file_meta.db"
-
-    if lancedb_dir.exists():
-        ok.append("LanceDB data directory exists")
-    else:
-        issues.append("No index found — run `tessera ingest`")
-
-    if meta_db.exists():
+    # 6. Optional dependencies
+    print()
+    optional_deps = {
+        "openpyxl": "openpyxl (xlsx support)",
+        "docx": "python-docx (docx support)",
+        "pymupdf": "pymupdf (pdf support)",
+    }
+    for mod, label in optional_deps.items():
         try:
-            from src.sync import FileMetaDB
-            db = FileMetaDB(meta_db)
-            count = db.file_count()
-            ok.append(f"Metadata DB: {count} tracked files")
-            db.close()
-        except Exception as exc:
-            issues.append(f"Metadata DB error: {exc}")
+            __import__(mod)
+            print(f"  {label}: installed")
+        except ImportError:
+            print(f"  {label}: not installed")
 
-    # 4. Memory directory
-    mem_dir = data_dir / "memories"
-    if mem_dir.exists():
-        mem_count = len(list(mem_dir.glob("*.md")))
-        ok.append(f"Memories: {mem_count} saved")
-
-    # Output
-    print("Tessera Health Check")
-    print("=" * 40)
-    for item in ok:
-        print(f"  [OK] {item}")
-    for item in issues:
-        print(f"  [!!] {item}")
+    # Summary
     print()
     if issues:
-        print(f"{len(issues)} issue(s) found.")
+        print(f"{issues} issue(s) found.")
     else:
         print("All checks passed.")
 

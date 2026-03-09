@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.2] - 2026-03-09
+
+### Added
+- **PDF file support** — `pymupdf`-based parser, optional dep (`pip install -e ".[pdf]"`)
+- **Search result highlighting** — matching terms bold-wrapped in `search_documents` and `unified_search` results
+- **`tessera check` improvements** — checks LanceDB index size, embedding model cache, Claude Desktop config with `cwd` validation, required/optional deps
+- Total tools: 31 (was 30), total tests: 181 (was 173)
+
 ## [0.5.1] - 2026-03-09
 
 Hotfix release addressing real-world installation issues reported by users.

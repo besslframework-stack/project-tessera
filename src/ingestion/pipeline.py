@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from src.config import settings, workspace
 from src.ingestion.csv_parser import parse_csv_file
 from src.ingestion.docx_parser import parse_docx_file
+from src.ingestion.pdf_parser import parse_pdf_file
 from src.ingestion.xlsx_parser import parse_xlsx_file
 from src.ingestion.markdown_parser import parse_markdown_directory, parse_markdown_file
 from src.ingestion.metadata_extractor import enrich_documents
@@ -121,6 +122,8 @@ class IngestionPipeline:
             return parse_docx_file(file_path)
         elif suffix in (".xlsx", ".xls"):
             return parse_xlsx_file(file_path)
+        elif suffix == ".pdf":
+            return parse_pdf_file(file_path)
         logger.debug("Unsupported file type, skipping: %s", file_path)
         return []
 
@@ -146,6 +149,13 @@ class IngestionPipeline:
                 docs.extend(parse_docx_file(docx_file))
             except Exception as exc:
                 logger.error("Failed to parse DOCX %s: %s", docx_file, exc)
+
+        # Also pick up PDF files in the directory tree
+        for pdf_file in sorted(dir_path.rglob("*.pdf")):
+            try:
+                docs.extend(parse_pdf_file(pdf_file))
+            except Exception as exc:
+                logger.error("Failed to parse PDF %s: %s", pdf_file, exc)
 
         # Also pick up XLSX files in the directory tree
         for xlsx_file in sorted(dir_path.rglob("*.xlsx")):

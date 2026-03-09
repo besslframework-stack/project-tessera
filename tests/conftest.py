@@ -32,6 +32,9 @@ class _PassthroughFastMCP:
 
 _mock_fastmcp_mod.FastMCP = _PassthroughFastMCP
 
+_mock_llama_index_core = MagicMock()
+_mock_llama_index_core_schema = MagicMock()
+
 _optional_deps = {
     "fastembed": MagicMock(),
     "lancedb": MagicMock(),
@@ -39,6 +42,9 @@ _optional_deps = {
     "mcp": MagicMock(),
     "mcp.server": MagicMock(),
     "mcp.server.fastmcp": _mock_fastmcp_mod,
+    "llama_index": MagicMock(),
+    "llama_index.core": _mock_llama_index_core,
+    "llama_index.core.schema": _mock_llama_index_core_schema,
 }
 for _mod_name, _mock in _optional_deps.items():
     if _mod_name not in sys.modules:
