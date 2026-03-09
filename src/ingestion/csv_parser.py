@@ -157,6 +157,29 @@ def _parse_event_taxonomy(
     return documents
 
 
+def format_csv_as_table(file_path: Path) -> str:
+    """Read a CSV file and return its full contents as a markdown table.
+
+    Args:
+        file_path: Path to the CSV file.
+
+    Returns:
+        Markdown table string, or error message.
+    """
+    rows = _read_csv(file_path)
+    if not rows:
+        return f"No data found in {file_path.name}"
+
+    headers = list(rows[0].keys())
+    lines = ["| " + " | ".join(headers) + " |"]
+    lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+    for row in rows:
+        vals = [str(row.get(h, "")).replace("|", "\\|").replace("\n", " ") for h in headers]
+        lines.append("| " + " | ".join(vals) + " |")
+
+    return "\n".join(lines)
+
+
 def _parse_generic(file_path: Path, rows: list[dict]) -> list[Document]:
     """Parse a generic CSV: one Document per row."""
     documents: list[Document] = []

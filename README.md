@@ -65,7 +65,8 @@ tessera init
   "mcpServers": {
     "tessera": {
       "command": "/path/to/project-tessera/.venv/bin/python",
-      "args": ["/path/to/project-tessera/mcp_server.py"]
+      "args": ["/path/to/project-tessera/mcp_server.py"],
+      "cwd": "/path/to/project-tessera"
     }
   }
 }

@@ -25,8 +25,8 @@ class SearchAnalyticsDB:
     so concurrent MCP tool calls and background tasks don't collide.
     """
 
-    def __init__(self, db_path: Path | None = None) -> None:
-        db_path = db_path or _DEFAULT_DB_PATH
+    def __init__(self, db_path: Path | str | None = None) -> None:
+        db_path = Path(db_path) if db_path else _DEFAULT_DB_PATH
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row

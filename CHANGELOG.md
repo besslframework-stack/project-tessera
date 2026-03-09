@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.1] - 2026-03-09
+
+Hotfix release addressing real-world installation issues reported by users.
+
+### Fixed
+- **[P0] CLI entrypoint bug** — `tessera` command now works from any directory (moved CLI to `src/cli.py` package)
+- **[P0] MCP startup timeout** — auto-sync runs in background thread via `run_in_executor`, server starts in ~3s
+- **[P1] Missing `cwd`** — README and `tessera init` now include `cwd` in Claude Desktop config example
+
+### Added
+- **XLSX file support** — `openpyxl`-based parser, optional dep (`pip install -e ".[xlsx]"`)
+- **DOCX file support** — `python-docx`-based parser, optional dep (`pip install -e ".[docx]"`)
+- **`view_file_full` tool** — Structured full-file view (CSV → table, XLSX → tables per sheet, MD/DOCX → text)
+- **`tessera install-mcp` command** — Auto-configure Claude Desktop config with correct paths and `cwd`
+- `format_csv_as_table()` — CSV full contents as markdown table
+- `format_xlsx_as_table()` — XLSX full contents as markdown tables per sheet
+- Total tools: 30 (was 28)
+
 ## [0.5.0] - 2026-03-09
 
 First public release with comprehensive MCP toolset (28 tools, 173 tests).

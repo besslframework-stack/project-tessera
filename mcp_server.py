@@ -66,15 +66,28 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
             def _ingest(paths: list[Path]) -> tuple[int, dict[str, int]]:
                 return pipeline.run(source_paths=paths)
 
-            result = run_incremental_sync(
-                ws=workspace,
-                meta_db=meta_db,
-                vector_store_delete_fn=vector_store.delete_by_source,
-                ingest_fn=_ingest,
-            )
-            if result.has_changes:
-                invalidate_search_cache()
-            logger.info("Auto-sync complete: %s", result.summary())
+            def _do_background_sync() -> None:
+                """Run sync in background so server starts immediately."""
+                try:
+                    result = run_incremental_sync(
+                        ws=workspace,
+                        meta_db=meta_db,
+                        vector_store_delete_fn=vector_store.delete_by_source,
+                        ingest_fn=_ingest,
+                    )
+                    if result.has_changes:
+                        invalidate_search_cache()
+                    logger.info("Background auto-sync complete: %s", result.summary())
+                except Exception as exc:
+                    logger.warning("Background auto-sync failed: %s", exc)
+
+            # Run sync in background thread — server starts immediately
+            import asyncio
+
+            loop = asyncio.get_event_loop()
+            loop.run_in_executor(None, _do_background_sync)
+            logger.info("Auto-sync started in background")
+
             ctx["meta_db"] = meta_db
 
             # Start file watcher for continuous auto-sync
@@ -224,6 +237,46 @@ def search_documents(
         output_parts.append(f"{header}\n{text}")
 
     return "\n\n---\n\n".join(output_parts)
+
+
+@mcp.tool(
+    description=(
+        "Return full contents of a file as a structured view. "
+        "CSV → markdown table, XLSX → tables per sheet, MD → raw text, DOCX → paragraphs. "
+        "Use when the user wants to see the complete file, not just search results."
+    )
+)
+def view_file_full(file_path: str) -> str:
+    """Return full contents of any supported file as structured text."""
+    p = Path(file_path)
+
+    # Try to find by partial filename if not absolute
+    if not p.exists() and not p.is_absolute():
+        try:
+            sources = list_indexed_sources()
+            for s in sources:
+                if file_path.lower() in s.lower():
+                    p = Path(s)
+                    break
+        except Exception:
+            pass
+
+    if not p.exists():
+        return f"File not found: {file_path}"
+
+    suffix = p.suffix.lower()
+    if suffix == ".csv":
+        from src.ingestion.csv_parser import format_csv_as_table
+        return format_csv_as_table(p)
+    elif suffix in (".xlsx", ".xls"):
+        from src.ingestion.xlsx_parser import format_xlsx_as_table
+        return format_xlsx_as_table(p)
+    elif suffix == ".md":
+        return read_file(str(p))
+    elif suffix == ".docx":
+        return read_file(str(p))
+    else:
+        return read_file(str(p))
 
 
 @mcp.tool(description="List all indexed source files.")

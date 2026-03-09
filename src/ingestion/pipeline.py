@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 
 from src.config import settings, workspace
 from src.ingestion.csv_parser import parse_csv_file
+from src.ingestion.docx_parser import parse_docx_file
+from src.ingestion.xlsx_parser import parse_xlsx_file
 from src.ingestion.markdown_parser import parse_markdown_directory, parse_markdown_file
 from src.ingestion.metadata_extractor import enrich_documents
 from src.ingestion.session_parser import parse_session_directory, parse_session_file
@@ -115,6 +117,10 @@ class IngestionPipeline:
             return parse_markdown_file(file_path)
         elif suffix == ".csv":
             return parse_csv_file(file_path)
+        elif suffix == ".docx":
+            return parse_docx_file(file_path)
+        elif suffix in (".xlsx", ".xls"):
+            return parse_xlsx_file(file_path)
         logger.debug("Unsupported file type, skipping: %s", file_path)
         return []
 
@@ -133,6 +139,20 @@ class IngestionPipeline:
                 docs.extend(parse_csv_file(csv_file))
             except Exception as exc:
                 logger.error("Failed to parse CSV %s: %s", csv_file, exc)
+
+        # Also pick up DOCX files in the directory tree
+        for docx_file in sorted(dir_path.rglob("*.docx")):
+            try:
+                docs.extend(parse_docx_file(docx_file))
+            except Exception as exc:
+                logger.error("Failed to parse DOCX %s: %s", docx_file, exc)
+
+        # Also pick up XLSX files in the directory tree
+        for xlsx_file in sorted(dir_path.rglob("*.xlsx")):
+            try:
+                docs.extend(parse_xlsx_file(xlsx_file))
+            except Exception as exc:
+                logger.error("Failed to parse XLSX %s: %s", xlsx_file, exc)
 
         return docs
 
