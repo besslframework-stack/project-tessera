@@ -1062,6 +1062,20 @@ def digest_conversation(summary: str = "") -> str:
     return f"{header}\n" + "\n".join(results)
 
 
+def decision_timeline() -> str:
+    """Show how decisions have evolved over time, grouped by topic."""
+    from src.decision_tracker import format_decision_timeline, get_decision_timeline
+    from src.memory import search_memories_by_category
+
+    decisions = search_memories_by_category("decision")
+    if not decisions:
+        return "No decision memories found. Decisions are auto-detected when you say things like 'we decided to use X'."
+
+    groups = get_decision_timeline(decisions)
+    _log_interaction("decision_timeline", "", f"{len(groups)} topics, {len(decisions)} decisions")
+    return format_decision_timeline(groups)
+
+
 def toggle_auto_learn(enabled: bool | None = None) -> str:
     """Toggle or check auto-learning status.
 

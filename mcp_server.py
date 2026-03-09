@@ -587,6 +587,17 @@ def search_by_category(category: str) -> str:
 
 @mcp.tool(
     description=(
+        "Show decision timeline — how decisions evolved over time, grouped by topic. "
+        "Detects when you changed your mind about something."
+    )
+)
+def decision_timeline() -> str:
+    """Show decision evolution timeline."""
+    return core.decision_timeline()
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

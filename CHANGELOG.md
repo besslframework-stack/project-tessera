@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.3] - 2026-03-10
+
+### Added
+- **Decision Tracker** — groups `category=decision` memories by topic similarity (Jaccard), detects when decisions on the same topic evolved over time
+- **`decision_timeline` MCP tool** — view how past decisions changed ("we used PostgreSQL → switched to MySQL")
+- **`src/decision_tracker.py`** — `_extract_topic_keywords()`, `_topic_similarity()`, `get_decision_timeline()`, `format_decision_timeline()`
+- **Korean tokenization fix** — separate `[a-zA-Z]+|[가-힣]+` regex prevents Korean particles merging with English words (e.g. "postgresql을" → "postgresql" + "을")
+- **`tests/test_decision_tracker.py`** — 18 tests (keyword extraction, similarity, grouping, change detection, formatting)
+- Total tools: 40, total tests: 321
+
 ## [0.7.2] - 2026-03-10
 
 ### Added
