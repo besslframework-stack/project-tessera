@@ -151,10 +151,24 @@ def save_memory(
     return file_path
 
 
-def recall_memories(query: str, top_k: int = 5) -> list[dict]:
-    """Search memories using vector similarity.
+def recall_memories(
+    query: str,
+    top_k: int = 5,
+    since: str | None = None,
+    until: str | None = None,
+    category: str | None = None,
+) -> list[dict]:
+    """Search memories using vector similarity with optional time and category filters.
 
-    Returns list of dicts with 'content', 'date', 'tags', 'source', 'similarity'.
+    Args:
+        query: Search query text.
+        top_k: Maximum number of results.
+        since: ISO date string (e.g. '2026-03-01'). Only return memories after this date.
+        until: ISO date string (e.g. '2026-03-10'). Only return memories before this date.
+        category: Filter by category (decision, preference, fact, etc.).
+
+    Returns:
+        List of dicts with 'content', 'date', 'category', 'tags', 'source', 'similarity'.
     """
     import lancedb
 
@@ -171,26 +185,45 @@ def recall_memories(query: str, top_k: int = 5) -> list[dict]:
     table = db.open_table("memories")
     vector = embed_query(query)
 
+    # Fetch more results when filtering, to compensate for post-filter reduction
+    fetch_k = top_k * 3 if (since or until or category) else top_k
+
     try:
-        results = table.search(vector).limit(top_k).to_list()
+        results = table.search(vector).limit(fetch_k).to_list()
     except Exception as exc:
         logger.warning("Memory search failed: %s", exc)
         return []
 
     memories = []
     for row in results:
+        date_val = row.get("date", "")
+        cat_val = row.get("category", "")
+
+        # Time filter
+        if since and date_val and date_val[:10] < since[:10]:
+            continue
+        if until and date_val and date_val[:10] > until[:10]:
+            continue
+
+        # Category filter
+        if category and cat_val.lower() != category.lower():
+            continue
+
         dist = row.get("_distance", 1.0)
         similarity = max(0.0, min(1.0, 1.0 - float(dist)))
 
         memories.append({
             "content": row.get("text", ""),
-            "date": row.get("date", ""),
-            "category": row.get("category", ""),
+            "date": date_val,
+            "category": cat_val,
             "tags": row.get("tags", ""),
             "source": row.get("source", ""),
             "file_path": row.get("file_path", ""),
             "similarity": similarity,
         })
+
+        if len(memories) >= top_k:
+            break
 
     return memories
 

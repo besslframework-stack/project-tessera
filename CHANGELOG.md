@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.2] - 2026-03-10
+
+### Added
+- **Temporal Index** — `recall` now supports `since` and `until` date filters for time-based queries
+- **Category filter** on `recall` — filter memories by category (decision, preference, fact)
+- **Combined filters** — use time + category together (e.g. "decisions from last week")
+- **`tests/test_temporal.py`** — 7 tests for time and category filtering
+- Total tools: 39, total tests: 303
+
+### Changed
+- **`recall_memories()`** — new `since`, `until`, `category` parameters with post-filter logic
+- **`core.recall()`** — accepts and passes through filter parameters
+- **MCP `recall` tool** — updated description, accepts `since`, `until`, `category` arguments
+
 ## [0.7.1] - 2026-03-10
 
 ### Added

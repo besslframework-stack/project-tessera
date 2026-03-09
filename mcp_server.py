@@ -311,12 +311,20 @@ def remember(content: str, tags: list[str] | None = None) -> str:
     description=(
         "Search past memories from previous sessions. "
         "Call this when the user asks 'what did I say about...', "
-        "'do you remember...', or references past conversations."
+        "'do you remember...', or references past conversations.\n\n"
+        "Supports time filters (since/until as ISO date, e.g. '2026-03-01') "
+        "and category filter (decision/preference/fact)."
     )
 )
-def recall(query: str, top_k: int = 5) -> str:
-    """Search past memories using semantic similarity."""
-    return core.recall(query, top_k=top_k)
+def recall(
+    query: str,
+    top_k: int = 5,
+    since: str | None = None,
+    until: str | None = None,
+    category: str | None = None,
+) -> str:
+    """Search past memories with optional time and category filters."""
+    return core.recall(query, top_k=top_k, since=since, until=until, category=category)
 
 
 @mcp.tool(

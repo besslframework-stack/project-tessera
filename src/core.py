@@ -338,8 +338,22 @@ def remember(content: str, tags: list[str] | None = None) -> str:
     return f"Remembered and {status}:\n{content}"
 
 
-def recall(query: str, top_k: int = 5) -> str:
-    """Search past memories using semantic similarity."""
+def recall(
+    query: str,
+    top_k: int = 5,
+    since: str | None = None,
+    until: str | None = None,
+    category: str | None = None,
+) -> str:
+    """Search past memories using semantic similarity with optional filters.
+
+    Args:
+        query: Search query.
+        top_k: Max results.
+        since: Only memories after this date (e.g. '2026-03-01').
+        until: Only memories before this date (e.g. '2026-03-10').
+        category: Filter by category (decision, preference, fact).
+    """
     if not query or not query.strip():
         return "Please provide a search query."
     from src.config import workspace
@@ -347,16 +361,30 @@ def recall(query: str, top_k: int = 5) -> str:
 
     top_k = max(1, min(top_k, workspace.search.max_top_k))
 
-    memories = recall_memories(query.strip(), top_k=top_k)
-    _log_interaction("recall", f"query={query.strip()!r} top_k={top_k}", f"{len(memories)} memories found")
+    memories = recall_memories(
+        query.strip(), top_k=top_k, since=since, until=until, category=category,
+    )
+    filters = []
+    if since:
+        filters.append(f"since={since}")
+    if until:
+        filters.append(f"until={until}")
+    if category:
+        filters.append(f"category={category}")
+    filter_str = f" [{', '.join(filters)}]" if filters else ""
+    _log_interaction("recall", f"query={query.strip()!r} top_k={top_k}{filter_str}", f"{len(memories)} memories found")
 
     if not memories:
+        if filters:
+            return f"No memories found matching your filters{filter_str}."
         return "I don't have any memories yet. You can ask me to remember something first."
 
     parts = []
     for i, m in enumerate(memories, 1):
         sim = m["similarity"] * 100
         header = f"[{i}] (similarity: {sim:.1f}%)"
+        if m.get("category"):
+            header += f"  [{m['category']}]"
         if m["date"]:
             header += f"  date: {m['date']}"
         if m["tags"]:
