@@ -625,6 +625,18 @@ def smart_suggest(max_suggestions: int = 5) -> str:
 
 @mcp.tool(
     description=(
+        "Generate a topic map showing how your knowledge is organized. "
+        "Clusters memories by shared keywords and shows topic distribution. "
+        "Use format='mermaid' for a visual Mermaid mindmap diagram."
+    )
+)
+def topic_map(output_format: str = "text") -> str:
+    """Generate topic map of all memories."""
+    return core.topic_map(output_format)
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

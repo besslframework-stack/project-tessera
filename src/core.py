@@ -1244,6 +1244,30 @@ def smart_suggest(max_suggestions: int = 5) -> str:
     return format_suggestions(suggestions)
 
 
+def topic_map(output_format: str = "text") -> str:
+    """Generate a topic map of all memories.
+
+    Args:
+        output_format: 'text' for readable text, 'mermaid' for Mermaid diagram.
+    """
+    from src.topic_map import build_topic_map, format_topic_map_mermaid, format_topic_map_text
+
+    # Get all memories
+    memories: list[dict] = []
+    try:
+        from src.memory import list_memories
+        memories = list_memories(limit=200)
+    except Exception:
+        logger.debug("Could not load memories for topic map")
+
+    topics = build_topic_map(memories)
+    _log_interaction("topic_map", f"format={output_format}", f"{len(topics)} topics")
+
+    if output_format == "mermaid":
+        return format_topic_map_mermaid(topics)
+    return format_topic_map_text(topics)
+
+
 # --- Interaction Log Tools ---
 
 

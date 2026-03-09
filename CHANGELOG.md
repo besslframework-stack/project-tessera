@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.7] - 2026-03-10
+
+### Added
+- **Topic Map** — cluster all memories by shared keywords, visualize knowledge distribution
+- **`topic_map` MCP tool** — text or Mermaid mindmap output showing topic clusters
+- **`src/topic_map.py`** — greedy set-cover clustering with co-occurrence keywords
+- **Mermaid mindmap** — `format_topic_map_mermaid()` generates visual mindmap diagram
+- **`tests/test_topic_map.py`** — 18 tests (tokenization, clustering, formatting, edge cases)
+- Total tools: 43, total tests: 400
+
 ## [0.7.6] - 2026-03-10
 
 ### Added
