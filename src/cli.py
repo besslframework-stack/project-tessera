@@ -499,15 +499,7 @@ def cmd_check(args: argparse.Namespace) -> None:
 def cmd_install_mcp(args: argparse.Namespace) -> None:
     """Auto-configure Claude Desktop to use Tessera MCP."""
     import json
-
-    project_root = Path(__file__).parent.parent
-    venv_python = project_root / ".venv" / "bin" / "python"
-    mcp_server = project_root / "mcp_server.py"
-
-    if not venv_python.exists():
-        print(f"Python not found at: {venv_python}")
-        print("Make sure you've created a virtual environment: python3 -m venv .venv")
-        return
+    import shutil
 
     # Find Claude Desktop config
     config_locations = [
@@ -522,7 +514,6 @@ def cmd_install_mcp(args: argparse.Namespace) -> None:
             break
 
     if config_path is None:
-        # Try creating at the first location (macOS)
         config_path = config_locations[0]
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -547,19 +538,43 @@ def cmd_install_mcp(args: argparse.Namespace) -> None:
             print("Keeping existing config.")
             return
 
-    config["mcpServers"]["tessera"] = {
-        "command": str(venv_python),
-        "args": [str(mcp_server)],
-        "cwd": str(project_root),
-    }
+    # Determine best command: uvx > venv python > system python
+    project_root = Path(__file__).parent.parent
+    uvx_path = shutil.which("uvx")
+    venv_python = project_root / ".venv" / "bin" / "python"
+
+    if uvx_path:
+        # uvx: no venv needed, works anywhere
+        tessera_config = {
+            "command": "uvx",
+            "args": ["--from", "project-tessera", "tessera-mcp"],
+        }
+        method = "uvx (recommended)"
+    elif venv_python.exists():
+        # Local venv: traditional method
+        mcp_server = project_root / "mcp_server.py"
+        tessera_config = {
+            "command": str(venv_python),
+            "args": [str(mcp_server)],
+            "cwd": str(project_root),
+        }
+        method = "venv"
+    else:
+        # Fallback: assume tessera-mcp is in PATH
+        tessera_config = {
+            "command": "tessera-mcp",
+        }
+        method = "system PATH"
+
+    config["mcpServers"]["tessera"] = tessera_config
 
     with open(config_path, "w") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
     print(f"Tessera MCP configured in: {config_path}")
-    print(f"  command: {venv_python}")
-    print(f"  args: [{mcp_server}]")
-    print(f"  cwd: {project_root}")
+    print(f"  method: {method}")
+    for k, v in tessera_config.items():
+        print(f"  {k}: {v}")
     print()
     print("Restart Claude Desktop to apply changes.")
 

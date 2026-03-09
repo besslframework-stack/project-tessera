@@ -1175,5 +1175,10 @@ def workspace_status() -> str:
     return get_all_projects_summary()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for the MCP server."""
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.2] - 2026-03-10
+
+### Added
+- **`tessera-mcp` entry point** — run MCP server directly via `tessera-mcp` command
+- **uvx-first Claude Desktop config** — `tessera install-mcp` auto-detects uvx and generates zero-venv config
+- uvx install option in README
+
+### Changed
+- `cmd_install_mcp` now prioritizes uvx > venv > system PATH
+
 ## [0.6.0] - 2026-03-09
 
 Zero-config experience — Tessera works without workspace.yaml.

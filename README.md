@@ -129,13 +129,26 @@ Your documents (Markdown, CSV, XLSX, DOCX, PDF)
 
 If `tessera setup` didn't configure Claude Desktop automatically, add this to your `claude_desktop_config.json`:
 
+**With uvx (recommended — no venv needed):**
+
 ```json
 {
   "mcpServers": {
     "tessera": {
-      "command": "python",
-      "args": ["-m", "mcp_server"],
-      "cwd": "/path/to/your/workspace"
+      "command": "uvx",
+      "args": ["--from", "project-tessera", "tessera-mcp"]
+    }
+  }
+}
+```
+
+**With pip install:**
+
+```json
+{
+  "mcpServers": {
+    "tessera": {
+      "command": "tessera-mcp"
     }
   }
 }
