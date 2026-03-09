@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.7] - 2026-03-10
+
+### Added
+- **Memory Categories** — memories are auto-categorized as `decision`, `preference`, `fact`, `reference`, `context`, or `general` using pattern matching from `auto_extract.py`
+- **`memory_categories` tool** — list all categories with counts
+- **`search_by_category` tool** — filter memories by category (e.g. "show me all my decisions")
+- **`_detect_category()` function** — auto-detects category from content text
+- **`category` field in frontmatter** — every new memory file now includes `category:` in YAML frontmatter
+- **`tests/test_memory_categories.py`** — 17 tests for category detection, listing, and search
+- Total tools: 37, total tests: 246
+
+### Changed
+- **`save_memory()`** — new `category` parameter; auto-detected if not provided
+- **`index_memory()`** — parses and indexes `category` field from frontmatter
+- **`recall_memories()`** — includes `category` in search results
+
 ## [0.6.6] - 2026-03-10
 
 ### Added

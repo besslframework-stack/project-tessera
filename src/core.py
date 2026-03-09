@@ -901,6 +901,44 @@ def search_by_tag(tag: str) -> str:
     return "\n".join(lines)
 
 
+def memory_categories() -> str:
+    """List all memory categories with counts."""
+    from src.memory import list_memory_categories
+
+    cats = list_memory_categories()
+    if not cats:
+        return "No categories found. Categories are auto-detected when saving memories."
+
+    lines = [f"# Memory Categories ({len(cats)})", ""]
+    for cat, count in cats.items():
+        lines.append(f"- **{cat}** ({count})")
+    return "\n".join(lines)
+
+
+def search_by_category(category: str) -> str:
+    """Find all memories with a specific category (decision, preference, fact, etc.)."""
+    if not category or not category.strip():
+        return "Please provide a category (e.g. 'decision', 'preference', 'fact')."
+    from src.memory import search_memories_by_category
+
+    results = search_memories_by_category(category.strip())
+    if not results:
+        return f"No memories found with category '{category}'."
+
+    lines = [f"# {category.title()} memories ({len(results)})", ""]
+    for r in results:
+        date = r.get("date", "")[:10] if r.get("date") else ""
+        header = f"- **{r['filename']}**"
+        if date:
+            header += f" ({date})"
+        lines.append(header)
+        preview = r["content"][:100].replace("\n", " ")
+        if len(r["content"]) > 100:
+            preview += "..."
+        lines.append(f"  {preview}")
+    return "\n".join(lines)
+
+
 # --- MCP Resources ---
 
 

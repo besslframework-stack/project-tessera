@@ -69,10 +69,28 @@ def _check_duplicate(content: str, threshold: float = 0.92) -> dict | None:
     return None
 
 
+def _detect_category(content: str) -> str:
+    """Auto-detect memory category from content using pattern matching.
+
+    Categories: decision, preference, fact, reference, context.
+    Falls back to 'general' if no pattern matches.
+    """
+    try:
+        from src.auto_extract import extract_facts
+
+        facts = extract_facts(content)
+        if facts:
+            return facts[0].category
+    except Exception:
+        pass
+    return "general"
+
+
 def save_memory(
     content: str,
     tags: list[str] | None = None,
     source: str = "conversation",
+    category: str | None = None,
     dedup: bool = True,
     dedup_threshold: float = 0.92,
 ) -> Path:
@@ -80,11 +98,13 @@ def save_memory(
 
     Checks for duplicate memories before saving (cosine similarity > threshold).
     If a duplicate is found, the save is skipped and the existing file path is returned.
+    Auto-detects category (decision/preference/fact) from content if not provided.
 
     Args:
         content: The knowledge/fact/decision to remember.
         tags: Optional tags for categorization.
         source: Where this memory came from.
+        category: Memory category. Auto-detected if None.
         dedup: Whether to check for duplicates before saving.
         dedup_threshold: Cosine similarity threshold for dedup (0.0-1.0).
 
@@ -102,6 +122,10 @@ def save_memory(
             )
             return existing_path
 
+    # Auto-detect category if not provided
+    if category is None:
+        category = _detect_category(content)
+
     now = datetime.now()
     timestamp = now.strftime("%Y%m%d_%H%M%S")
     slug = content[:40].replace(" ", "_").replace("/", "_").replace("\n", "_")
@@ -116,13 +140,14 @@ def save_memory(
         f"---\n"
         f"date: {now.isoformat()}\n"
         f"source: {source}\n"
+        f"category: {category}\n"
         f"tags: [{tag_str}]\n"
         f"---\n\n"
         f"{content}\n"
     )
 
     file_path.write_text(md_content, encoding="utf-8")
-    logger.info("Saved memory: %s", file_path)
+    logger.info("Saved memory [%s]: %s", category, file_path)
     return file_path
 
 
@@ -160,6 +185,7 @@ def recall_memories(query: str, top_k: int = 5) -> list[dict]:
         memories.append({
             "content": row.get("text", ""),
             "date": row.get("date", ""),
+            "category": row.get("category", ""),
             "tags": row.get("tags", ""),
             "source": row.get("source", ""),
             "file_path": row.get("file_path", ""),
@@ -188,6 +214,7 @@ def index_memory(file_path: Path) -> int:
     # Parse frontmatter
     date_str = ""
     source = ""
+    category = ""
     tags = ""
     body = text
     if text.startswith("---"):
@@ -200,6 +227,8 @@ def index_memory(file_path: Path) -> int:
                     date_str = line.split(":", 1)[1].strip()
                 elif line.startswith("source:"):
                     source = line.split(":", 1)[1].strip()
+                elif line.startswith("category:"):
+                    category = line.split(":", 1)[1].strip()
                 elif line.startswith("tags:"):
                     tags = line.split(":", 1)[1].strip()
 
@@ -215,6 +244,7 @@ def index_memory(file_path: Path) -> int:
         "text": body,
         "date": date_str,
         "source": source,
+        "category": category,
         "tags": tags,
         "file_path": str(file_path),
     }
@@ -480,6 +510,90 @@ def search_memories_by_tag(tag: str) -> list[dict]:
             "filename": md_file.stem,
             "content": body,
             "date": date_str,
+            "tags": tags_raw,
+            "source": source,
+        })
+
+    results.sort(key=lambda m: m["date"], reverse=True)
+    return results
+
+
+def list_memory_categories() -> dict[str, int]:
+    """List all unique categories across saved memories with their counts.
+
+    Returns:
+        Dict mapping category name to count. Sorted by count descending.
+    """
+    from collections import Counter
+
+    mem_dir = _memory_dir()
+    counter: Counter[str] = Counter()
+
+    for md_file in mem_dir.glob("*.md"):
+        text = md_file.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            continue
+
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            continue
+
+        frontmatter = parts[1]
+        for line in frontmatter.strip().splitlines():
+            if line.startswith("category:"):
+                cat = line.split(":", 1)[1].strip()
+                if cat:
+                    counter[cat] += 1
+                break
+
+    return dict(counter.most_common())
+
+
+def search_memories_by_category(category: str) -> list[dict]:
+    """Find all memories with a specific category.
+
+    Args:
+        category: Category to filter by (e.g. 'decision', 'preference', 'fact').
+
+    Returns:
+        List of dicts with 'filename', 'content', 'date', 'category', 'tags', 'source'.
+        Sorted by date descending (newest first).
+    """
+    mem_dir = _memory_dir()
+    results: list[dict] = []
+
+    for md_file in mem_dir.glob("*.md"):
+        text = md_file.read_text(encoding="utf-8")
+
+        date_str = ""
+        source = ""
+        cat = ""
+        tags_raw = ""
+        body = text
+
+        if text.startswith("---"):
+            parts = text.split("---", 2)
+            if len(parts) >= 3:
+                frontmatter = parts[1]
+                body = parts[2].strip()
+                for line in frontmatter.strip().splitlines():
+                    if line.startswith("date:"):
+                        date_str = line.split(":", 1)[1].strip()
+                    elif line.startswith("source:"):
+                        source = line.split(":", 1)[1].strip()
+                    elif line.startswith("category:"):
+                        cat = line.split(":", 1)[1].strip()
+                    elif line.startswith("tags:"):
+                        tags_raw = line.split(":", 1)[1].strip()
+
+        if cat.lower() != category.lower():
+            continue
+
+        results.append({
+            "filename": md_file.stem,
+            "content": body,
+            "date": date_str,
+            "category": cat,
             "tags": tags_raw,
             "source": source,
         })

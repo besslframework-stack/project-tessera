@@ -87,7 +87,7 @@ Ask Claude about your documents. It searches automatically.
 | Word | `.docx` | `pip install project-tessera[docx]` |
 | PDF | `.pdf` | `pip install project-tessera[pdf]` |
 
-## Tools (35)
+## Tools (37)
 
 ### Search
 | Tool | What it does |
@@ -111,6 +111,8 @@ Ask Claude about your documents. It searches automatically.
 | `import_memories` | Batch import memories from JSON |
 | `memory_tags` | List all unique tags with counts |
 | `search_by_tag` | Filter memories by specific tag |
+| `memory_categories` | List auto-detected categories (decision/preference/fact) |
+| `search_by_category` | Filter memories by category |
 
 ### Knowledge graph
 | Tool | What it does |

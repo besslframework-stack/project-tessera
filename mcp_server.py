@@ -541,6 +541,28 @@ def search_by_tag(tag: str) -> str:
     return core.search_by_tag(tag)
 
 
+@mcp.tool(
+    description=(
+        "List all memory categories with counts. "
+        "Categories are auto-detected: decision, preference, fact, reference, context."
+    )
+)
+def memory_categories() -> str:
+    """List all memory categories with counts."""
+    return core.memory_categories()
+
+
+@mcp.tool(
+    description=(
+        "Search memories by category (e.g. 'decision', 'preference', 'fact'). "
+        "Use memory_categories first to see available categories."
+    )
+)
+def search_by_category(category: str) -> str:
+    """Find all memories with a specific category."""
+    return core.search_by_category(category)
+
+
 # --- MCP Resources ---
 
 
