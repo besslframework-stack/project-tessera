@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.3] - 2026-03-10
+
+### Added
+- **`TESSERA_WORKSPACE` env var** — set document folder path via environment variable, enables uvx users to specify workspace without workspace.yaml
+- 3 new config tests (total: 184)
+
 ## [0.6.2] - 2026-03-10
 
 ### Added

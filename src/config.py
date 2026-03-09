@@ -168,14 +168,19 @@ def _build_auto_detected_defaults() -> dict:
     """Build a sensible default config from the current working directory.
 
     Used when no workspace.yaml is found, enabling zero-config startup
-    for non-technical users.
+    for non-technical users. Respects TESSERA_WORKSPACE env var if set.
     """
-    cwd = Path.cwd()
-    folder_name = cwd.name or "workspace"
+    workspace_env = os.environ.get("TESSERA_WORKSPACE")
+    if workspace_env:
+        workspace_path = Path(workspace_env).expanduser().resolve()
+        folder_name = workspace_path.name or "workspace"
+    else:
+        workspace_path = Path.cwd()
+        folder_name = workspace_path.name or "workspace"
     return {
         "workspace": {
             "name": folder_name,
-            "root": str(cwd),
+            "root": str(workspace_path),
         },
         "sources": [
             {
@@ -200,11 +205,17 @@ def load_workspace_config() -> WorkspaceConfig:
         with open(yaml_path) as f:
             raw = yaml.safe_load(f) or {}
     else:
-        cwd_name = Path.cwd().name or "workspace"
-        logger.info(
-            "No workspace.yaml found, using auto-detected defaults for %s",
-            cwd_name,
-        )
+        workspace_env = os.environ.get("TESSERA_WORKSPACE")
+        if workspace_env:
+            logger.info(
+                "No workspace.yaml found, using TESSERA_WORKSPACE=%s",
+                workspace_env,
+            )
+        else:
+            logger.info(
+                "No workspace.yaml found, using auto-detected defaults for %s",
+                Path.cwd().name or "workspace",
+            )
         raw = _build_auto_detected_defaults()
 
     ws = raw.get("workspace", {})

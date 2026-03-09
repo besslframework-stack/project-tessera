@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,7 @@ from src.config import (
     SourceConfig,
     WatcherConfig,
     WorkspaceConfig,
+    _build_auto_detected_defaults,
     _validate_positive,
     _validate_range,
     load_workspace_config,
@@ -184,3 +186,24 @@ class TestConfigValidation:
     def test_validate_range_below(self):
         with pytest.raises(ConfigValidationError):
             _validate_range("test", -0.1, 0.0, 1.0)
+
+
+class TestTesseraWorkspaceEnv:
+    def test_env_var_overrides_cwd(self, tmp_path, monkeypatch):
+        target = tmp_path / "my-docs"
+        target.mkdir()
+        monkeypatch.setenv("TESSERA_WORKSPACE", str(target))
+        result = _build_auto_detected_defaults()
+        assert result["workspace"]["root"] == str(target)
+        assert result["workspace"]["name"] == "my-docs"
+
+    def test_env_var_with_tilde(self, monkeypatch):
+        monkeypatch.setenv("TESSERA_WORKSPACE", "~/Documents/notes")
+        result = _build_auto_detected_defaults()
+        assert "~" not in result["workspace"]["root"]
+        assert "Documents/notes" in result["workspace"]["root"]
+
+    def test_no_env_var_uses_cwd(self, monkeypatch):
+        monkeypatch.delenv("TESSERA_WORKSPACE", raising=False)
+        result = _build_auto_detected_defaults()
+        assert result["workspace"]["root"] == str(Path.cwd())
