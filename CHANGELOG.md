@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.8.0] - 2026-03-10
+
+### Radar Phase Complete — Tessera now has proactive intelligence
+
+Tessera no longer just searches when asked. It tracks decision evolution,
+suggests what to explore, maps knowledge topology, and ages out stale
+information automatically.
+
+### Radar Phase summary (v0.7.1 → v0.8.0)
+| Version | Feature | Tests added |
+|---------|---------|-------------|
+| v0.7.1 | Universal text/code parser (50+ extensions) | 29 |
+| v0.7.2 | Temporal index (since/until/category filters) | 7 |
+| v0.7.3 | Decision tracker (topic grouping + change detection) | 18 |
+| v0.7.4 | Context window builder (token budget assembly) | 24 |
+| v0.7.5 | Smart suggest (pattern-based query recommendations) | 15 |
+| v0.7.6 | Relevance decay (time-based score adjustment) | 22 |
+| v0.7.7 | Topic map (keyword clustering + Mermaid mindmap) | 18 |
+| v0.7.8 | Knowledge stats (aggregate dashboard) | 13 |
+
+### Changed
+- README updated: 44 tools, Intelligence section added
+- Total tools: 44, total tests: 413
+
 ## [0.7.8] - 2026-03-10
 
 ### Added

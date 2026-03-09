@@ -88,7 +88,7 @@ Ask Claude about your documents. It searches automatically.
 | Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
 | Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` (for text extraction) |
 
-## Tools (39)
+## Tools (44)
 
 ### Search
 | Tool | What it does |
@@ -103,7 +103,7 @@ Ask Claude about your documents. It searches automatically.
 | Tool | What it does |
 |------|-------------|
 | `remember` | Save knowledge that persists across sessions |
-| `recall` | Search past memories from previous conversations |
+| `recall` | Search past memories with date/category filters |
 | `learn` | Save and immediately index new knowledge |
 | `digest_conversation` | Auto-extract decisions/facts from the current session |
 | `list_memories` | Browse saved memories |
@@ -130,6 +130,15 @@ Ask Claude about your documents. It searches automatically.
 | `review_learned` | Review recently auto-learned memories |
 | `session_interactions` | View tool calls from current/past sessions |
 | `recent_sessions` | Session history with interaction counts |
+
+### Intelligence
+| Tool | What it does |
+|------|-------------|
+| `decision_timeline` | Track how decisions evolved over time, grouped by topic |
+| `context_window` | Build optimal context within a token budget for cross-AI use |
+| `smart_suggest` | Personalized query suggestions based on past patterns |
+| `topic_map` | Cluster memories by topic with Mermaid mindmap |
+| `knowledge_stats` | Aggregate statistics dashboard (categories, tags, growth) |
 
 ### Workspace
 | Tool | What it does |
