@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "0.5.2"
+version = "0.6.0"
 description = "Tessera — Personal knowledge RAG as an MCP server for Claude Desktop"
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"

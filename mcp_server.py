@@ -190,12 +190,12 @@ def search_documents(
         results = search(query.strip(), top_k=top_k, project=project, doc_type=doc_type)
     except Exception as exc:
         logger.error("Search failed: %s", exc)
-        return f"Search error: {exc}. Try running `ingest_documents` first."
+        return "Couldn't search yet — your documents haven't been indexed. Try asking me to 'index my documents' first."
     _elapsed = (_time.monotonic() - _t0) * 1000
     _analytics.log_query(query.strip(), top_k, len(results), _elapsed, project, doc_type, "search")
 
     if not results:
-        msg = "No results found."
+        msg = "I couldn't find anything matching that."
         suggestions = suggest_alternative_queries(query.strip())
         if suggestions:
             msg += "\n\nTry these alternative queries:\n"
@@ -289,7 +289,7 @@ def list_sources() -> str:
     sources = list_indexed_sources()
 
     if not sources:
-        return "No indexed files. Try the `ingest_documents` tool to index your documents first."
+        return "No files indexed yet. Ask me to 'index my documents' or run `tessera setup` to get started."
 
     lines = [f"Indexed files ({len(sources)}):", ""]
     for s in sources:
@@ -461,7 +461,7 @@ def audit_prd(
 def remember(content: str, tags: list[str] | None = None) -> str:
     """Save a memory for cross-session persistence."""
     if not content or not content.strip():
-        return "Please provide content to remember."
+        return "What should I remember? Tell me what you'd like to save."
     from src.memory import learn_and_index
 
     result = learn_and_index(content.strip(), tags=tags, source="user-request")
@@ -486,7 +486,7 @@ def recall(query: str, top_k: int = 5) -> str:
     memories = recall_memories(query.strip(), top_k=top_k)
 
     if not memories:
-        return "No memories found. Nothing has been saved yet."
+        return "I don't have any memories yet. You can ask me to remember something first."
 
     parts = []
     for i, m in enumerate(memories, 1):
@@ -666,7 +666,14 @@ def ingest_documents(paths: list[str] | None = None) -> str:
     pipeline = IngestionPipeline(vector_store=vector_store)
 
     source_paths = [Path(p) for p in paths] if paths else None
-    count, per_file = pipeline.run(source_paths=source_paths)
+    try:
+        count, per_file = pipeline.run(source_paths=source_paths)
+    except Exception as exc:
+        logger.error("Ingestion failed: %s", exc)
+        return (
+            "Something went wrong while indexing. Make sure your workspace folder "
+            "exists and contains supported files (.md, .csv, .xlsx, .docx, .pdf)."
+        )
     invalidate_search_cache()
 
     return (

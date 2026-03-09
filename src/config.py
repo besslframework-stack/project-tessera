@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -161,16 +164,48 @@ def _validate_range(name: str, value, lo, hi) -> None:
         )
 
 
+def _build_auto_detected_defaults() -> dict:
+    """Build a sensible default config from the current working directory.
+
+    Used when no workspace.yaml is found, enabling zero-config startup
+    for non-technical users.
+    """
+    cwd = Path.cwd()
+    folder_name = cwd.name or "workspace"
+    return {
+        "workspace": {
+            "name": folder_name,
+            "root": str(cwd),
+        },
+        "sources": [
+            {
+                "path": ".",
+                "type": "document",
+                "project": "_global",
+            },
+        ],
+        "sync": {
+            "auto_sync": True,
+            "extensions": [".md", ".csv", ".xlsx", ".docx", ".pdf"],
+        },
+    }
+
+
 def load_workspace_config() -> WorkspaceConfig:
-    """Load workspace config from workspace.yaml, falling back to hardcoded defaults."""
+    """Load workspace config from workspace.yaml, falling back to auto-detected defaults."""
     project_root = Path(__file__).parent.parent
     yaml_path = project_root / "workspace.yaml"
 
     if yaml_path.exists():
         with open(yaml_path) as f:
-            raw = yaml.safe_load(f)
+            raw = yaml.safe_load(f) or {}
     else:
-        raw = {}
+        cwd_name = Path.cwd().name or "workspace"
+        logger.info(
+            "No workspace.yaml found, using auto-detected defaults for %s",
+            cwd_name,
+        )
+        raw = _build_auto_detected_defaults()
 
     ws = raw.get("workspace", {})
     root = Path(ws.get("root", settings.data.base_dir))
@@ -183,11 +218,11 @@ def load_workspace_config() -> WorkspaceConfig:
             type=s.get("type", "unknown"),
             project=s.get("project", "_global"),
         ))
-    # Fallback: use hardcoded tier1 + tier2 if no sources in yaml
+    # Fallback: use current directory as single document source
     if not sources:
-        for p in settings.data.tier1_sources + settings.data.tier2_sources:
-            rel = str(p.relative_to(root))
-            sources.append(SourceConfig(path=rel, type="unknown", project="_global"))
+        sources.append(
+            SourceConfig(path=".", type="document", project="_global")
+        )
 
     projects = {}
     for pid, pdata in raw.get("projects", {}).items():

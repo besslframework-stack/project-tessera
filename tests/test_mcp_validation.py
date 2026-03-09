@@ -47,13 +47,13 @@ class TestRememberValidation:
         from mcp_server import remember
 
         result = remember(content="")
-        assert "provide content" in result.lower()
+        assert "remember" in result.lower() or "provide content" in result.lower()
 
     def test_whitespace_content(self):
         from mcp_server import remember
 
         result = remember(content="   \n  ")
-        assert "provide content" in result.lower()
+        assert "remember" in result.lower() or "provide content" in result.lower()
 
 
 class TestLearnValidation:
@@ -61,7 +61,7 @@ class TestLearnValidation:
         from mcp_server import learn
 
         result = learn(content="")
-        assert "provide content" in result.lower()
+        assert "remember" in result.lower() or "provide content" in result.lower()
 
 
 class TestUnifiedSearchValidation:

@@ -1,6 +1,7 @@
 """Tessera CLI — personal knowledge RAG system.
 
 Usage:
+    tessera setup                         One-command setup for new users
     tessera init                          Interactive setup (workspace.yaml + first index)
     tessera ingest [--path PATH]          Ingest documents into the vector store
     tessera sync                          Incremental sync (new/changed/deleted files only)
@@ -22,6 +23,106 @@ logger = logging.getLogger(__name__)
 
 # Project root is one level up from src/
 PROJECT_ROOT = Path(__file__).parent.parent
+
+
+def cmd_setup(args: argparse.Namespace) -> None:
+    """One-command setup: workspace.yaml + embedding model + Claude Desktop config."""
+    project_root = PROJECT_ROOT
+    yaml_path = project_root / "workspace.yaml"
+
+    print("Setting up Tessera...")
+    print()
+
+    # Step 1: Create workspace.yaml if missing
+    if yaml_path.exists():
+        print(f"workspace.yaml already exists at {yaml_path}")
+    else:
+        try:
+            import yaml
+
+            workspace_name = project_root.name
+            config = {
+                "workspace": {
+                    "root": str(project_root),
+                    "name": workspace_name,
+                },
+                "sources": [
+                    {"path": ".", "type": "document", "project": "_global"},
+                ],
+                "projects": {},
+                "archive": {"directory": "archive"},
+                "models": {
+                    "embed_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+                },
+                "search": {
+                    "max_top_k": 50,
+                    "reranker_weight": 0.7,
+                    "fetch_multiplier": 6,
+                    "result_text_limit": 1500,
+                    "unified_text_limit": 800,
+                },
+                "ingestion": {
+                    "chunk_size": 1024,
+                    "chunk_overlap": 100,
+                    "max_node_chars": 800,
+                },
+                "watcher": {
+                    "poll_interval": 30.0,
+                    "debounce": 5.0,
+                },
+                "sync": {
+                    "auto_sync": True,
+                    "extensions": [".md", ".csv"],
+                    "ignore": [
+                        "**/.venv/**", "**/.next/**", "**/node_modules/**",
+                        "**/__pycache__/**", "**/data/lancedb/**",
+                        "**/data/logs/**", "**/archive/**", "**/.git/**",
+                    ],
+                },
+            }
+
+            with open(yaml_path, "w") as f:
+                yaml.dump(
+                    config, f,
+                    default_flow_style=False,
+                    allow_unicode=True,
+                    sort_keys=False,
+                )
+            print(f"Created workspace.yaml at {yaml_path}")
+        except Exception as exc:
+            print(f"Failed to create workspace.yaml: {exc}")
+            print("You can create it manually with `tessera init`.")
+
+    # Step 2: Pre-download embedding model
+    print()
+    print("Downloading embedding model (first time only)...")
+    try:
+        from fastembed import TextEmbedding
+
+        TextEmbedding(
+            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        )
+        print("Embedding model ready.")
+    except ImportError:
+        print("fastembed not installed. Run `pip install -e .` first, then re-run setup.")
+    except Exception as exc:
+        print(f"Could not download embedding model: {exc}")
+        print("The model will be downloaded automatically on first use.")
+
+    # Step 3: Configure Claude Desktop
+    print()
+    try:
+        mcp_args = argparse.Namespace(force=True)
+        cmd_install_mcp(mcp_args)
+    except Exception as exc:
+        print(f"Could not configure Claude Desktop automatically: {exc}")
+        print("You can configure it later with `tessera install-mcp`.")
+
+    # Summary
+    print()
+    print("=" * 50)
+    print("Setup complete! Restart Claude Desktop to start using Tessera.")
+    print("=" * 50)
 
 
 def cmd_init(args: argparse.Namespace) -> None:
@@ -436,8 +537,9 @@ def cmd_install_mcp(args: argparse.Namespace) -> None:
         config["mcpServers"] = {}
 
     # Check if tessera already configured
+    force = getattr(args, "force", False)
     existing = config["mcpServers"].get("tessera")
-    if existing:
+    if existing and not force:
         print(f"Tessera already configured in {config_path}")
         print(f"  command: {existing.get('command', '?')}")
         update = input("Update to current paths? [y/N] ").strip().lower()
@@ -469,6 +571,10 @@ def cli() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # setup
+    setup_parser = subparsers.add_parser("setup", help="One-command setup for new users")
+    setup_parser.set_defaults(func=cmd_setup)
 
     # init
     init_parser = subparsers.add_parser("init", help="Interactive setup")
@@ -502,6 +608,9 @@ def cli() -> None:
 
     # install-mcp
     install_parser = subparsers.add_parser("install-mcp", help="Configure Claude Desktop for Tessera")
+    install_parser.add_argument(
+        "--force", action="store_true", help="Overwrite existing config without prompting"
+    )
     install_parser.set_defaults(func=cmd_install_mcp)
 
     args = parser.parse_args()

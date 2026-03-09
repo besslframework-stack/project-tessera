@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0] - 2026-03-09
+
+Zero-config experience — Tessera works without workspace.yaml.
+
+### Added
+- **`tessera setup` one-command** — creates workspace.yaml, downloads embedding model, configures Claude Desktop in one step
+- **Auto-detect workspace** — MCP server starts without workspace.yaml, auto-discovers files in current directory
+- **Friendly error messages** — all user-facing errors rewritten to be action-oriented, no technical jargon
+
+### Changed
+- `load_workspace_config()` gracefully falls back to auto-detected defaults when no config file exists
+
 ## [0.5.2] - 2026-03-09
 
 ### Added
