@@ -1,0 +1,15 @@
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      workspacePath:
+        type: string
+        description: Path to the folder containing your documents (optional, defaults to current directory)
+  commandFunction:
+    |-
+    (config) => ({
+      command: "uvx",
+      args: ["--from", "project-tessera", "tessera-mcp"],
+      env: config.workspacePath ? { TESSERA_WORKSPACE: config.workspacePath } : {}
+    })
