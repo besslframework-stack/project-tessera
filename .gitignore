@@ -29,18 +29,19 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Session logs (personal)
+# Session logs
 session_logs/
-
-# Internal
-.files/
-.claude/
-HANDOFF.md
-HANDOFF-*.md
-promotion-posts.md
 conversation-logs/
 
-# User-specific workspace config (use workspace.yaml.example as template)
+# Internal docs
+.files/
+.claude/
+HANDOFF*.md
+promotion-posts.md
+*_requirements.md
+*_improvement*.md
+
+# User-specific workspace config
 workspace.yaml
 
 # Promotion assets
@@ -49,6 +50,3 @@ assets/twitter-*
 # iCloud artifacts
 site/
 personal_ontology_rag/
-
-HANDOFF*.md
-tessera_improvement_requirements.md
