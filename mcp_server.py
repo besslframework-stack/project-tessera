@@ -129,6 +129,20 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
             watcher.stop()
             logger.info("File watcher stopped")
 
+        # Save session summary on shutdown
+        try:
+            from src.interaction_log import SESSION_ID
+            from src.session_summary import save_session_summary
+
+            il = core._get_interaction_log()
+            interactions = il.get_session_interactions(SESSION_ID, limit=200)
+            if interactions:
+                result = save_session_summary(SESSION_ID, interactions)
+                if result:
+                    logger.info("Session summary saved: %s", result["file_path"])
+        except Exception as exc:
+            logger.debug("Session summary failed (non-fatal): %s", exc)
+
 
 mcp = FastMCP(
     name="tessera",

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.9] - 2026-03-10
+
+### Added
+- **Session Summary** — MCP server shutdown 시 해당 세션의 interaction을 자동 요약해서 memory로 저장
+- **`src/session_summary.py`** — 세션 요약 생성기 (도구 사용 통계, 검색 쿼리, 기억된 내용 추출)
+- **`generate_session_summary()`** — interaction 리스트에서 텍스트 요약 생성 (LLM 호출 없음)
+- **`save_session_summary()`** — 요약을 `category: context` memory로 저장 + 인덱싱
+- **`tests/test_session_summary.py`** — 12 tests (요약 생성, 저장, 에러 처리)
+- Total tools: 37, total tests: 258
+
+### Changed
+- **`mcp_server.py` lifespan** — `finally` 블록에서 세션 요약 자동 저장
+
+### Note
+- v0.6.8 (Session Boundary)는 v0.6.4에서 session_id 구현 시 이미 완료됨 — 스킵
+
 ## [0.6.7] - 2026-03-10
 
 ### Added
