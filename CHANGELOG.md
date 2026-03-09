@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.6] - 2026-03-10
+
+### Added
+- **Memory Dedup** — `save_memory()` and `learn_and_index()` now check cosine similarity before saving. If existing memory is >92% similar, the save is skipped and existing path is returned
+- **`_check_duplicate()` function** — vector similarity search against existing memories in LanceDB
+- **`tests/test_auto_extract.py`** — 24 tests for the auto-extract pattern matching engine (Korean + English)
+- **`tests/test_memory_dedup.py`** — 12 tests for dedup logic (`_check_duplicate`, `save_memory` dedup, `learn_and_index` dedup)
+- Total tools: 35, total tests: 229
+
+### Changed
+- **`save_memory()`** — new `dedup` and `dedup_threshold` parameters (defaults: `True`, `0.92`)
+- **`learn_and_index()`** — returns `deduplicated` flag and `similarity` score when duplicate is detected
+
 ## [0.6.5] - 2026-03-10
 
 ### Added

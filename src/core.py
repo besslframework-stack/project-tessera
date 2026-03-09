@@ -329,6 +329,10 @@ def remember(content: str, tags: list[str] | None = None) -> str:
     if extracted and not tags:
         tags = [extracted[0].category]
     result = learn_and_index(content.strip(), tags=tags, source="user-request")
+    if result.get("deduplicated"):
+        sim = result.get("similarity", 0) * 100
+        _log_interaction("remember", f"content={content.strip()[:100]!r} tags={tags}", f"dedup ({sim:.0f}%)")
+        return f"Already remembered (similar memory exists, {sim:.0f}% match). Skipped duplicate."
     status = "indexed" if result["indexed"] else "saved (not yet indexed)"
     _log_interaction("remember", f"content={content.strip()[:100]!r} tags={tags}", status)
     return f"Remembered and {status}:\n{content}"
@@ -369,6 +373,10 @@ def learn(content: str, tags: list[str] | None = None, source: str = "auto-learn
     from src.memory import learn_and_index
 
     result = learn_and_index(content.strip(), tags=tags, source=source)
+    if result.get("deduplicated"):
+        sim = result.get("similarity", 0) * 100
+        _log_interaction("learn", f"content={content.strip()[:100]!r} tags={tags}", f"dedup ({sim:.0f}%)")
+        return f"Already known (similar memory exists, {sim:.0f}% match). Skipped duplicate."
     status = "indexed" if result["indexed"] else "saved (indexing failed)"
     _log_interaction("learn", f"content={content.strip()[:100]!r} tags={tags}", status)
     return f"Learned and {status}:\n{content}"

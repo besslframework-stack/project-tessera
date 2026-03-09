@@ -24,17 +24,84 @@ def _memory_dir() -> Path:
     return mem_dir
 
 
-def save_memory(content: str, tags: list[str] | None = None, source: str = "conversation") -> Path:
+def _check_duplicate(content: str, threshold: float = 0.92) -> dict | None:
+    """Check if a similar memory already exists using cosine similarity.
+
+    Args:
+        content: The content to check for duplicates.
+        threshold: Cosine similarity threshold (0.0-1.0). Above this = duplicate.
+
+    Returns:
+        Dict with 'file_path', 'content', 'similarity' if duplicate found, else None.
+    """
+    try:
+        import lancedb
+        from src.config import settings
+
+        db_path = str(settings.data.lancedb_path)
+        if not Path(db_path).exists():
+            return None
+
+        db = lancedb.connect(db_path)
+        if "memories" not in db.table_names():
+            return None
+
+        table = db.open_table("memories")
+        vector = embed_query(content)
+
+        results = table.search(vector).limit(1).to_list()
+        if not results:
+            return None
+
+        top = results[0]
+        dist = float(top.get("_distance", 1.0))
+        similarity = max(0.0, min(1.0, 1.0 - dist))
+
+        if similarity >= threshold:
+            return {
+                "file_path": top.get("file_path", ""),
+                "content": top.get("text", ""),
+                "similarity": similarity,
+            }
+    except Exception as exc:
+        logger.debug("Dedup check failed (proceeding with save): %s", exc)
+
+    return None
+
+
+def save_memory(
+    content: str,
+    tags: list[str] | None = None,
+    source: str = "conversation",
+    dedup: bool = True,
+    dedup_threshold: float = 0.92,
+) -> Path:
     """Save a memory as a timestamped markdown file.
+
+    Checks for duplicate memories before saving (cosine similarity > threshold).
+    If a duplicate is found, the save is skipped and the existing file path is returned.
 
     Args:
         content: The knowledge/fact/decision to remember.
         tags: Optional tags for categorization.
         source: Where this memory came from.
+        dedup: Whether to check for duplicates before saving.
+        dedup_threshold: Cosine similarity threshold for dedup (0.0-1.0).
 
     Returns:
-        Path to the saved file.
+        Path to the saved (or existing duplicate) file.
     """
+    if dedup:
+        existing = _check_duplicate(content, threshold=dedup_threshold)
+        if existing:
+            existing_path = Path(existing["file_path"])
+            logger.info(
+                "Memory dedup: skipped (%.1f%% similar to %s)",
+                existing["similarity"] * 100,
+                existing_path.name,
+            )
+            return existing_path
+
     now = datetime.now()
     timestamp = now.strftime("%Y%m%d_%H%M%S")
     slug = content[:40].replace(" ", "_").replace("/", "_").replace("\n", "_")
@@ -181,13 +248,27 @@ def index_all_memories() -> int:
 def learn_and_index(content: str, tags: list[str] | None = None, source: str = "auto-learn") -> dict:
     """Save new knowledge and immediately index it for search.
 
-    Returns dict with file_path and index status.
+    Dedup is enabled by default — if identical or near-identical content
+    already exists, the save is skipped and the existing path is returned.
+
+    Returns dict with file_path, index status, and whether it was a duplicate.
     """
-    file_path = save_memory(content, tags=tags, source=source)
+    # Check dedup before saving
+    existing = _check_duplicate(content)
+    if existing:
+        return {
+            "file_path": existing["file_path"],
+            "indexed": True,
+            "deduplicated": True,
+            "similarity": existing["similarity"],
+        }
+
+    file_path = save_memory(content, tags=tags, source=source, dedup=False)
     indexed = index_memory(file_path)
     return {
         "file_path": str(file_path),
         "indexed": indexed > 0,
+        "deduplicated": False,
     }
 
 
