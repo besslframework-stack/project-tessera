@@ -33,19 +33,12 @@ Thumbs.db
 session_logs/
 conversation-logs/
 
-# Internal docs
+# Internal
 .files/
 .claude/
-HANDOFF*.md
-promotion-posts.md
-*_requirements.md
-*_improvement*.md
 
 # User-specific workspace config
 workspace.yaml
-
-# Promotion assets
-assets/twitter-*
 
 # iCloud artifacts
 site/
