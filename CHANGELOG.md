@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.9.0] - 2026-03-11
+
+### Gateway Phase Complete — Tessera works with any AI tool
+
+Tessera is no longer Claude-only. Any AI tool (ChatGPT, Gemini, Copilot,
+browser extensions) can read and write to Tessera via REST API.
+
+### Gateway Phase summary (v0.8.1 → v0.9.0)
+| Version | Feature | Tests added |
+|---------|---------|-------------|
+| v0.8.1 | FastAPI HTTP API (20 endpoints) | 21 |
+| v0.8.2 | API Key authentication | 12 |
+| v0.8.3 | CORS + OpenAPI schema | 9 |
+| v0.8.4 | Batch API (multi-operation) | 7 |
+| v0.8.5 | Rate limiter + CI fix | 11 |
+| v0.8.6 | Webhooks (event notifications) | 10 |
+
+### Changed
+- README updated: HTTP API section with curl examples, 44 MCP + 21 HTTP endpoints
+- Total tools: 44 MCP + 21 HTTP endpoints, total tests: 483
+
 ## [0.8.6] - 2026-03-11
 
 ### Added

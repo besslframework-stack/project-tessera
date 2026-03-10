@@ -88,7 +88,7 @@ Ask Claude about your documents. It searches automatically.
 | Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
 | Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` (for text extraction) |
 
-## Tools (44)
+## Tools (44 MCP + 21 HTTP endpoints)
 
 ### Search
 | Tool | What it does |
@@ -168,16 +168,43 @@ tessera install-mcp    # Configure Claude Desktop
 tessera version        # Show version
 ```
 
+## HTTP API
+
+Install with API support:
+
+```bash
+pip install project-tessera[api]
+tessera-api  # Starts on http://127.0.0.1:8394
+```
+
+Interactive docs at `http://127.0.0.1:8394/docs`. Use from ChatGPT, Gemini, browser extensions, or any HTTP client.
+
+```bash
+# Search
+curl -X POST http://127.0.0.1:8394/search -H "Content-Type: application/json" \
+  -d '{"query": "database architecture", "top_k": 5}'
+
+# Remember
+curl -X POST http://127.0.0.1:8394/remember -H "Content-Type: application/json" \
+  -d '{"content": "Use PostgreSQL for production", "tags": ["db"]}'
+
+# Batch (multiple operations in one call)
+curl -X POST http://127.0.0.1:8394/batch -H "Content-Type: application/json" \
+  -d '{"operations": [{"method": "search", "params": {"query": "test"}}, {"method": "knowledge_stats"}]}'
+```
+
+Optional auth: `TESSERA_API_KEY=your-key tessera-api`
+
 ## How it works
 
 ```
-Documents (Markdown, CSV, XLSX, DOCX, PDF)
+Documents (Markdown, CSV, XLSX, DOCX, PDF, code, images)
     |
     v
 Parse & chunk --> Embed locally (fastembed/ONNX) --> LanceDB (local vector DB)
     |
     v
-src/core.py (search, memory, knowledge graph, auto-extract)
+src/core.py (search, memory, knowledge graph, auto-extract, intelligence)
     |
     v
 MCP server (Claude Desktop) / HTTP API (ChatGPT, Gemini, extensions)
@@ -253,7 +280,7 @@ See [ROADMAP.md](ROADMAP.md) for the full plan from v0.6 to v1.0.
 | Sponge | v0.7 | Manual memory becomes automatic learning |
 | Radar | v0.8 | Reactive search becomes proactive intelligence |
 | Gateway | v0.9 | MCP-only becomes multi-interface (HTTP API) |
-| Cortex | v1.0 | Search tool becomes Claude's persistent brain |
+| Cortex | v1.0 | Personal knowledge layer across all AI tools |
 
 ## License
 
