@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.4] - 2026-03-11
+
+### Added
+- **Batch API** — `POST /batch` executes up to 20 operations in a single request
+- **10 batch methods** — search, unified_search, remember, recall, learn, context_window, decision_timeline, smart_suggest, topic_map, knowledge_stats
+- **Per-operation error handling** — failed operations return error status without blocking others
+- **`tests/test_batch_api.py`** — 7 tests (multi-op, errors, limits, filters)
+- Total tests: 462
+
 ## [0.8.3] - 2026-03-11
 
 ### Added

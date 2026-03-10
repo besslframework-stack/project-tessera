@@ -231,6 +231,55 @@ def knowledge_stats():
 
 
 # ---------------------------------------------------------------------------
+# Batch
+# ---------------------------------------------------------------------------
+
+class BatchOperation(BaseModel):
+    method: str  # "search", "remember", "recall", "learn", "context_window"
+    params: dict = {}
+
+
+class BatchRequest(BaseModel):
+    operations: list[BatchOperation]
+
+
+@app.post("/batch", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def batch(req: BatchRequest):
+    """Execute multiple operations in a single request."""
+    _BATCH_HANDLERS = {
+        "search": lambda p: core.search_documents(p.get("query", ""), p.get("top_k", 5)),
+        "unified_search": lambda p: core.unified_search(p.get("query", ""), p.get("top_k", 5)),
+        "remember": lambda p: core.remember(p.get("content", ""), p.get("tags")),
+        "recall": lambda p: core.recall(
+            p.get("query", ""), p.get("top_k", 5),
+            since=p.get("since"), until=p.get("until"), category=p.get("category"),
+        ),
+        "learn": lambda p: core.learn(p.get("content", ""), p.get("tags")),
+        "context_window": lambda p: core.context_window(
+            p.get("query", ""), p.get("token_budget", 4000), p.get("include_documents", True),
+        ),
+        "decision_timeline": lambda p: core.decision_timeline(),
+        "smart_suggest": lambda p: core.smart_suggest(p.get("max_suggestions", 5)),
+        "topic_map": lambda p: core.topic_map(p.get("output_format", "text")),
+        "knowledge_stats": lambda p: core.knowledge_stats(),
+    }
+
+    results = []
+    for op in req.operations[:20]:  # Max 20 operations per batch
+        handler = _BATCH_HANDLERS.get(op.method)
+        if handler is None:
+            results.append({"method": op.method, "status": "error", "data": f"Unknown method: {op.method}"})
+            continue
+        try:
+            data = handler(op.params)
+            results.append({"method": op.method, "status": "ok", "data": data})
+        except Exception as e:
+            results.append({"method": op.method, "status": "error", "data": str(e)})
+
+    return ApiResponse(data=results)
+
+
+# ---------------------------------------------------------------------------
 # Workspace
 # ---------------------------------------------------------------------------
 
