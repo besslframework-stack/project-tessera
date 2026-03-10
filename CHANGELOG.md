@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.5] - 2026-03-11
+
+### Added
+- **Rate Limiter** — in-memory sliding window rate limiting (default 60 req/min)
+- **`src/rate_limiter.py`** — `RateLimiter` class with token bucket, per-client tracking
+- **`TESSERA_RATE_LIMIT` env var** — configure max requests per minute (0 to disable)
+- **`tests/test_rate_limiter.py`** — 11 tests (limits, clients, expiry, config)
+- Total tests: 473
+
+### Fixed
+- **CI: FastAPI tests failing** — added `fastapi httpx uvicorn` to CI install step
+- v0.8.1-v0.8.4 PyPI publish was failing due to missing fastapi in CI test env
+
 ## [0.8.4] - 2026-03-11
 
 ### Added
