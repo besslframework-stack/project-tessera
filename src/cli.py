@@ -585,6 +585,23 @@ def cmd_serve(_args: argparse.Namespace) -> None:
     mcp_main()
 
 
+def cmd_api(args: argparse.Namespace) -> None:
+    """Start the HTTP API server."""
+    port = getattr(args, "port", 8394)
+    host = getattr(args, "host", "127.0.0.1")
+    print(f"Starting Tessera HTTP API on {host}:{port}")
+    import uvicorn
+    uvicorn.run("src.http_server:app", host=host, port=port)
+
+
+def cmd_migrate(args: argparse.Namespace) -> None:
+    """Run data migration."""
+    from src.migrate import format_migration_result, run_migration
+    dry_run = getattr(args, "dry_run", False)
+    result = run_migration(dry_run=dry_run)
+    print(format_migration_result(result))
+
+
 def cli() -> None:
     """Main CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -630,6 +647,17 @@ def cli() -> None:
     # check
     check_parser = subparsers.add_parser("check", help="Check workspace health")
     check_parser.set_defaults(func=cmd_check)
+
+    # api
+    api_parser = subparsers.add_parser("api", help="Start HTTP API server")
+    api_parser.add_argument("--port", type=int, default=8394, help="Port (default: 8394)")
+    api_parser.add_argument("--host", default="127.0.0.1", help="Host (default: 127.0.0.1)")
+    api_parser.set_defaults(func=cmd_api)
+
+    # migrate
+    migrate_parser = subparsers.add_parser("migrate", help="Run data migration to latest schema")
+    migrate_parser.add_argument("--dry-run", action="store_true", help="Preview changes without migrating")
+    migrate_parser.set_defaults(func=cmd_migrate)
 
     # install-mcp
     install_parser = subparsers.add_parser("install-mcp", help="Configure Claude Desktop for Tessera")

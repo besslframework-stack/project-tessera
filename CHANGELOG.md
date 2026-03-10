@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.8] - 2026-03-11
+
+### Added
+- **`tessera api` CLI command** — start HTTP API server (`tessera api --port 8394`)
+- **`tessera migrate` CLI command** — run data migration (`tessera migrate --dry-run`)
+- CLI now has 9 commands: setup, init, ingest, sync, status, version, check, serve, api, migrate, install-mcp
+
 ## [0.9.7] - 2026-03-11
 
 ### Fixed
