@@ -10,42 +10,38 @@
 
 **Personal Knowledge Layer for AI. Own your memory across every AI tool.**
 
-You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge that disappears when the session ends. Tessera captures that knowledge, stores it locally, and serves it back to any AI. Your memory, your machine, your data.
+You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge that disappears when the session ends. Tessera captures that knowledge, stores it locally, and serves it back to any AI tool through MCP or REST API.
 
-## What makes Tessera different
+## Why Tessera
 
-- **Auto-learning** -- Tessera records every interaction and extracts decisions, preferences, and facts automatically. No manual "remember this."
-- **Interface-agnostic core** -- One knowledge engine, multiple interfaces. MCP today, HTTP API for ChatGPT/Gemini/extensions coming next.
+- **Auto-learning** -- extracts decisions, preferences, and facts from conversations automatically.
+- **Works with any AI** -- Claude via MCP, ChatGPT/Gemini/Copilot via HTTP API. One knowledge base, every tool.
 - **Cross-session memory** -- AI remembers your decisions and context between conversations.
-- **100% local** -- No cloud, no API keys, no data leaving your machine. LanceDB + fastembed/ONNX.
-- **Hybrid search** -- Semantic + keyword search with reranking. Not just vector similarity.
+- **Cross-AI portability** -- export memories to ChatGPT or Gemini format. Import past conversations from any AI.
+- **100% local** -- no cloud, no API keys, no data leaving your machine. LanceDB + fastembed/ONNX.
+- **Encrypted storage** -- optional AES-256 encryption at rest for sensitive knowledge.
 
 ## Architecture
 
 ```
                     +-----------------+
-                    |    src/core.py  |   Business logic (40+ functions)
+                    |    src/core.py  |   49 public functions
                     |                 |   Search, memory, knowledge graph,
-                    |                 |   auto-extract, interaction log
+                    |                 |   auto-extract, intelligence, export
                     +-----------------+
                      /        |        \
     +-------------+  +----------------+  +----------+
     | mcp_server  |  | http_server.py |  | cli.py   |
     | (stdio/MCP) |  | (REST API)     |  | (CLI)    |
-    | Claude      |  | ChatGPT,       |  |          |
-    | Desktop     |  | Gemini, etc.   |  |          |
+    | 47 tools    |  | 28 endpoints   |  | 11 cmds  |
     +-------------+  +----------------+  +----------+
 
-    Core engine:
     +--------------------------------------------------+
     | LanceDB (vectors) | SQLite (metadata, analytics) |
     | fastembed/ONNX (local embeddings, no API keys)   |
-    | Auto-extract (pattern-based fact detection)       |
-    | Interaction log (every tool call recorded)        |
+    | AES-256-CBC vault (optional encryption)          |
     +--------------------------------------------------+
 ```
-
-One core, multiple interfaces. The same knowledge base works regardless of which AI tool you use.
 
 ## Get started
 
@@ -67,10 +63,7 @@ uvx --from project-tessera tessera setup
 tessera setup
 ```
 
-This does everything:
-- Creates a workspace config
-- Downloads the embedding model (~220MB, first time only)
-- Configures Claude Desktop automatically
+Creates workspace config, downloads embedding model (~220MB, first time only), configures Claude Desktop.
 
 ### 3. Restart Claude Desktop
 
@@ -85,26 +78,25 @@ Ask Claude about your documents. It searches automatically.
 | Code | `.py` `.js` `.ts` `.tsx` `.jsx` `.java` `.go` `.rs` `.rb` `.php` `.c` `.cpp` `.h` `.swift` `.kt` `.sh` `.sql` `.cs` `.dart` `.r` `.lua` `.scala` | included |
 | Config | `.json` `.yaml` `.yml` `.toml` `.xml` `.ini` `.cfg` `.env` | included |
 | Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
-| Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` (for text extraction) |
+| Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` |
 
-## Tools (51 MCP + 28 HTTP endpoints)
+## MCP tools (47)
 
-### Search
+### Search (5)
 | Tool | What it does |
 |------|-------------|
 | `search_documents` | Semantic + keyword hybrid search across all docs |
 | `unified_search` | Search documents AND memories in one call |
-| `view_file_full` | Full file view (CSV as table, XLSX per sheet, etc.) |
+| `view_file_full` | Full file view (CSV as table, XLSX per sheet) |
 | `read_file` | Read any file's full content |
 | `list_sources` | See what's indexed |
 
-### Memory
+### Memory (13)
 | Tool | What it does |
 |------|-------------|
 | `remember` | Save knowledge that persists across sessions |
 | `recall` | Search past memories with date/category filters |
 | `learn` | Save and immediately index new knowledge |
-| `digest_conversation` | Auto-extract decisions/facts from the current session |
 | `list_memories` | Browse saved memories |
 | `forget_memory` | Delete a specific memory |
 | `export_memories` | Batch export all memories as JSON |
@@ -113,15 +105,10 @@ Ask Claude about your documents. It searches automatically.
 | `search_by_tag` | Filter memories by specific tag |
 | `memory_categories` | List auto-detected categories (decision/preference/fact) |
 | `search_by_category` | Filter memories by category |
-
-### Knowledge graph
-| Tool | What it does |
-|------|-------------|
 | `find_similar` | Find documents similar to a given file |
 | `knowledge_graph` | Build a Mermaid diagram of document relationships |
-| `explore_connections` | Show connections around a specific topic |
 
-### Auto-learn
+### Auto-learn (5)
 | Tool | What it does |
 |------|-------------|
 | `digest_conversation` | Extract and save knowledge from the current session |
@@ -130,27 +117,32 @@ Ask Claude about your documents. It searches automatically.
 | `session_interactions` | View tool calls from current/past sessions |
 | `recent_sessions` | Session history with interaction counts |
 
-### Intelligence
+### Intelligence (7)
 | Tool | What it does |
 |------|-------------|
 | `decision_timeline` | Track how decisions evolved over time, grouped by topic |
-| `context_window` | Build optimal context within a token budget for cross-AI use |
+| `context_window` | Build optimal context within a token budget |
 | `smart_suggest` | Personalized query suggestions based on past patterns |
 | `topic_map` | Cluster memories by topic with Mermaid mindmap |
-| `knowledge_stats` | Aggregate statistics dashboard (categories, tags, growth) |
-| `user_profile` | Auto-built profile from memories (language, preferences, expertise) |
+| `knowledge_stats` | Aggregate statistics (categories, tags, growth) |
+| `user_profile` | Auto-built profile (language, preferences, expertise) |
+| `explore_connections` | Show connections around a specific topic |
 
-### Cortex (Personal Brain)
+### Cross-AI (4)
 | Tool | What it does |
 |------|-------------|
-| `export_knowledge` | Export as Obsidian (wikilinks), Markdown, CSV, or JSON |
 | `export_for_ai` | Export memories in ChatGPT or Gemini format |
 | `import_from_ai` | Import memories from ChatGPT or Gemini |
-| `import_conversations` | Extract knowledge from past AI conversation exports |
+| `import_conversations` | Extract knowledge from ChatGPT/Claude/Gemini conversation exports |
+| `export_knowledge` | Export as Obsidian (wikilinks), Markdown, CSV, or JSON |
+
+### Security and data (2)
+| Tool | What it does |
+|------|-------------|
 | `vault_status` | Check AES-256 encryption status |
 | `migrate_data` | Upgrade data from older schema versions |
 
-### Workspace
+### Workspace (11)
 | Tool | What it does |
 |------|-------------|
 | `ingest_documents` | Index documents (first-time or full rebuild) |
@@ -165,7 +157,7 @@ Ask Claude about your documents. It searches automatically.
 | `search_analytics` | Search usage patterns, top queries, response times |
 | `check_document_freshness` | Detect stale documents older than N days |
 
-## CLI
+## CLI (11 commands)
 
 ```bash
 tessera setup          # One-command setup
@@ -173,7 +165,7 @@ tessera init           # Interactive setup
 tessera ingest         # Index all sources
 tessera sync           # Re-index changed files
 tessera serve          # Start MCP server
-tessera api            # Start HTTP API server
+tessera api            # Start HTTP API server (port 8394)
 tessera migrate        # Upgrade data schema
 tessera check          # Workspace health
 tessera status         # Project status
@@ -181,32 +173,75 @@ tessera install-mcp    # Configure Claude Desktop
 tessera version        # Show version
 ```
 
-## HTTP API
+## HTTP API (28 endpoints)
 
 Install with API support:
 
 ```bash
 pip install project-tessera[api]
-tessera-api  # Starts on http://127.0.0.1:8394
+tessera api  # Starts on http://127.0.0.1:8394
 ```
 
-Interactive docs at `http://127.0.0.1:8394/docs`. Use from ChatGPT, Gemini, browser extensions, or any HTTP client.
+Interactive docs at `http://127.0.0.1:8394/docs`.
+
+### Endpoints
+
+| Method | Path | What it does |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/version` | Version info |
+| POST | `/search` | Semantic + keyword search |
+| POST | `/unified-search` | Search docs + memories |
+| POST | `/remember` | Save a memory |
+| POST | `/recall` | Search memories with filters |
+| POST | `/learn` | Save and index knowledge |
+| GET | `/memories` | List memories |
+| DELETE | `/memories/{id}` | Delete a memory |
+| GET | `/memories/categories` | List categories |
+| GET | `/memories/search-by-category` | Filter by category |
+| GET | `/memories/tags` | List tags |
+| GET | `/memories/search-by-tag` | Filter by tag |
+| POST | `/context-window` | Build token-budgeted context |
+| GET | `/decision-timeline` | Decision evolution |
+| GET | `/smart-suggest` | Query suggestions |
+| GET | `/topic-map` | Topic clusters |
+| GET | `/knowledge-stats` | Stats dashboard |
+| POST | `/batch` | Multiple operations in one call |
+| GET | `/export` | Export as Obsidian/MD/CSV/JSON |
+| GET | `/export-for-ai` | Export for ChatGPT/Gemini |
+| POST | `/import-from-ai` | Import from ChatGPT/Gemini |
+| POST | `/import-conversations` | Import past conversations |
+| POST | `/migrate` | Run data migration |
+| GET | `/vault-status` | Encryption status |
+| GET | `/user-profile` | User profile |
+| GET | `/status` | Server status |
+| GET | `/health-check` | Workspace diagnostics |
+
+### Examples
 
 ```bash
 # Search
-curl -X POST http://127.0.0.1:8394/search -H "Content-Type: application/json" \
+curl -X POST http://127.0.0.1:8394/search \
+  -H "Content-Type: application/json" \
   -d '{"query": "database architecture", "top_k": 5}'
 
 # Remember
-curl -X POST http://127.0.0.1:8394/remember -H "Content-Type: application/json" \
+curl -X POST http://127.0.0.1:8394/remember \
+  -H "Content-Type: application/json" \
   -d '{"content": "Use PostgreSQL for production", "tags": ["db"]}'
 
-# Batch (multiple operations in one call)
-curl -X POST http://127.0.0.1:8394/batch -H "Content-Type: application/json" \
+# Export for ChatGPT
+curl http://127.0.0.1:8394/export-for-ai?target=chatgpt
+
+# Batch
+curl -X POST http://127.0.0.1:8394/batch \
+  -H "Content-Type: application/json" \
   -d '{"operations": [{"method": "search", "params": {"query": "test"}}, {"method": "knowledge_stats"}]}'
 ```
 
-Optional auth: `TESSERA_API_KEY=your-key tessera-api`
+Optional auth: set `TESSERA_API_KEY` environment variable.
+
+Optional encryption: set `TESSERA_VAULT_KEY` environment variable.
 
 ## How it works
 
@@ -214,13 +249,13 @@ Optional auth: `TESSERA_API_KEY=your-key tessera-api`
 Documents (Markdown, CSV, XLSX, DOCX, PDF, code, images)
     |
     v
-Parse & chunk --> Embed locally (fastembed/ONNX) --> LanceDB (local vector DB)
+Parse & chunk --> Embed locally (fastembed/ONNX) --> LanceDB (vectors)
     |
     v
 src/core.py (search, memory, knowledge graph, auto-extract, intelligence)
     |
     v
-MCP server (Claude Desktop) / HTTP API (ChatGPT, Gemini, extensions)
+MCP server (Claude) / HTTP API (ChatGPT, Gemini, extensions) / CLI
 ```
 
 Everything runs on your machine. No external API calls for search or embedding.
@@ -258,7 +293,7 @@ Config location:
 
 ## Configuration
 
-`tessera setup` creates `workspace.yaml`. All parameters are tunable:
+`tessera setup` creates `workspace.yaml`:
 
 ```yaml
 workspace:
@@ -276,24 +311,20 @@ search:
 ingestion:
   chunk_size: 1024         # Text chunk size
   chunk_overlap: 100       # Overlap between chunks
-
-watcher:
-  poll_interval: 30.0      # Seconds between scans
-  debounce: 5.0            # Wait before syncing
 ```
 
-Or skip config entirely -- Tessera auto-detects your workspace. Set `TESSERA_WORKSPACE=/path/to/docs` to specify a folder.
+Or set `TESSERA_WORKSPACE=/path/to/docs` to skip config.
 
-## Roadmap
+## Numbers
 
-See [ROADMAP.md](ROADMAP.md) for the full plan from v0.6 to v1.0.
-
-| Phase | Version | What changes |
-|-------|---------|-------------|
-| Sponge | v0.7 | Manual memory becomes automatic learning |
-| Radar | v0.8 | Reactive search becomes proactive intelligence |
-| Gateway | v0.9 | MCP-only becomes multi-interface (HTTP API) |
-| Cortex | v1.0 | Personal knowledge layer across all AI tools |
+| Metric | Count |
+|--------|-------|
+| MCP tools | 47 |
+| HTTP endpoints | 28 |
+| CLI commands | 11 |
+| Tests | 652 |
+| Supported file types | 40+ |
+| Core functions | 49 |
 
 ## License
 

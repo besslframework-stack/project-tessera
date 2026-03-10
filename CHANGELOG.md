@@ -15,7 +15,7 @@ Tessera is no longer a document search tool. It is a personal knowledge layer th
 - Runs 100% locally: LanceDB + fastembed/ONNX, no cloud, no API keys
 
 **By the numbers:**
-- 51 MCP tools
+- 47 MCP tools
 - 28 HTTP API endpoints
 - 11 CLI commands
 - 652 tests
@@ -30,7 +30,7 @@ Tessera is no longer a document search tool. It is a personal knowledge layer th
 
 ### Changed
 - **PyPI classifier** upgraded from Alpha to **Beta** (`Development Status :: 4 - Beta`)
-- **README** updated: 51 MCP + 28 HTTP endpoints, Cortex tools section, CLI commands, removed "(planned)" from architecture
+- **README** updated: 47 MCP + 28 HTTP endpoints, Cortex tools section, CLI commands
 
 ### Pre-release summary (v0.9.1 → v0.9.9)
 | Version | Feature | Tests |
@@ -72,7 +72,7 @@ Tessera is no longer a document search tool. It is a personal knowledge layer th
 - **`migrate_data` MCP tool** — run migration with optional dry_run preview
 - **`POST /migrate` HTTP endpoint** — migration via REST
 - **`tests/test_migrate.py`** — 32 tests (normalization, version detection, dry run, actual migration, backup)
-- Total tools: 51 MCP + 28 HTTP endpoints, total tests: 621
+- Total tests: 621
 
 ## [0.9.5] - 2026-03-11
 
@@ -83,7 +83,7 @@ Tessera is no longer a document search tool. It is a personal knowledge layer th
 - **`GET /vault-status` HTTP endpoint** — vault status via REST
 - **`tests/test_vault.py`** — 21 tests (roundtrip, Korean, emoji, edge cases, key management)
 - Set `TESSERA_VAULT_KEY` to enable encryption — all local, no cloud
-- Total tools: 50 MCP + 27 HTTP endpoints, total tests: 589
+- Total tests: 589
 
 ## [0.9.4] - 2026-03-11
 
@@ -93,7 +93,7 @@ Tessera is no longer a document search tool. It is a personal knowledge layer th
 - **`import_conversations` MCP tool** — paste exported JSON, specify source, auto-extract and store
 - **`POST /import-conversations` HTTP endpoint** — conversation import via REST
 - **`tests/test_conversation_import.py`** — 28 tests (ChatGPT/Claude/Gemini formats, Korean classification, helpers)
-- Total tools: 49 MCP + 26 HTTP endpoints, total tests: 568
+- Total tests: 568
 
 ## [0.9.3] - 2026-03-11
 
@@ -103,7 +103,7 @@ Tessera is no longer a document search tool. It is a personal knowledge layer th
 - **`export_for_ai` / `import_from_ai` MCP tools** — migrate knowledge between AI platforms
 - **`GET /export-for-ai` + `POST /import-from-ai` HTTP endpoints** — cross-AI via REST
 - **`tests/test_cross_ai.py`** — 27 tests (roundtrip, category extraction, tag parsing, Korean, edge cases)
-- Total tools: 48 MCP + 25 HTTP endpoints, total tests: 540
+- Total tests: 540
 
 ## [0.9.2] - 2026-03-11
 
