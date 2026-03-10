@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.8.6] - 2026-03-11
+
+### Added
+- **Webhooks** — fire HTTP POST to external URLs on events (memory created/deleted, search, document indexed)
+- **`src/webhooks.py`** — `register_webhook()`, `fire_event()`, `list_webhooks()` with async non-blocking delivery
+- **`TESSERA_WEBHOOK_URL` env var** — quick webhook setup without config file
+- **4 event types** — `memory.created`, `memory.deleted`, `search.performed`, `document.indexed`
+- **`tests/test_webhooks.py`** — 10 tests (register, fire, skip, error handling)
+- Total tests: 483
+
 ## [0.8.5] - 2026-03-11
 
 ### Added
