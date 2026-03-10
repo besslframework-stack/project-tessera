@@ -317,6 +317,12 @@ def import_conversations(req: ImportConversationsRequest):
     return ApiResponse(data=result)
 
 
+@app.get("/vault-status", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def vault_status_endpoint():
+    result = core.vault_status_info()
+    return ApiResponse(data=result)
+
+
 @app.get("/user-profile", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def user_profile():
     result = core.user_profile()

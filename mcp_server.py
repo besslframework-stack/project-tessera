@@ -711,6 +711,18 @@ def import_conversations(data: str, source: str = "chatgpt") -> str:
 
 @mcp.tool(
     description=(
+        "Check vault encryption status. "
+        "When TESSERA_VAULT_KEY is set, memories are encrypted at rest using AES-256-CBC. "
+        "All encryption is local — no cloud, no external services."
+    )
+)
+def vault_status() -> str:
+    """Get vault encryption status."""
+    return core.vault_status_info()
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

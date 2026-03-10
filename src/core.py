@@ -1449,6 +1449,24 @@ def import_conversations(data: str, source: str = "chatgpt") -> str:
     return summary + f"\n\nStored {stored} of {len(extracted)} extracted memories."
 
 
+def vault_status_info() -> str:
+    """Get vault encryption status."""
+    from src.vault import vault_status
+    status = vault_status()
+    if status["enabled"]:
+        return (
+            f"## Vault Status\n"
+            f"- Enabled: Yes\n"
+            f"- Algorithm: {status['algorithm']}\n"
+            f"- Key source: {status['key_source']}"
+        )
+    return (
+        "## Vault Status\n"
+        "- Enabled: No\n"
+        "- Set TESSERA_VAULT_KEY environment variable to enable encryption."
+    )
+
+
 # --- Interaction Log Tools ---
 
 

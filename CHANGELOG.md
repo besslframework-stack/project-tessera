@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.5] - 2026-03-11
+
+### Added
+- **Memory Vault** — optional AES-256-CBC encryption for memories at rest
+- **`src/vault.py`** — pure Python AES-256 implementation (no external deps), `encrypt()`, `decrypt()`, `encrypt_dict()`, `decrypt_dict()`, `vault_status()`
+- **`vault_status` MCP tool** — check encryption status
+- **`GET /vault-status` HTTP endpoint** — vault status via REST
+- **`tests/test_vault.py`** — 21 tests (roundtrip, Korean, emoji, edge cases, key management)
+- Set `TESSERA_VAULT_KEY` to enable encryption — all local, no cloud
+- Total tools: 50 MCP + 27 HTTP endpoints, total tests: 589
+
 ## [0.9.4] - 2026-03-11
 
 ### Added
