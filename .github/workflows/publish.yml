@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install pytest pyyaml numpy python-dotenv
+      - run: pip install pytest pyyaml numpy python-dotenv fastapi httpx uvicorn
       - run: python -m pytest tests/ -v
 
   publish:
