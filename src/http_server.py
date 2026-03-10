@@ -289,6 +289,11 @@ def export_knowledge(format: str = Query(default="markdown")):
     return ApiResponse(data=result)
 
 
+class ImportConversationsRequest(BaseModel):
+    data: str
+    source: str = "chatgpt"
+
+
 class ImportFromAIRequest(BaseModel):
     data: str
     source: str = "chatgpt"
@@ -303,6 +308,12 @@ def export_for_ai(target: str = Query(default="chatgpt")):
 @app.post("/import-from-ai", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def import_from_ai(req: ImportFromAIRequest):
     result = core.import_from_ai(req.data, req.source)
+    return ApiResponse(data=result)
+
+
+@app.post("/import-conversations", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def import_conversations(req: ImportConversationsRequest):
+    result = core.import_conversations(req.data, req.source)
     return ApiResponse(data=result)
 
 

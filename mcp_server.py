@@ -698,6 +698,19 @@ def import_from_ai(data: str, source: str = "chatgpt") -> str:
 
 @mcp.tool(
     description=(
+        "Import past conversations from ChatGPT, Claude, or Gemini exports. "
+        "Paste the exported JSON data and specify the source: 'chatgpt', 'claude', 'gemini', or 'text'. "
+        "Tessera extracts decisions, preferences, and facts from the conversations. "
+        "Use this to recover knowledge from past AI interactions."
+    )
+)
+def import_conversations(data: str, source: str = "chatgpt") -> str:
+    """Import conversations and extract knowledge."""
+    return core.import_conversations(data, source)
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.4] - 2026-03-11
+
+### Added
+- **Conversation Import** — extract knowledge from ChatGPT/Claude/Gemini conversation exports
+- **`src/conversation_import.py`** — importers for ChatGPT (mapping format), Claude (chat_messages), Gemini, and plain text; auto-classifies decisions/preferences/facts; Korean pattern support
+- **`import_conversations` MCP tool** — paste exported JSON, specify source, auto-extract and store
+- **`POST /import-conversations` HTTP endpoint** — conversation import via REST
+- **`tests/test_conversation_import.py`** — 28 tests (ChatGPT/Claude/Gemini formats, Korean classification, helpers)
+- Total tools: 49 MCP + 26 HTTP endpoints, total tests: 568
+
 ## [0.9.3] - 2026-03-11
 
 ### Added

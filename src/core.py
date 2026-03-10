@@ -1408,6 +1408,47 @@ def import_from_ai(data: str, source: str = "chatgpt") -> str:
     return f"Imported {imported_count} memories from {source} format."
 
 
+def import_conversations(data: str, source: str = "chatgpt") -> str:
+    """Import conversations from AI tool exports and extract knowledge.
+
+    Supported sources: chatgpt, claude, gemini, text.
+    Extracts decisions, preferences, and facts from past conversations.
+    """
+    from src.conversation_import import (
+        format_import_summary,
+        import_chatgpt_conversations,
+        import_claude_conversations,
+        import_gemini_conversations,
+        import_plain_text,
+    )
+
+    importers = {
+        "chatgpt": import_chatgpt_conversations,
+        "claude": import_claude_conversations,
+        "gemini": import_gemini_conversations,
+        "text": import_plain_text,
+    }
+
+    importer = importers.get(source.lower(), import_plain_text)
+    extracted = importer(data)
+
+    if not extracted:
+        return "No extractable knowledge found in the conversation data."
+
+    # Store each extracted memory
+    stored = 0
+    for mem in extracted:
+        try:
+            remember(mem["content"], mem.get("tags"))
+            stored += 1
+        except Exception as e:
+            logger.debug("Failed to store extracted memory: %s", e)
+
+    summary = format_import_summary(extracted)
+    _log_interaction("import_conversations", source, f"{stored}/{len(extracted)} stored")
+    return summary + f"\n\nStored {stored} of {len(extracted)} extracted memories."
+
+
 # --- Interaction Log Tools ---
 
 
