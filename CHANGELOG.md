@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.9] - 2026-03-11
+
+### Changed
+- **PyPI classifier** upgraded from Alpha to **Beta** (`Development Status :: 4 - Beta`)
+- **README** updated: 51 MCP + 28 HTTP endpoints, Cortex tools section, CLI commands, removed "(planned)" from architecture
+
+### Pre-release summary (v0.9.1 → v0.9.9)
+| Version | Feature | Tests |
+|---------|---------|-------|
+| v0.9.1 | User Profile | 13 |
+| v0.9.2 | Export Formats (Obsidian/MD/CSV/JSON) | 17 |
+| v0.9.3 | Cross-AI Format (ChatGPT/Gemini) | 27 |
+| v0.9.4 | Conversation Import | 28 |
+| v0.9.5 | Memory Vault (AES-256) | 21 |
+| v0.9.6 | Migration Tool | 32 |
+| v0.9.7 | Error Handling + Hardening | 31 |
+| v0.9.8 | CLI: tessera api + tessera migrate | 0 |
+| v0.9.9 | Beta classifier, README update | 0 |
+| **Total** | **Cortex Phase** | **169 new tests** |
+
 ## [0.9.8] - 2026-03-11
 
 ### Added

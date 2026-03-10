@@ -24,7 +24,7 @@ You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge 
 
 ```
                     +-----------------+
-                    |    src/core.py  |   Business logic (35 functions)
+                    |    src/core.py  |   Business logic (40+ functions)
                     |                 |   Search, memory, knowledge graph,
                     |                 |   auto-extract, interaction log
                     +-----------------+
@@ -35,7 +35,6 @@ You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge 
     | Claude      |  | ChatGPT,       |  |          |
     | Desktop     |  | Gemini, etc.   |  |          |
     +-------------+  +----------------+  +----------+
-                          (planned)
 
     Core engine:
     +--------------------------------------------------+
@@ -88,7 +87,7 @@ Ask Claude about your documents. It searches automatically.
 | Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
 | Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` (for text extraction) |
 
-## Tools (44 MCP + 21 HTTP endpoints)
+## Tools (51 MCP + 28 HTTP endpoints)
 
 ### Search
 | Tool | What it does |
@@ -139,6 +138,17 @@ Ask Claude about your documents. It searches automatically.
 | `smart_suggest` | Personalized query suggestions based on past patterns |
 | `topic_map` | Cluster memories by topic with Mermaid mindmap |
 | `knowledge_stats` | Aggregate statistics dashboard (categories, tags, growth) |
+| `user_profile` | Auto-built profile from memories (language, preferences, expertise) |
+
+### Cortex (Personal Brain)
+| Tool | What it does |
+|------|-------------|
+| `export_knowledge` | Export as Obsidian (wikilinks), Markdown, CSV, or JSON |
+| `export_for_ai` | Export memories in ChatGPT or Gemini format |
+| `import_from_ai` | Import memories from ChatGPT or Gemini |
+| `import_conversations` | Extract knowledge from past AI conversation exports |
+| `vault_status` | Check AES-256 encryption status |
+| `migrate_data` | Upgrade data from older schema versions |
 
 ### Workspace
 | Tool | What it does |
@@ -162,6 +172,9 @@ tessera setup          # One-command setup
 tessera init           # Interactive setup
 tessera ingest         # Index all sources
 tessera sync           # Re-index changed files
+tessera serve          # Start MCP server
+tessera api            # Start HTTP API server
+tessera migrate        # Upgrade data schema
 tessera check          # Workspace health
 tessera status         # Project status
 tessera install-mcp    # Configure Claude Desktop
