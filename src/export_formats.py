@@ -108,7 +108,7 @@ def export_csv(memories: list[dict]) -> str:
             mem.get("date", "")[:10] if mem.get("date") else "",
             mem.get("category", "general"),
             mem.get("content", "").strip(),
-            ",".join(mem.get("tags", [])),
+            ",".join(mem.get("tags") or []),
             mem.get("source", ""),
         ])
 

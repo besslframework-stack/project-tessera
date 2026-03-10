@@ -37,8 +37,8 @@ def init_auth():
             _API_KEYS.update(api_keys)
             _REQUIRE_AUTH = True
             logger.info("API auth enabled via workspace config (%d keys)", len(_API_KEYS))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Could not load workspace config for auth: %s", e)
 
 
 def generate_api_key() -> str:

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.7] - 2026-03-11
+
+### Fixed
+- **CSV export crash** when tags is None (TypeError on join)
+- **Silent exception swallowing** — added logging to `except` blocks in api_auth, memory, core
+- **HTTP input validation** — added `str_max_length` to Pydantic request models
+
+### Added
+- **`tests/test_hardening.py`** — 31 edge case tests across all modules (None tags, unicode, null bytes, future dates, empty inputs, rate limiter bounds)
+- Total tests: 652
+
 ## [0.9.6] - 2026-03-11
 
 ### Added

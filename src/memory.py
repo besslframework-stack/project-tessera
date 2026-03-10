@@ -81,8 +81,8 @@ def _detect_category(content: str) -> str:
         facts = extract_facts(content)
         if facts:
             return facts[0].category
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Category detection failed: %s", e)
     return "general"
 
 
@@ -290,8 +290,8 @@ def index_memory(file_path: Path) -> int:
         # Delete existing record for this file if re-indexing
         try:
             table.delete(f"id = '{file_path.stem}'")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Could not delete existing record %s: %s", file_path.stem, e)
         table.add([record])
     else:
         db.create_table("memories", [record])

@@ -70,10 +70,17 @@ class SearchRequest(BaseModel):
     query: str
     top_k: int = 5
 
+    @classmethod
+    def __init_subclass__(cls, **kwargs): ...
+
+    model_config = {"str_max_length": 2000}
+
 
 class RememberRequest(BaseModel):
     content: str
     tags: list[str] | None = None
+
+    model_config = {"str_max_length": 10000}
 
 
 class RecallRequest(BaseModel):
@@ -83,16 +90,22 @@ class RecallRequest(BaseModel):
     until: str | None = None
     category: str | None = None
 
+    model_config = {"str_max_length": 2000}
+
 
 class LearnRequest(BaseModel):
     content: str
     tags: list[str] | None = None
+
+    model_config = {"str_max_length": 10000}
 
 
 class ContextWindowRequest(BaseModel):
     query: str
     token_budget: int = 4000
     include_documents: bool = True
+
+    model_config = {"str_max_length": 2000}
 
 
 class ApiResponse(BaseModel):
