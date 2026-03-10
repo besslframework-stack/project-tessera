@@ -1449,6 +1449,14 @@ def import_conversations(data: str, source: str = "chatgpt") -> str:
     return summary + f"\n\nStored {stored} of {len(extracted)} extracted memories."
 
 
+def migrate_data(dry_run: bool = False) -> str:
+    """Run data migration to the latest schema version."""
+    from src.migrate import format_migration_result, run_migration
+    result = run_migration(dry_run=dry_run)
+    _log_interaction("migrate_data", f"dry_run={dry_run}", result.get("message", ""))
+    return format_migration_result(result)
+
+
 def vault_status_info() -> str:
     """Get vault encryption status."""
     from src.vault import vault_status

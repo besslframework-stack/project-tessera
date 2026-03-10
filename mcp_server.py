@@ -711,6 +711,18 @@ def import_conversations(data: str, source: str = "chatgpt") -> str:
 
 @mcp.tool(
     description=(
+        "Migrate Tessera data to the latest schema version. "
+        "Creates a backup before migration. Use dry_run=True to preview changes. "
+        "Handles v0.6.x through v1.0.0 data format upgrades."
+    )
+)
+def migrate_data(dry_run: bool = False) -> str:
+    """Run data migration."""
+    return core.migrate_data(dry_run)
+
+
+@mcp.tool(
+    description=(
         "Check vault encryption status. "
         "When TESSERA_VAULT_KEY is set, memories are encrypted at rest using AES-256-CBC. "
         "All encryption is local — no cloud, no external services."

@@ -317,6 +317,12 @@ def import_conversations(req: ImportConversationsRequest):
     return ApiResponse(data=result)
 
 
+@app.post("/migrate", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def migrate_data(dry_run: bool = Query(default=False)):
+    result = core.migrate_data(dry_run)
+    return ApiResponse(data=result)
+
+
 @app.get("/vault-status", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def vault_status_endpoint():
     result = core.vault_status_info()

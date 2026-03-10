@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.6] - 2026-03-11
+
+### Added
+- **Migration Tool** — upgrade data from v0.6.x → v1.0.0 with automatic backup
+- **`src/migrate.py`** — version detection (heuristic), memory normalization, backup creation, dry-run mode
+- **`migrate_data` MCP tool** — run migration with optional dry_run preview
+- **`POST /migrate` HTTP endpoint** — migration via REST
+- **`tests/test_migrate.py`** — 32 tests (normalization, version detection, dry run, actual migration, backup)
+- Total tools: 51 MCP + 28 HTTP endpoints, total tests: 621
+
 ## [0.9.5] - 2026-03-11
 
 ### Added
