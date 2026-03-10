@@ -673,6 +673,31 @@ def export_knowledge(format: str = "markdown") -> str:
 
 @mcp.tool(
     description=(
+        "Export memories for use in another AI tool. "
+        "Supported targets: 'chatgpt' (ChatGPT memory JSON), 'gemini' (Gemini context format), "
+        "'standard' (Tessera interchange format). "
+        "Use this when migrating knowledge to another AI platform."
+    )
+)
+def export_for_ai(target: str = "chatgpt") -> str:
+    """Export memories in another AI tool's format."""
+    return core.export_for_ai(target)
+
+
+@mcp.tool(
+    description=(
+        "Import memories from another AI tool. "
+        "Paste the exported JSON data and specify the source: 'chatgpt', 'gemini', or 'standard'. "
+        "Memories will be automatically categorized and stored in Tessera."
+    )
+)
+def import_from_ai(data: str, source: str = "chatgpt") -> str:
+    """Import memories from another AI tool's export."""
+    return core.import_from_ai(data, source)
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

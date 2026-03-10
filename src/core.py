@@ -1347,6 +1347,67 @@ def export_knowledge(fmt: str = "markdown") -> str:
     return result
 
 
+def export_for_ai(target: str = "chatgpt") -> str:
+    """Export memories in a format compatible with another AI tool.
+
+    Supported targets: chatgpt, gemini, standard (Tessera interchange format).
+    """
+    from src.cross_ai import export_for_chatgpt, export_for_gemini, export_standard
+
+    memories: list[dict] = []
+    try:
+        from src.memory import list_memories
+        memories = list_memories(limit=500)
+    except Exception:
+        logger.debug("Could not load memories for cross-AI export")
+
+    exporters = {
+        "chatgpt": export_for_chatgpt,
+        "gemini": export_for_gemini,
+        "standard": export_standard,
+        "tessera": export_standard,
+    }
+
+    exporter = exporters.get(target.lower(), export_standard)
+    result = exporter(memories)
+    _log_interaction("export_for_ai", target, f"{len(memories)} memories exported for {target}")
+    return result
+
+
+def import_from_ai(data: str, source: str = "chatgpt") -> str:
+    """Import memories from another AI tool's export format.
+
+    Supported sources: chatgpt, gemini, standard (Tessera format).
+    Returns summary of imported memories.
+    """
+    from src.cross_ai import import_from_chatgpt, import_from_gemini, import_standard
+
+    importers = {
+        "chatgpt": import_from_chatgpt,
+        "gemini": import_from_gemini,
+        "standard": import_standard,
+        "tessera": import_standard,
+    }
+
+    importer = importers.get(source.lower(), import_standard)
+    memories = importer(data)
+
+    if not memories:
+        return f"No valid memories found in {source} format data."
+
+    # Store each imported memory
+    imported_count = 0
+    for mem in memories:
+        try:
+            remember(mem["content"], mem.get("tags"))
+            imported_count += 1
+        except Exception as e:
+            logger.debug("Failed to import memory: %s", e)
+
+    _log_interaction("import_from_ai", source, f"{imported_count}/{len(memories)} imported")
+    return f"Imported {imported_count} memories from {source} format."
+
+
 # --- Interaction Log Tools ---
 
 

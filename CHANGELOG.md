@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.3] - 2026-03-11
+
+### Added
+- **Cross-AI Format** — export/import memories for ChatGPT and Gemini
+- **`src/cross_ai.py`** — `export_for_chatgpt()`, `import_from_chatgpt()`, `export_for_gemini()`, `import_from_gemini()`, `export_standard()`, `import_standard()`
+- **`export_for_ai` / `import_from_ai` MCP tools** — migrate knowledge between AI platforms
+- **`GET /export-for-ai` + `POST /import-from-ai` HTTP endpoints** — cross-AI via REST
+- **`tests/test_cross_ai.py`** — 27 tests (roundtrip, category extraction, tag parsing, Korean, edge cases)
+- Total tools: 48 MCP + 25 HTTP endpoints, total tests: 540
+
 ## [0.9.2] - 2026-03-11
 
 ### Added

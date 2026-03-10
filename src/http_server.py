@@ -289,6 +289,23 @@ def export_knowledge(format: str = Query(default="markdown")):
     return ApiResponse(data=result)
 
 
+class ImportFromAIRequest(BaseModel):
+    data: str
+    source: str = "chatgpt"
+
+
+@app.get("/export-for-ai", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def export_for_ai(target: str = Query(default="chatgpt")):
+    result = core.export_for_ai(target)
+    return ApiResponse(data=result)
+
+
+@app.post("/import-from-ai", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def import_from_ai(req: ImportFromAIRequest):
+    result = core.import_from_ai(req.data, req.source)
+    return ApiResponse(data=result)
+
+
 @app.get("/user-profile", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def user_profile():
     result = core.user_profile()
