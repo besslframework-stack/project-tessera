@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.8.1] - 2026-03-11
+
+### Added
+- **FastAPI HTTP API** — REST API exposing all Tessera functions for ChatGPT, Gemini, browser extensions
+- **`src/http_server.py`** — 20 endpoints (search, memory, intelligence, workspace)
+- **`tessera-api` entry point** — `pip install project-tessera[api]` then `tessera-api`
+- **`[api]` optional deps** — fastapi + uvicorn
+- **Pydantic request models** — typed request/response for all endpoints
+- **`tests/test_http_server.py`** — 21 tests (all endpoints via FastAPI TestClient)
+- Total tools: 44 MCP + 20 HTTP endpoints, total tests: 434
+
+### Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/version` | Version info |
+| POST | `/search` | Hybrid search |
+| POST | `/unified-search` | Search docs + memories |
+| POST | `/remember` | Save memory |
+| POST | `/recall` | Search memories with filters |
+| POST | `/learn` | Save and index |
+| GET | `/memories` | List memories |
+| DELETE | `/memories/{id}` | Delete memory |
+| GET | `/memories/categories` | Category breakdown |
+| GET | `/memories/tags` | Tag list |
+| POST | `/context-window` | Build context for AI |
+| GET | `/decision-timeline` | Decision evolution |
+| GET | `/smart-suggest` | Query suggestions |
+| GET | `/topic-map` | Topic clusters |
+| GET | `/knowledge-stats` | Stats dashboard |
+
 ## [0.8.0] - 2026-03-10
 
 ### Radar Phase Complete — Tessera now has proactive intelligence

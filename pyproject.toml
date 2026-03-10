@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "0.8.0"
+version = "0.8.1"
 description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
@@ -51,6 +51,10 @@ ocr = [
 images = [
     "Pillow>=10.0.0",
 ]
+api = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/besslframework-stack/project-tessera"
@@ -60,6 +64,7 @@ Issues = "https://github.com/besslframework-stack/project-tessera/issues"
 [project.scripts]
 tessera = "src.cli:cli"
 tessera-mcp = "mcp_server:main"
+tessera-api = "src.http_server:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
