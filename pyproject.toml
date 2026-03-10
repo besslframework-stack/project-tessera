@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "0.9.9"
-description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool."
+version = "1.0.0"
+description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool. 51 MCP tools, REST API, cross-AI memory, encryption, local-first."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
 authors = [
     { name = "Jae-seong Jeong", email = "bessl.framework@gmail.com" },
 ]
 readme = "README.md"
-keywords = ["rag", "mcp", "claude", "knowledge-base", "vector-search", "local"]
+keywords = ["rag", "mcp", "claude", "knowledge-base", "vector-search", "local", "personal-knowledge", "cross-ai", "memory", "chatgpt", "gemini"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3.11",

@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0] - 2026-03-11
+
+### Tessera v1.0 — Personal Knowledge Layer for AI
+
+Tessera is no longer a document search tool. It is a personal knowledge layer that works across every AI tool you use.
+
+**What Tessera 1.0 does:**
+- Remembers your decisions, preferences, and facts across AI sessions
+- Works with Claude (MCP), ChatGPT, Gemini, and any HTTP-capable AI tool
+- Exports to Obsidian, Markdown, CSV, JSON, ChatGPT memory, Gemini context
+- Imports past conversations from ChatGPT, Claude, and Gemini
+- Encrypts memories at rest with AES-256 (optional)
+- Runs 100% locally: LanceDB + fastembed/ONNX, no cloud, no API keys
+
+**By the numbers:**
+- 51 MCP tools
+- 28 HTTP API endpoints
+- 11 CLI commands
+- 652 tests
+- 4 phases completed: Sponge → Radar → Gateway → Cortex
+
+### Changed
+- PyPI description updated to "Personal Knowledge Layer for AI"
+- Keywords expanded: personal-knowledge, cross-ai, memory, chatgpt, gemini
+- HTTP API version bumped to 1.0.0
+
 ## [0.9.9] - 2026-03-11
 
 ### Changed
