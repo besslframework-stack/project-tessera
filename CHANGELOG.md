@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.3] - 2026-03-11
+
+### Added
+- **CORS middleware** — allows requests from ChatGPT, Gemini, Claude.ai, localhost origins
+- **OpenAPI tags** — endpoints organized into search, memory, intelligence, workspace groups
+- **Interactive docs** — `/docs` (Swagger UI) and `/openapi.json` available out of the box
+- **`tests/test_cors_openapi.py`** — 9 tests (CORS headers, OpenAPI schema, endpoint listing)
+- Total tests: 455
+
 ## [0.8.2] - 2026-03-11
 
 ### Added

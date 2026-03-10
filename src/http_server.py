@@ -10,6 +10,7 @@ import logging
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
@@ -21,7 +22,29 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Tessera API",
     description="Personal Knowledge Layer for AI — REST API",
-    version="0.8.2",
+    version="0.8.3",
+    openapi_tags=[
+        {"name": "search", "description": "Document and memory search"},
+        {"name": "memory", "description": "Cross-session memory management"},
+        {"name": "intelligence", "description": "Proactive knowledge intelligence"},
+        {"name": "workspace", "description": "Workspace management and diagnostics"},
+    ],
+)
+
+# CORS — allow local and common AI tool origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://chat.openai.com",
+        "https://chatgpt.com",
+        "https://gemini.google.com",
+        "https://claude.ai",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Initialize auth on import
