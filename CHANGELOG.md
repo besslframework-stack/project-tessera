@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.1] - 2026-03-11
+
+### Added
+- **User Profile** — auto-built profile from memories and interactions
+- **`user_profile` MCP tool** — preferences, decisions, top topics, language detection, tool usage patterns
+- **`src/user_profile.py`** — `build_profile()`, `format_profile()` with language detection (Korean/English/bilingual)
+- **`/user-profile` HTTP endpoint** — profile via REST API
+- **`tests/test_user_profile.py`** — 13 tests (preferences, decisions, language, tools, formatting)
+- Total tools: 45 MCP + 22 HTTP endpoints, total tests: 496
+
 ## [0.9.0] - 2026-03-11
 
 ### Gateway Phase Complete — Tessera works with any AI tool

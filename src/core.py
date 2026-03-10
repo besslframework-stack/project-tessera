@@ -1291,6 +1291,29 @@ def knowledge_stats() -> str:
     return format_stats(stats)
 
 
+def user_profile() -> str:
+    """Build and display a user profile from memories and interactions."""
+    from src.user_profile import build_profile, format_profile
+
+    memories: list[dict] = []
+    try:
+        from src.memory import list_memories
+        memories = list_memories(limit=200)
+    except Exception:
+        logger.debug("Could not load memories for profile")
+
+    interactions: list[dict] = []
+    try:
+        log = _get_interaction_log()
+        interactions = log.get_recent(limit=200)
+    except Exception:
+        logger.debug("Could not load interactions for profile")
+
+    profile = build_profile(memories, interactions)
+    _log_interaction("user_profile", "", f"{profile['total_memories']} memories")
+    return format_profile(profile)
+
+
 # --- Interaction Log Tools ---
 
 

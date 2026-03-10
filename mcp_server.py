@@ -649,6 +649,17 @@ def knowledge_stats() -> str:
 
 @mcp.tool(
     description=(
+        "View your user profile — preferences, decisions, top topics, "
+        "language preference, tool usage patterns, and knowledge areas."
+    )
+)
+def user_profile() -> str:
+    """Get user profile summary."""
+    return core.user_profile()
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

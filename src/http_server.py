@@ -283,6 +283,12 @@ def batch(req: BatchRequest):
 # Workspace
 # ---------------------------------------------------------------------------
 
+@app.get("/user-profile", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def user_profile():
+    result = core.user_profile()
+    return ApiResponse(data=result)
+
+
 @app.get("/status", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def tessera_status():
     result = core.tessera_status()
