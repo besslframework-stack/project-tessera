@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.2] - 2026-03-11
+
+### Added
+- **API Key Authentication** — optional auth for HTTP API via `TESSERA_API_KEY` env var or workspace config
+- **`src/api_auth.py`** — `init_auth()`, `validate_key()`, `generate_api_key()`, `hash_key()`
+- **`X-API-Key` header** — all protected endpoints require API key when auth is enabled
+- **`/health` and `/version` exempt** — always accessible without auth
+- **`tests/test_api_auth.py`** — 12 tests (key generation, validation, HTTP integration)
+- Total tests: 446
+
+### Security
+- Auth is opt-in: local-first design means no auth by default
+- Set `TESSERA_API_KEY=your-key` to enable
+- Keys use `tsr_` prefix + cryptographically secure random tokens
+
 ## [0.8.1] - 2026-03-11
 
 ### Added

@@ -9,18 +9,34 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
 from src import core
+from src.api_auth import init_auth, is_auth_required, validate_key
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Tessera API",
     description="Personal Knowledge Layer for AI — REST API",
-    version="0.8.1",
+    version="0.8.2",
 )
+
+# Initialize auth on import
+init_auth()
+
+# API key header (optional — only enforced when TESSERA_API_KEY is set)
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def verify_api_key(api_key: str | None = Depends(_api_key_header)):
+    """Verify API key if auth is required."""
+    if not is_auth_required():
+        return  # No auth needed
+    if not api_key or not validate_key(api_key):
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 # ---------------------------------------------------------------------------
@@ -84,13 +100,13 @@ def version():
 # Search
 # ---------------------------------------------------------------------------
 
-@app.post("/search", response_model=ApiResponse)
+@app.post("/search", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def search_documents(req: SearchRequest):
     result = core.search_documents(req.query, req.top_k)
     return ApiResponse(data=result)
 
 
-@app.post("/unified-search", response_model=ApiResponse)
+@app.post("/unified-search", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def unified_search(req: SearchRequest):
     result = core.unified_search(req.query, req.top_k)
     return ApiResponse(data=result)
@@ -100,13 +116,13 @@ def unified_search(req: SearchRequest):
 # Memory
 # ---------------------------------------------------------------------------
 
-@app.post("/remember", response_model=ApiResponse)
+@app.post("/remember", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def remember(req: RememberRequest):
     result = core.remember(req.content, req.tags)
     return ApiResponse(data=result)
 
 
-@app.post("/recall", response_model=ApiResponse)
+@app.post("/recall", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def recall(req: RecallRequest):
     result = core.recall(
         req.query, req.top_k,
@@ -115,43 +131,43 @@ def recall(req: RecallRequest):
     return ApiResponse(data=result)
 
 
-@app.post("/learn", response_model=ApiResponse)
+@app.post("/learn", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def learn(req: LearnRequest):
     result = core.learn(req.content, req.tags)
     return ApiResponse(data=result)
 
 
-@app.get("/memories", response_model=ApiResponse)
+@app.get("/memories", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def list_memories(limit: int = Query(default=20, ge=1, le=100)):
     result = core.list_memories(limit)
     return ApiResponse(data=result)
 
 
-@app.delete("/memories/{memory_id}", response_model=ApiResponse)
+@app.delete("/memories/{memory_id}", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def forget_memory(memory_id: str):
     result = core.forget_memory(memory_id)
     return ApiResponse(data=result)
 
 
-@app.get("/memories/categories", response_model=ApiResponse)
+@app.get("/memories/categories", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def memory_categories():
     result = core.memory_categories()
     return ApiResponse(data=result)
 
 
-@app.get("/memories/search-by-category", response_model=ApiResponse)
+@app.get("/memories/search-by-category", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def search_by_category(category: str = Query(...)):
     result = core.search_by_category(category)
     return ApiResponse(data=result)
 
 
-@app.get("/memories/tags", response_model=ApiResponse)
+@app.get("/memories/tags", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def memory_tags():
     result = core.memory_tags()
     return ApiResponse(data=result)
 
 
-@app.get("/memories/search-by-tag", response_model=ApiResponse)
+@app.get("/memories/search-by-tag", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def search_by_tag(tag: str = Query(...)):
     result = core.search_by_tag(tag)
     return ApiResponse(data=result)
@@ -161,31 +177,31 @@ def search_by_tag(tag: str = Query(...)):
 # Intelligence
 # ---------------------------------------------------------------------------
 
-@app.post("/context-window", response_model=ApiResponse)
+@app.post("/context-window", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def context_window(req: ContextWindowRequest):
     result = core.context_window(req.query, req.token_budget, req.include_documents)
     return ApiResponse(data=result)
 
 
-@app.get("/decision-timeline", response_model=ApiResponse)
+@app.get("/decision-timeline", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def decision_timeline():
     result = core.decision_timeline()
     return ApiResponse(data=result)
 
 
-@app.get("/smart-suggest", response_model=ApiResponse)
+@app.get("/smart-suggest", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def smart_suggest(max_suggestions: int = Query(default=5, ge=1, le=20)):
     result = core.smart_suggest(max_suggestions)
     return ApiResponse(data=result)
 
 
-@app.get("/topic-map", response_model=ApiResponse)
+@app.get("/topic-map", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def topic_map(output_format: str = Query(default="text")):
     result = core.topic_map(output_format)
     return ApiResponse(data=result)
 
 
-@app.get("/knowledge-stats", response_model=ApiResponse)
+@app.get("/knowledge-stats", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def knowledge_stats():
     result = core.knowledge_stats()
     return ApiResponse(data=result)
@@ -195,13 +211,13 @@ def knowledge_stats():
 # Workspace
 # ---------------------------------------------------------------------------
 
-@app.get("/status", response_model=ApiResponse)
+@app.get("/status", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def tessera_status():
     result = core.tessera_status()
     return ApiResponse(data=result)
 
 
-@app.get("/health-check", response_model=ApiResponse)
+@app.get("/health-check", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def health_check():
     result = core.health_check()
     return ApiResponse(data=result)
