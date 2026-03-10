@@ -283,6 +283,12 @@ def batch(req: BatchRequest):
 # Workspace
 # ---------------------------------------------------------------------------
 
+@app.get("/export", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
+def export_knowledge(format: str = Query(default="markdown")):
+    result = core.export_knowledge(format)
+    return ApiResponse(data=result)
+
+
 @app.get("/user-profile", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def user_profile():
     result = core.user_profile()

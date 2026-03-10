@@ -660,6 +660,19 @@ def user_profile() -> str:
 
 @mcp.tool(
     description=(
+        "Export all your knowledge in various formats. "
+        "Supported formats: 'markdown' (default), 'obsidian' (with wikilinks and frontmatter), "
+        "'csv' (spreadsheet-compatible), 'json' (machine-readable). "
+        "Use 'obsidian' to import into Obsidian vaults."
+    )
+)
+def export_knowledge(format: str = "markdown") -> str:
+    """Export knowledge in the specified format."""
+    return core.export_knowledge(format)
+
+
+@mcp.tool(
+    description=(
         "Toggle or check auto-learning status. "
         "When enabled, Tessera automatically extracts decisions, preferences, "
         "and facts from conversations. Call without arguments to check status."

@@ -1314,6 +1314,39 @@ def user_profile() -> str:
     return format_profile(profile)
 
 
+def export_knowledge(fmt: str = "markdown") -> str:
+    """Export all memories in the specified format.
+
+    Supported formats: markdown, obsidian, csv, json.
+    """
+    from src.export_formats import (
+        export_csv,
+        export_json_pretty,
+        export_markdown,
+        export_obsidian,
+    )
+
+    memories: list[dict] = []
+    try:
+        from src.memory import list_memories
+        memories = list_memories(limit=500)
+    except Exception:
+        logger.debug("Could not load memories for export")
+
+    formatters = {
+        "markdown": export_markdown,
+        "md": export_markdown,
+        "obsidian": export_obsidian,
+        "csv": export_csv,
+        "json": export_json_pretty,
+    }
+
+    formatter = formatters.get(fmt.lower(), export_markdown)
+    result = formatter(memories)
+    _log_interaction("export_knowledge", fmt, f"{len(memories)} memories exported as {fmt}")
+    return result
+
+
 # --- Interaction Log Tools ---
 
 

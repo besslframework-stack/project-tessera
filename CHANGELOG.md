@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.2] - 2026-03-11
+
+### Added
+- **Export Formats** — export knowledge as Obsidian, Markdown, CSV, or JSON
+- **`export_knowledge` MCP tool** — format parameter: markdown, obsidian, csv, json
+- **`src/export_formats.py`** — `export_obsidian()` (wikilinks + YAML frontmatter), `export_markdown()` (grouped by category), `export_csv()`, `export_json_pretty()`
+- **`GET /export` HTTP endpoint** — export via REST API with format query param
+- **`tests/test_export_formats.py`** — 17 tests (Obsidian frontmatter/wikilinks, Markdown grouping/truncation, CSV headers, JSON Korean support)
+- Total tools: 46 MCP + 23 HTTP endpoints, total tests: 513
+
 ## [0.9.1] - 2026-03-11
 
 ### Added
