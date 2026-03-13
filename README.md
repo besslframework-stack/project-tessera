@@ -1,6 +1,8 @@
 # Tessera
 
 [![PyPI version](https://img.shields.io/pypi/v/project-tessera)](https://pypi.org/project/project-tessera/)
+[![Downloads](https://img.shields.io/pypi/dm/project-tessera)](https://pypi.org/project/project-tessera/)
+[![Tests](https://img.shields.io/badge/tests-784%20passing-brightgreen)]()
 [![Python](https://img.shields.io/pypi/pyversions/project-tessera)](https://pypi.org/project/project-tessera/)
 [![License](https://img.shields.io/pypi/l/project-tessera)](https://github.com/besslframework-stack/project-tessera/blob/main/LICENSE)
 
@@ -8,40 +10,158 @@
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" />
 </a>
 
-**Personal Knowledge Layer for AI. Own your memory across every AI tool.**
+**Your AI conversations generate knowledge that vanishes when the session ends. Tessera keeps it.**
 
-You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge that disappears when the session ends. Tessera captures that knowledge, stores it locally, and serves it back to any AI tool through MCP or REST API.
+One knowledge base across Claude, ChatGPT, Gemini, and Copilot. No API keys. No Docker. No data leaves your machine.
 
-## Why Tessera
+```bash
+pip install project-tessera
+tessera setup
+# Done. Claude Desktop now has persistent memory + document search.
+```
 
-- **Auto-learning** -- extracts decisions, preferences, and facts from conversations automatically.
-- **Works with any AI** -- Claude via MCP, ChatGPT/Gemini/Copilot via HTTP API. One knowledge base, every tool.
-- **Cross-session memory** -- AI remembers your decisions and context between conversations.
-- **Cross-AI portability** -- export memories to ChatGPT or Gemini format. Import past conversations from any AI.
-- **100% local** -- no cloud, no API keys, no data leaving your machine. LanceDB + fastembed/ONNX.
-- **Encrypted storage** -- optional AES-256 encryption at rest for sensitive knowledge.
+---
+
+## Why Tessera over alternatives
+
+|  | Tessera | Mem0 | Basic Memory | mcp-memory-service |
+|--|---------|------|--------------|-------------------|
+| Works without API keys | Yes | No (needs OpenAI) | Yes | Partial |
+| Works without Docker | Yes | No | Yes | No |
+| Document search (40+ types) | Yes | No | Markdown only | No |
+| Cross-AI export/import | Yes | No | No | No |
+| Contradiction detection | Yes | No | No | No |
+| Memory confidence scoring | Yes | No | No | No |
+| Encrypted vault (AES-256) | Yes | No | No | No |
+| HTTP API for non-MCP tools | 34 endpoints | Yes | No | Yes |
+| Auto-learning from conversations | Yes | Yes | No | No |
+| MCP tools | 53 | ~10 | ~15 | 24 |
+
+### What makes Tessera different
+
+**Cross-AI portability.** Export your knowledge to ChatGPT memory format. Import Gemini conversations. Move between AI tools without starting over. No other tool does this.
+
+**Active intelligence, not passive storage.** Tessera detects contradictions in your memories, scores confidence based on repetition and source diversity, tracks how your decisions evolved over time, and flags stale knowledge. It does not just store -- it understands.
+
+**Zero infrastructure.** `pip install` and go. LanceDB (embedded columnar vector store) and fastembed (ONNX runtime) run locally. No Docker containers, no database servers, no API keys, no cloud accounts.
+
+**Encrypted by default.** Set one environment variable and all memories are AES-256-CBC encrypted at rest. Your knowledge, your keys.
+
+---
 
 ## Architecture
 
-```
-                    +-----------------+
-                    |    src/core.py  |   55 public functions
-                    |                 |   Search, memory, knowledge graph,
-                    |                 |   auto-extract, intelligence, export
-                    +-----------------+
-                     /        |        \
-    +-------------+  +----------------+  +----------+
-    | mcp_server  |  | http_server.py |  | cli.py   |
-    | (stdio/MCP) |  | (REST API)     |  | (CLI)    |
-    | 53 tools    |  | 34 endpoints   |  | 11 cmds  |
-    +-------------+  +----------------+  +----------+
+### How search works (query path)
 
-    +--------------------------------------------------+
-    | LanceDB (vectors) | SQLite (metadata, analytics) |
-    | fastembed/ONNX (local embeddings, no API keys)   |
-    | AES-256-CBC vault (optional encryption)          |
-    +--------------------------------------------------+
 ```
+    User asks: "What did we decide about the database?"
+                            |
+                            v
+                +-----------------------+
+                |    Query Processing   |
+                |  Multi-angle decomp   |    "database decision"
+                |  (2-4 perspectives)   |    "database", "decision"
+                +-----------------------+    "decision about database"
+                            |
+              +-------------+-------------+
+              |                           |
+              v                           v
+    +------------------+        +------------------+
+    |  Vector Search   |        |  Keyword Search  |
+    |  (LanceDB)       |        |  (FTS index)     |
+    |  384-dim MiniLM  |        |  BM25 scoring    |
+    +------------------+        +------------------+
+              |                           |
+              +-------------+-------------+
+                            |
+                            v
+                +-----------------------+
+                |      Reranking        |
+                |  70% semantic weight  |    LinearCombinationReranker
+                |  30% keyword weight   |    + version-aware scoring
+                +-----------------------+
+                            |
+                            v
+                +-----------------------+
+                |   Result Assembly     |
+                |  Dedup (content hash) |    2-pass deduplication
+                |  Verdict labels       |    found / weak / none
+                |  Cache (60s TTL)      |
+                +-----------------------+
+                            |
+                            v
+                    Top-K results with
+                    confidence scores
+```
+
+### How ingestion works (ingest path)
+
+```
+    Documents: .md .pdf .docx .xlsx .py .ts .go ...  (40+ types)
+                            |
+                            v
+                +-----------------------+
+                |   File Type Router    |
+                |  Markdown, CSV, XLSX  |    Type-specific parsers
+                |  Code, PDF, Images    |    with metadata extraction
+                +-----------------------+
+                            |
+                            v
+                +-----------------------+
+                |   Chunking Engine     |
+                |  1024 tokens/chunk    |    Sentence-boundary aware
+                |  100 token overlap    |    Heading-preserving
+                +-----------------------+
+                            |
+                            v
+                +-----------------------+
+                |   Local Embedding     |
+                |  fastembed/ONNX       |    paraphrase-multilingual
+                |  384 dimensions       |    MiniLM-L12-v2
+                |  No API calls         |    101 languages
+                +-----------------------+
+                            |
+              +-------------+-------------+
+              |                           |
+              v                           v
+    +------------------+        +------------------+
+    |    LanceDB       |        |     SQLite       |
+    |  Vector storage  |        |  File metadata   |
+    |  Columnar format |        |  Search analytics|
+    |  Zero-config     |        |  Interaction log |
+    +------------------+        +------------------+
+```
+
+### System overview
+
+```
+                    +--------------------------------------------+
+                    |              src/core.py                    |
+                    |         55 orchestration functions          |
+                    |   48 specialized modules, 10.5k LOC        |
+                    +--------------------------------------------+
+                     /                |                \
+    +---------------+  +-------------------+  +--------------+
+    | MCP Server    |  | HTTP API Server   |  | CLI          |
+    | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
+    | 53 tools      |  | 34 endpoints      |  | setup, sync  |
+    | stdio         |  | port 8394         |  | ingest, api  |
+    +---------------+  +-------------------+  +--------------+
+           |                    |                     |
+           v                    v                     v
+    +------------------------------------------------------------+
+    |                    Storage Layer                            |
+    |  LanceDB         SQLite           Filesystem               |
+    |  (vectors)       (metadata,       (memories as .md,        |
+    |                   analytics,       encrypted with           |
+    |                   interactions)    AES-256-CBC)             |
+    |                                                            |
+    |  fastembed/ONNX: local embedding, no API keys              |
+    |  101 languages, 384-dim vectors, ~220MB model              |
+    +------------------------------------------------------------+
+```
+
+---
 
 ## Get started
 
@@ -69,6 +189,102 @@ Creates workspace config, downloads embedding model (~220MB, first time only), c
 
 Ask Claude about your documents. It searches automatically.
 
+### Use with ChatGPT, Gemini, or any HTTP client
+
+```bash
+pip install project-tessera[api]
+tessera api  # Starts REST API on http://127.0.0.1:8394
+```
+
+Interactive Swagger docs at `http://127.0.0.1:8394/docs`.
+
+---
+
+## Key capabilities
+
+### Hybrid search with reranking
+
+Every search query runs through a 4-stage retrieval pipeline:
+
+1. **Query decomposition** -- splits complex queries into 2-4 search angles (core keywords, individual terms, reversed emphasis)
+2. **Hybrid retrieval** -- vector similarity (LanceDB) + keyword matching (FTS/BM25) in parallel
+3. **Reranking** -- LinearCombinationReranker merges results (70% semantic, 30% keyword weight)
+4. **Verdict scoring** -- each result labeled as `confident match` (>= 45%), `possible match` (25-45%), or `low relevance` (< 25%)
+
+Version-aware: when multiple versions of the same document exist, Tessera automatically prefers the latest.
+
+### Cross-session memory
+
+```bash
+# Via MCP (Claude)
+"Remember that we chose PostgreSQL for the production database"
+
+# Via HTTP API (ChatGPT, Gemini, scripts)
+curl -X POST http://127.0.0.1:8394/remember \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Use PostgreSQL for production", "tags": ["db", "architecture"]}'
+```
+
+Memories are:
+- **Auto-categorized** as decision, preference, or fact
+- **Deduplicated** via cosine similarity (0.92 threshold) -- no duplicates
+- **Confidence-scored** based on repetition (35%), recency (25%), source diversity (20%), and category weight (20%)
+- **Encrypted at rest** when `TESSERA_VAULT_KEY` is set (AES-256-CBC, pure Python, no external deps)
+
+### Auto-learning
+
+Tessera extracts decisions, preferences, and facts from your conversations automatically. Toggle with `toggle_auto_learn`. Review what it learned with `review_learned`.
+
+### Contradiction detection
+
+Scans your memories for conflicting statements:
+
+```
+CONTRADICTION (HIGH severity):
+  "We decided to use PostgreSQL" (2026-03-01)
+  vs
+  "Switched to MongoDB for the main database" (2026-03-10)
+
+  The newer memory (2026-03-10) likely reflects the current state.
+```
+
+Supports both English and Korean negation patterns.
+
+### Cross-AI portability
+
+```bash
+# Export your knowledge for ChatGPT
+curl http://127.0.0.1:8394/export-for-ai?target=chatgpt
+
+# Import past conversations from ChatGPT
+curl -X POST http://127.0.0.1:8394/import-conversations \
+  -d '{"data": "<exported JSON>", "source": "chatgpt"}'
+
+# Export as Obsidian vault (wikilinks), Markdown, CSV, or JSON
+curl http://127.0.0.1:8394/export?format=obsidian
+```
+
+### Memory health analytics
+
+Classifies every memory as **healthy**, **stale** (90+ days without reinforcement), or **orphaned** (minimal metadata, no category). Generates cleanup recommendations and growth statistics.
+
+### Plugin hooks
+
+Extend Tessera with custom scripts triggered on events:
+
+```yaml
+# workspace.yaml
+hooks:
+  on_memory_created:
+    - script: ./notify-slack.sh
+  on_contradiction_found:
+    - script: ./alert.py
+```
+
+7 event types: `on_memory_created`, `on_memory_deleted`, `on_search`, `on_session_start`, `on_session_end`, `on_ingest_complete`, `on_contradiction_found`.
+
+---
+
 ## Supported file types (40+)
 
 | Category | Extensions | Install |
@@ -80,9 +296,13 @@ Ask Claude about your documents. It searches automatically.
 | Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
 | Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` |
 
+---
+
 ## MCP tools (53)
 
-### Search (5)
+<details>
+<summary><strong>Search (5)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `search_documents` | Semantic + keyword hybrid search across all docs |
@@ -91,7 +311,11 @@ Ask Claude about your documents. It searches automatically.
 | `read_file` | Read any file's full content |
 | `list_sources` | See what's indexed |
 
-### Memory (13)
+</details>
+
+<details>
+<summary><strong>Memory (13)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `remember` | Save knowledge that persists across sessions |
@@ -108,7 +332,11 @@ Ask Claude about your documents. It searches automatically.
 | `find_similar` | Find documents similar to a given file |
 | `knowledge_graph` | Build a Mermaid diagram of document relationships |
 
-### Auto-learn (5)
+</details>
+
+<details>
+<summary><strong>Auto-learn (5)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `digest_conversation` | Extract and save knowledge from the current session |
@@ -117,7 +345,11 @@ Ask Claude about your documents. It searches automatically.
 | `session_interactions` | View tool calls from current/past sessions |
 | `recent_sessions` | Session history with interaction counts |
 
-### Intelligence (7)
+</details>
+
+<details>
+<summary><strong>Intelligence (7)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `decision_timeline` | Track how decisions evolved over time, grouped by topic |
@@ -128,7 +360,25 @@ Ask Claude about your documents. It searches automatically.
 | `user_profile` | Auto-built profile (language, preferences, expertise) |
 | `explore_connections` | Show connections around a specific topic |
 
-### Cross-AI (4)
+</details>
+
+<details>
+<summary><strong>Insight (6)</strong></summary>
+
+| Tool | What it does |
+|------|-------------|
+| `deep_search` | Multi-angle search: decomposes query into 2-4 perspectives, merges best results |
+| `deep_recall` | Multi-angle memory recall with verdict labels |
+| `detect_contradictions` | Scan memories for conflicting statements with severity rating |
+| `memory_confidence` | Rate each memory's reliability (repetition, recency, source diversity) |
+| `memory_health` | Classify memories as healthy/stale/orphaned with cleanup recommendations |
+| `list_plugin_hooks` | View registered event hooks and extensibility points |
+
+</details>
+
+<details>
+<summary><strong>Cross-AI (4)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `export_for_ai` | Export memories in ChatGPT or Gemini format |
@@ -136,13 +386,21 @@ Ask Claude about your documents. It searches automatically.
 | `import_conversations` | Extract knowledge from ChatGPT/Claude/Gemini conversation exports |
 | `export_knowledge` | Export as Obsidian (wikilinks), Markdown, CSV, or JSON |
 
-### Security and data (2)
+</details>
+
+<details>
+<summary><strong>Security and data (2)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `vault_status` | Check AES-256 encryption status |
 | `migrate_data` | Upgrade data from older schema versions |
 
-### Workspace (11)
+</details>
+
+<details>
+<summary><strong>Workspace (11)</strong></summary>
+
 | Tool | What it does |
 |------|-------------|
 | `ingest_documents` | Index documents (first-time or full rebuild) |
@@ -157,44 +415,21 @@ Ask Claude about your documents. It searches automatically.
 | `search_analytics` | Search usage patterns, top queries, response times |
 | `check_document_freshness` | Detect stale documents older than N days |
 
-### Insight (6) — v1.1.0
-| Tool | What it does |
-|------|-------------|
-| `deep_search` | Multi-angle search: decomposes query into 2-4 perspectives, merges best results |
-| `deep_recall` | Multi-angle memory recall with verdict labels |
-| `detect_contradictions` | Scan memories for conflicting statements with severity rating |
-| `memory_confidence` | Rate each memory's reliability (repetition, recency, source diversity) |
-| `memory_health` | Classify memories as healthy/stale/orphaned with cleanup recommendations |
-| `list_plugin_hooks` | View registered event hooks and extensibility points |
+</details>
 
-## CLI (11 commands)
-
-```bash
-tessera setup          # One-command setup
-tessera init           # Interactive setup
-tessera ingest         # Index all sources
-tessera sync           # Re-index changed files
-tessera serve          # Start MCP server
-tessera api            # Start HTTP API server (port 8394)
-tessera migrate        # Upgrade data schema
-tessera check          # Workspace health
-tessera status         # Project status
-tessera install-mcp    # Configure Claude Desktop
-tessera version        # Show version
-```
+---
 
 ## HTTP API (34 endpoints)
 
-Install with API support:
-
 ```bash
 pip install project-tessera[api]
-tessera api  # Starts on http://127.0.0.1:8394
+tessera api  # http://127.0.0.1:8394
 ```
 
-Interactive docs at `http://127.0.0.1:8394/docs`.
+Swagger UI at `http://127.0.0.1:8394/docs`. Optional auth via `TESSERA_API_KEY` env var.
 
-### Endpoints
+<details>
+<summary><strong>All endpoints</strong></summary>
 
 | Method | Path | What it does |
 |--------|------|-------------|
@@ -233,15 +468,17 @@ Interactive docs at `http://127.0.0.1:8394/docs`.
 | GET | `/memory-health` | Memory health analytics |
 | GET | `/hooks` | List plugin hooks |
 
-### Examples
+</details>
+
+### Quick examples
 
 ```bash
-# Search
+# Search documents
 curl -X POST http://127.0.0.1:8394/search \
   -H "Content-Type: application/json" \
   -d '{"query": "database architecture", "top_k": 5}'
 
-# Remember
+# Save a memory
 curl -X POST http://127.0.0.1:8394/remember \
   -H "Content-Type: application/json" \
   -d '{"content": "Use PostgreSQL for production", "tags": ["db"]}'
@@ -249,32 +486,31 @@ curl -X POST http://127.0.0.1:8394/remember \
 # Export for ChatGPT
 curl http://127.0.0.1:8394/export-for-ai?target=chatgpt
 
-# Batch
+# Batch (multiple operations, single request)
 curl -X POST http://127.0.0.1:8394/batch \
   -H "Content-Type: application/json" \
   -d '{"operations": [{"method": "search", "params": {"query": "test"}}, {"method": "knowledge_stats"}]}'
 ```
 
-Optional auth: set `TESSERA_API_KEY` environment variable.
+---
 
-Optional encryption: set `TESSERA_VAULT_KEY` environment variable.
+## CLI (11 commands)
 
-## How it works
-
+```bash
+tessera setup          # One-command setup (config + model download + Claude Desktop)
+tessera init           # Interactive setup
+tessera ingest         # Index all document sources
+tessera sync           # Re-index changed files only
+tessera serve          # Start MCP server (stdio)
+tessera api            # Start HTTP API server (port 8394)
+tessera migrate        # Upgrade data schema
+tessera check          # Workspace health diagnostics
+tessera status         # Project status summary
+tessera install-mcp    # Configure Claude Desktop
+tessera version        # Show version
 ```
-Documents (Markdown, CSV, XLSX, DOCX, PDF, code, images)
-    |
-    v
-Parse & chunk --> Embed locally (fastembed/ONNX) --> LanceDB (vectors)
-    |
-    v
-src/core.py (search, memory, knowledge graph, auto-extract, intelligence)
-    |
-    v
-MCP server (Claude) / HTTP API (ChatGPT, Gemini, extensions) / CLI
-```
 
-Everything runs on your machine. No external API calls for search or embedding.
+---
 
 ## Claude Desktop config
 
@@ -307,6 +543,8 @@ Config location:
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
+---
+
 ## Configuration
 
 `tessera setup` creates `workspace.yaml`:
@@ -321,26 +559,51 @@ sources:
     type: document
 
 search:
-  reranker_weight: 0.7     # Semantic vs keyword balance
+  reranker_weight: 0.7     # Semantic vs keyword balance (0.0 = keyword only, 1.0 = vector only)
   max_top_k: 50            # Max results per search
 
 ingestion:
-  chunk_size: 1024         # Text chunk size
+  chunk_size: 1024         # Tokens per chunk
   chunk_overlap: 100       # Overlap between chunks
+
+hooks:                      # Optional plugin hooks
+  on_memory_created:
+    - script: ./my-hook.sh
 ```
 
-Or set `TESSERA_WORKSPACE=/path/to/docs` to skip config.
+Or set `TESSERA_WORKSPACE=/path/to/docs` to skip config file entirely.
 
-## Numbers
+Environment variables:
+- `TESSERA_API_KEY` -- enable API authentication
+- `TESSERA_VAULT_KEY` -- enable AES-256 encryption for memories
+
+---
+
+## Technical details
+
+| Component | Technology | Why |
+|-----------|-----------|-----|
+| Vector store | LanceDB | Embedded columnar store. Zero-config, no server process, handles vector + metadata queries natively |
+| Embeddings | fastembed/ONNX | Local inference, no API keys. `paraphrase-multilingual-MiniLM-L12-v2` (384-dim, 101 languages) |
+| Metadata | SQLite | File tracking, search analytics, interaction logging. Thread-safe with reentrant locks |
+| Memory storage | Filesystem (.md) | Human-readable, git-friendly, encryptable. YAML frontmatter for metadata |
+| Encryption | Pure Python AES-256-CBC | No OpenSSL dependency. PKCS7 padding, random IV per memory |
+| HTTP API | FastAPI | Auto-generated Swagger docs, Pydantic validation, async-capable |
+| MCP | FastMCP (stdio) | Standard MCP protocol for Claude Desktop |
+
+### Numbers
 
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
 | HTTP endpoints | 34 |
 | CLI commands | 11 |
+| Core modules | 48 |
+| Lines of code | 10,500+ |
 | Tests | 784 |
-| Supported file types | 40+ |
-| Core functions | 55 |
+| File types | 40+ |
+
+---
 
 ## License
 
