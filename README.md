@@ -25,7 +25,7 @@ You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge 
 
 ```
                     +-----------------+
-                    |    src/core.py  |   49 public functions
+                    |    src/core.py  |   55 public functions
                     |                 |   Search, memory, knowledge graph,
                     |                 |   auto-extract, intelligence, export
                     +-----------------+
@@ -33,7 +33,7 @@ You use Claude, ChatGPT, Gemini, Copilot. Each conversation generates knowledge 
     +-------------+  +----------------+  +----------+
     | mcp_server  |  | http_server.py |  | cli.py   |
     | (stdio/MCP) |  | (REST API)     |  | (CLI)    |
-    | 47 tools    |  | 28 endpoints   |  | 11 cmds  |
+    | 53 tools    |  | 34 endpoints   |  | 11 cmds  |
     +-------------+  +----------------+  +----------+
 
     +--------------------------------------------------+
@@ -80,7 +80,7 @@ Ask Claude about your documents. It searches automatically.
 | Web | `.html` `.htm` `.css` `.scss` `.less` `.svg` | included |
 | Images | `.png` `.jpg` `.jpeg` `.webp` `.gif` `.bmp` `.tiff` | `pip install project-tessera[ocr]` |
 
-## MCP tools (47)
+## MCP tools (53)
 
 ### Search (5)
 | Tool | What it does |
@@ -157,6 +157,16 @@ Ask Claude about your documents. It searches automatically.
 | `search_analytics` | Search usage patterns, top queries, response times |
 | `check_document_freshness` | Detect stale documents older than N days |
 
+### Insight (6) — v1.1.0
+| Tool | What it does |
+|------|-------------|
+| `deep_search` | Multi-angle search: decomposes query into 2-4 perspectives, merges best results |
+| `deep_recall` | Multi-angle memory recall with verdict labels |
+| `detect_contradictions` | Scan memories for conflicting statements with severity rating |
+| `memory_confidence` | Rate each memory's reliability (repetition, recency, source diversity) |
+| `memory_health` | Classify memories as healthy/stale/orphaned with cleanup recommendations |
+| `list_plugin_hooks` | View registered event hooks and extensibility points |
+
 ## CLI (11 commands)
 
 ```bash
@@ -173,7 +183,7 @@ tessera install-mcp    # Configure Claude Desktop
 tessera version        # Show version
 ```
 
-## HTTP API (28 endpoints)
+## HTTP API (34 endpoints)
 
 Install with API support:
 
@@ -216,6 +226,12 @@ Interactive docs at `http://127.0.0.1:8394/docs`.
 | GET | `/user-profile` | User profile |
 | GET | `/status` | Server status |
 | GET | `/health-check` | Workspace diagnostics |
+| POST | `/deep-search` | Multi-angle document search |
+| POST | `/deep-recall` | Multi-angle memory recall |
+| GET | `/contradictions` | Detect conflicting memories |
+| GET | `/memory-confidence` | Memory reliability scores |
+| GET | `/memory-health` | Memory health analytics |
+| GET | `/hooks` | List plugin hooks |
 
 ### Examples
 
@@ -319,12 +335,12 @@ Or set `TESSERA_WORKSPACE=/path/to/docs` to skip config.
 
 | Metric | Count |
 |--------|-------|
-| MCP tools | 47 |
-| HTTP endpoints | 28 |
+| MCP tools | 53 |
+| HTTP endpoints | 34 |
 | CLI commands | 11 |
-| Tests | 652 |
+| Tests | 784 |
 | Supported file types | 40+ |
-| Core functions | 49 |
+| Core functions | 55 |
 
 ## License
 
