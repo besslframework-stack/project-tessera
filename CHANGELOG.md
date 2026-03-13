@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1] - 2026-03-13
+
+### Fixed
+- **Tool count correction** — MCP tool count was incorrectly stated as 51; corrected to 47 (`@mcp.resource` is not a tool)
+- README and CHANGELOG updated with accurate numbers
+
+### Changed
+- **PyPI classifier** upgraded from Beta to **Production/Stable** (`Development Status :: 5 - Production/Stable`)
+
 ## [1.0.0] - 2026-03-11
 
 ### Tessera v1.0 — Personal Knowledge Layer for AI

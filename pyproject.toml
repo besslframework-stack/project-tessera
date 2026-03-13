@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "1.0.0"
+version = "1.0.1"
 description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool. 47 MCP tools, REST API, cross-AI memory, encryption, local-first."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
@@ -14,7 +14,7 @@ authors = [
 readme = "README.md"
 keywords = ["rag", "mcp", "claude", "knowledge-base", "vector-search", "local", "personal-knowledge", "cross-ai", "memory", "chatgpt", "gemini"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Text Processing :: Indexing",
