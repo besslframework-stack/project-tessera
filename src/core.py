@@ -369,49 +369,6 @@ def find_similar(source_path: str, top_k: int = 5) -> str:
 # --- MCP Resources ---
 
 
-def document_index() -> str:
-    """Provide a browsable index of all indexed documents."""
-    from src.search import list_indexed_sources
-
-    sources = list_indexed_sources()
-
-    if not sources:
-        return "No indexed documents."
-
-    # Group by project directory
-    groups: dict[str, list[str]] = {}
-    for s in sources:
-        parts = Path(s).parts
-        # Try to extract a meaningful group name from the path
-        key = "Other"
-        for i, part in enumerate(parts):
-            if part in ("products", "internal", "memory", "docs"):
-                if i + 1 < len(parts):
-                    key = parts[i + 1]
-                else:
-                    key = part
-                break
-        groups.setdefault(key, []).append(s)
-
-    lines = [f"# Indexed Documents ({len(sources)})", ""]
-    for group, files in sorted(groups.items()):
-        lines.append(f"## {group} ({len(files)})")
-        for f in files:
-            name = Path(f).name
-            lines.append(f"- {name}")
-            lines.append(f"  `{f}`")
-        lines.append("")
-
-    return "\n".join(lines)
-
-
-def workspace_status() -> str:
-    """Provide current workspace status across all projects."""
-    from src.project_status import get_all_projects_summary
-
-    return get_all_projects_summary()
-
-
 # --- Auto-Learn Tools ---
 
 

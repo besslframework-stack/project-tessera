@@ -8,53 +8,46 @@ version = "1.0.0"
 description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool. 47 MCP tools, REST API, cross-AI memory, encryption, local-first."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
-authors = [
-    { name = "Jae-seong Jeong", email = "bessl.framework@gmail.com" },
-]
+authors = [{ name = "Jae-seong Jeong", email = "bessl.framework@gmail.com" }]
 readme = "README.md"
-keywords = ["rag", "mcp", "claude", "knowledge-base", "vector-search", "local", "personal-knowledge", "cross-ai", "memory", "chatgpt", "gemini"]
+keywords = [
+  "rag",
+  "mcp",
+  "claude",
+  "knowledge-base",
+  "vector-search",
+  "local",
+  "personal-knowledge",
+  "cross-ai",
+  "memory",
+  "chatgpt",
+  "gemini",
+]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Text Processing :: Indexing",
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Text Processing :: Indexing",
 ]
 dependencies = [
-    "llama-index-core>=0.12.0",
-    "lancedb>=0.17.0",
-    "fastembed>=0.7.0",
-    "mcp>=1.0.0",
-    "python-dotenv>=1.0.0",
-    "pyyaml>=6.0",
-    "pandas>=2.0.0",
-    "numpy>=1.26.0",
+  "llama-index-core>=0.12.0",
+  "lancedb>=0.17.0",
+  "fastembed>=0.7.0",
+  "mcp>=1.0.0",
+  "python-dotenv>=1.0.0",
+  "pyyaml>=6.0",
+  "pandas>=2.0.0",
+  "numpy>=1.26.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "ruff>=0.8.0",
-]
-docx = [
-    "python-docx>=1.0.0",
-]
-xlsx = [
-    "openpyxl>=3.1.0",
-]
-pdf = [
-    "pymupdf>=1.24.0",
-]
-ocr = [
-    "pytesseract>=0.3.10",
-    "Pillow>=10.0.0",
-]
-images = [
-    "Pillow>=10.0.0",
-]
-api = [
-    "fastapi>=0.100.0",
-    "uvicorn>=0.23.0",
-]
+dev = ["pytest>=8.0", "ruff>=0.8.0", "vulture>=2.15"]
+docx = ["python-docx>=1.0.0"]
+xlsx = ["openpyxl>=3.1.0"]
+pdf = ["pymupdf>=1.24.0"]
+ocr = ["pytesseract>=0.3.10", "Pillow>=10.0.0"]
+images = ["Pillow>=10.0.0"]
+api = ["fastapi>=0.100.0", "uvicorn>=0.23.0"]
 
 [project.urls]
 Homepage = "https://github.com/besslframework-stack/project-tessera"
@@ -85,3 +78,6 @@ select = ["E", "F", "I", "N", "W"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = ["vulture>=2.15"]

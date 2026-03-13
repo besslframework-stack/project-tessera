@@ -25,106 +25,6 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
-def cmd_setup(args: argparse.Namespace) -> None:
-    """One-command setup: workspace.yaml + embedding model + Claude Desktop config."""
-    project_root = PROJECT_ROOT
-    yaml_path = project_root / "workspace.yaml"
-
-    print("Setting up Tessera...")
-    print()
-
-    # Step 1: Create workspace.yaml if missing
-    if yaml_path.exists():
-        print(f"workspace.yaml already exists at {yaml_path}")
-    else:
-        try:
-            import yaml
-
-            workspace_name = project_root.name
-            config = {
-                "workspace": {
-                    "root": str(project_root),
-                    "name": workspace_name,
-                },
-                "sources": [
-                    {"path": ".", "type": "document", "project": "_global"},
-                ],
-                "projects": {},
-                "archive": {"directory": "archive"},
-                "models": {
-                    "embed_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-                },
-                "search": {
-                    "max_top_k": 50,
-                    "reranker_weight": 0.7,
-                    "fetch_multiplier": 6,
-                    "result_text_limit": 1500,
-                    "unified_text_limit": 800,
-                },
-                "ingestion": {
-                    "chunk_size": 1024,
-                    "chunk_overlap": 100,
-                    "max_node_chars": 800,
-                },
-                "watcher": {
-                    "poll_interval": 30.0,
-                    "debounce": 5.0,
-                },
-                "sync": {
-                    "auto_sync": True,
-                    "extensions": [".md", ".csv"],
-                    "ignore": [
-                        "**/.venv/**", "**/.next/**", "**/node_modules/**",
-                        "**/__pycache__/**", "**/data/lancedb/**",
-                        "**/data/logs/**", "**/archive/**", "**/.git/**",
-                    ],
-                },
-            }
-
-            with open(yaml_path, "w") as f:
-                yaml.dump(
-                    config, f,
-                    default_flow_style=False,
-                    allow_unicode=True,
-                    sort_keys=False,
-                )
-            print(f"Created workspace.yaml at {yaml_path}")
-        except Exception as exc:
-            print(f"Failed to create workspace.yaml: {exc}")
-            print("You can create it manually with `tessera init`.")
-
-    # Step 2: Pre-download embedding model
-    print()
-    print("Downloading embedding model (first time only)...")
-    try:
-        from fastembed import TextEmbedding
-
-        TextEmbedding(
-            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        )
-        print("Embedding model ready.")
-    except ImportError:
-        print("fastembed not installed. Run `pip install -e .` first, then re-run setup.")
-    except Exception as exc:
-        print(f"Could not download embedding model: {exc}")
-        print("The model will be downloaded automatically on first use.")
-
-    # Step 3: Configure Claude Desktop
-    print()
-    try:
-        mcp_args = argparse.Namespace(force=True)
-        cmd_install_mcp(mcp_args)
-    except Exception as exc:
-        print(f"Could not configure Claude Desktop automatically: {exc}")
-        print("You can configure it later with `tessera install-mcp`.")
-
-    # Summary
-    print()
-    print("=" * 50)
-    print("Setup complete! Restart Claude Desktop to start using Tessera.")
-    print("=" * 50)
-
-
 def cmd_init(args: argparse.Namespace) -> None:
     """Interactive setup: create workspace.yaml and optionally index."""
     project_root = PROJECT_ROOT
@@ -167,8 +67,15 @@ def cmd_init(args: argparse.Namespace) -> None:
     projects = {}
 
     skip_dirs = {
-        "node_modules", ".venv", "__pycache__", ".git", "archive",
-        ".next", "dist", "build", ".cache",
+        "node_modules",
+        ".venv",
+        "__pycache__",
+        ".git",
+        "archive",
+        ".next",
+        "dist",
+        "build",
+        ".cache",
     }
 
     for child in sorted(root_path.iterdir()):
@@ -233,9 +140,14 @@ def cmd_init(args: argparse.Namespace) -> None:
             "auto_sync": True,
             "extensions": [".md", ".csv"],
             "ignore": [
-                "**/.venv/**", "**/.next/**", "**/node_modules/**",
-                "**/__pycache__/**", "**/data/lancedb/**",
-                "**/data/logs/**", "**/archive/**", "**/.git/**",
+                "**/.venv/**",
+                "**/.next/**",
+                "**/node_modules/**",
+                "**/__pycache__/**",
+                "**/data/lancedb/**",
+                "**/data/logs/**",
+                "**/archive/**",
+                "**/.git/**",
             ],
         },
     }
@@ -262,6 +174,7 @@ def cmd_init(args: argparse.Namespace) -> None:
         print("\nEmbedding model will be downloaded on first run (~220MB)...")
         import importlib
         import src.config
+
         importlib.reload(src.config)
         args_ns = argparse.Namespace(path=None)
         cmd_ingest(args_ns)
@@ -358,9 +271,11 @@ def cmd_version(args: argparse.Namespace) -> None:
     """Show Tessera version."""
     try:
         from importlib.metadata import version
+
         v = version("project-tessera")
     except Exception:
         import tomllib
+
         with open(PROJECT_ROOT / "pyproject.toml", "rb") as f:
             v = tomllib.load(f)["project"]["version"]
     print(f"Tessera v{v}")
@@ -377,10 +292,12 @@ def cmd_check(args: argparse.Namespace) -> None:
     # --- Version ---
     try:
         from importlib.metadata import version
+
         ver = version("project-tessera")
     except Exception:
         try:
             import tomllib
+
             with open(project_root / "pyproject.toml", "rb") as f:
                 ver = tomllib.load(f)["project"]["version"]
         except Exception:
@@ -412,6 +329,7 @@ def cmd_check(args: argparse.Namespace) -> None:
     if lancedb_dir.exists():
         try:
             import lancedb as _lancedb
+
             db = _lancedb.connect(str(lancedb_dir))
             table_names = db.table_names()
             total_rows = 0
@@ -434,7 +352,10 @@ def cmd_check(args: argparse.Namespace) -> None:
     # 4. Claude Desktop config
     if platform.system() == "Darwin":
         config_path = (
-            Path.home() / "Library" / "Application Support" / "Claude"
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Claude"
             / "claude_desktop_config.json"
         )
     else:
@@ -496,110 +417,11 @@ def cmd_check(args: argparse.Namespace) -> None:
         print("All checks passed.")
 
 
-def cmd_install_mcp(args: argparse.Namespace) -> None:
-    """Auto-configure Claude Desktop to use Tessera MCP."""
-    import json
-    import shutil
-
-    # Find Claude Desktop config
-    config_locations = [
-        Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
-        Path.home() / ".config" / "claude" / "claude_desktop_config.json",
-    ]
-
-    config_path = None
-    for loc in config_locations:
-        if loc.exists():
-            config_path = loc
-            break
-
-    if config_path is None:
-        config_path = config_locations[0]
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Read existing config or create new
-    if config_path.exists():
-        with open(config_path) as f:
-            config = json.load(f)
-    else:
-        config = {}
-
-    if "mcpServers" not in config:
-        config["mcpServers"] = {}
-
-    # Check if tessera already configured
-    force = getattr(args, "force", False)
-    existing = config["mcpServers"].get("tessera")
-    if existing and not force:
-        print(f"Tessera already configured in {config_path}")
-        print(f"  command: {existing.get('command', '?')}")
-        update = input("Update to current paths? [y/N] ").strip().lower()
-        if update != "y":
-            print("Keeping existing config.")
-            return
-
-    # Determine best command: uvx > venv python > system python
-    project_root = Path(__file__).parent.parent
-    uvx_path = shutil.which("uvx")
-    venv_python = project_root / ".venv" / "bin" / "python"
-
-    if uvx_path:
-        # uvx: no venv needed, works anywhere
-        tessera_config = {
-            "command": "uvx",
-            "args": ["--from", "project-tessera", "tessera-mcp"],
-        }
-        method = "uvx (recommended)"
-    elif venv_python.exists():
-        # Local venv: traditional method
-        mcp_server = project_root / "mcp_server.py"
-        tessera_config = {
-            "command": str(venv_python),
-            "args": [str(mcp_server)],
-            "cwd": str(project_root),
-        }
-        method = "venv"
-    else:
-        # Fallback: assume tessera-mcp is in PATH
-        tessera_config = {
-            "command": "tessera-mcp",
-        }
-        method = "system PATH"
-
-    config["mcpServers"]["tessera"] = tessera_config
-
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=2, ensure_ascii=False)
-
-    print(f"Tessera MCP configured in: {config_path}")
-    print(f"  method: {method}")
-    for k, v in tessera_config.items():
-        print(f"  {k}: {v}")
-    print()
-    print("Restart Claude Desktop to apply changes.")
-
-
 def cmd_serve(_args: argparse.Namespace) -> None:
     """Start the MCP server."""
     from mcp_server import main as mcp_main
+
     mcp_main()
-
-
-def cmd_api(args: argparse.Namespace) -> None:
-    """Start the HTTP API server."""
-    port = getattr(args, "port", 8394)
-    host = getattr(args, "host", "127.0.0.1")
-    print(f"Starting Tessera HTTP API on {host}:{port}")
-    import uvicorn
-    uvicorn.run("src.http_server:app", host=host, port=port)
-
-
-def cmd_migrate(args: argparse.Namespace) -> None:
-    """Run data migration."""
-    from src.migrate import format_migration_result, run_migration
-    dry_run = getattr(args, "dry_run", False)
-    result = run_migration(dry_run=dry_run)
-    print(format_migration_result(result))
 
 
 def cli() -> None:
@@ -613,10 +435,6 @@ def cli() -> None:
     # serve
     serve_parser = subparsers.add_parser("serve", help="Start MCP server")
     serve_parser.set_defaults(func=cmd_serve)
-
-    # setup
-    setup_parser = subparsers.add_parser("setup", help="One-command setup for new users")
-    setup_parser.set_defaults(func=cmd_setup)
 
     # init
     init_parser = subparsers.add_parser("init", help="Interactive setup")
@@ -647,24 +465,6 @@ def cli() -> None:
     # check
     check_parser = subparsers.add_parser("check", help="Check workspace health")
     check_parser.set_defaults(func=cmd_check)
-
-    # api
-    api_parser = subparsers.add_parser("api", help="Start HTTP API server")
-    api_parser.add_argument("--port", type=int, default=8394, help="Port (default: 8394)")
-    api_parser.add_argument("--host", default="127.0.0.1", help="Host (default: 127.0.0.1)")
-    api_parser.set_defaults(func=cmd_api)
-
-    # migrate
-    migrate_parser = subparsers.add_parser("migrate", help="Run data migration to latest schema")
-    migrate_parser.add_argument("--dry-run", action="store_true", help="Preview changes without migrating")
-    migrate_parser.set_defaults(func=cmd_migrate)
-
-    # install-mcp
-    install_parser = subparsers.add_parser("install-mcp", help="Configure Claude Desktop for Tessera")
-    install_parser.add_argument(
-        "--force", action="store_true", help="Overwrite existing config without prompting"
-    )
-    install_parser.set_defaults(func=cmd_install_mcp)
 
     args = parser.parse_args()
     args.func(args)

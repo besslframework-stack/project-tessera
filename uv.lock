@@ -1879,6 +1879,7 @@ api = [
 dev = [
     { name = "pytest" },
     { name = "ruff" },
+    { name = "vulture" },
 ]
 docx = [
     { name = "python-docx" },
@@ -1895,6 +1896,11 @@ pdf = [
 ]
 xlsx = [
     { name = "openpyxl" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "vulture" },
 ]
 
 [package.metadata]
@@ -1917,8 +1923,12 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
     { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.23.0" },
+    { name = "vulture", marker = "extra == 'dev'", specifier = ">=2.15" },
 ]
 provides-extras = ["dev", "docx", "xlsx", "pdf", "ocr", "images", "api"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "vulture", specifier = ">=2.15" }]
 
 [[package]]
 name = "propcache"
@@ -3032,6 +3042,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/32/ce/eeb58ae4ac36fe09e3842eb02e0eb676bf2c53ae062b98f1b2531673efdd/uvicorn-0.41.0.tar.gz", hash = "sha256:09d11cf7008da33113824ee5a1c6422d89fbc2ff476540d69a34c87fab8b571a", size = 82633, upload-time = "2026-02-16T23:07:24.1Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/e4/d04a086285c20886c0daad0e026f250869201013d18f81d9ff5eada73a88/uvicorn-0.41.0-py3-none-any.whl", hash = "sha256:29e35b1d2c36a04b9e180d4007ede3bcb32a85fbdfd6c6aeb3f26839de088187", size = 68783, upload-time = "2026-02-16T23:07:22.357Z" },
+]
+
+[[package]]
+name = "vulture"
+version = "2.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/c6/4f147b621b4c0899eb1770f98113334bb706ebd251ac2be979316b1985fa/vulture-2.15.tar.gz", hash = "sha256:f9d8b4ce29c69950d323f21dceab4a4d6c694403dffbed7713c4691057e561fe", size = 52438, upload-time = "2026-03-04T21:41:39.096Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/f3/07cf122e145bc6df976030e9935123124c3fcb5044cf407b5e71e85821b4/vulture-2.15-py3-none-any.whl", hash = "sha256:a3d8ebef918694326620eb128fa783486c8d285b23381c2b457d864ac056ef8d", size = 26895, upload-time = "2026-03-04T21:41:39.878Z" },
 ]
 
 [[package]]
