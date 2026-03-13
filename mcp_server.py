@@ -29,7 +29,9 @@ _file_handler = logging.handlers.RotatingFileHandler(
     encoding="utf-8",
 )
 _file_handler.setFormatter(
-    logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    logging.Formatter(
+        "%(asctime)s %(levelname)s [%(name)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
 )
 _file_handler.setLevel(logging.DEBUG)
 
@@ -223,66 +225,27 @@ def read_file(file_path: str) -> str:
     return core.read_file(file_path)
 
 
-@mcp.tool(
-    description=(
-        "Organize files in the workspace. "
-        "action: 'move', 'archive', 'rename', 'list'. "
-        "Always call suggest_cleanup first and get user confirmation before organizing."
-    )
-)
-def organize_files(
-    action: str,
-    path: str,
-    destination: str | None = None,
-    new_name: str | None = None,
-    recursive: bool = False,
-) -> str:
-    """Organize files in the workspace."""
-    return core.organize_files(action, path, destination=destination, new_name=new_name, recursive=recursive)
-
-
-@mcp.tool(
-    description=(
-        "Generate cleanup suggestions for the workspace. "
-        "Detects root-level files, backup files, large files, empty directories. "
-        "Call this tool first when cleanup is requested."
-    )
-)
-def suggest_cleanup(path: str | None = None) -> str:
-    """Suggest cleanup actions for the workspace."""
-    return core.suggest_cleanup(path)
-
-
-@mcp.tool(
-    description=(
-        "Get project status including HANDOFF.md, recent changes, and file statistics. "
-        "Call automatically when asked about project status."
-    )
-)
+# TODO: Remove?
+# @mcp.tool(
+#     description=(
+#         "Get project status including HANDOFF.md, recent changes, and file statistics. "
+#         "Call automatically when asked about project status."
+#     )
+# )
 def project_status(project_id: str | None = None) -> str:
     """Get project status. If no project_id, returns all projects summary."""
     return core.project_status(project_id)
 
 
-@mcp.tool(
-    description=(
-        "Extract decisions from session logs and decision logs. "
-        "Call automatically when asked about past decisions."
-    )
-)
-def extract_decisions(project_id: str | None = None, since: str | None = None) -> str:
-    """Extract decisions from session/decision logs."""
-    return core.extract_decisions(project_id=project_id, since=since)
-
-
-@mcp.tool(
-    description=(
-        "Audit a PRD file for quality and completeness against a 13-section structure. "
-        "Checks section coverage, Mermaid syntax, wireframes, versioning, and changelog.\n\n"
-        "check_sprawl=True: Detect multiple versions of the same PRD (suggest archiving old ones)\n"
-        "check_consistency=True: Check cross-PRD consistency for period selectors and tiers"
-    )
-)
+# TODO: Remove?
+# @mcp.tool(
+#     description=(
+#         "Audit a PRD file for quality and completeness against a 13-section structure. "
+#         "Checks section coverage, Mermaid syntax, wireframes, versioning, and changelog.\n\n"
+#         "check_sprawl=True: Detect multiple versions of the same PRD (suggest archiving old ones)\n"
+#         "check_consistency=True: Check cross-PRD consistency for period selectors and tiers"
+#     )
+# )
 def audit_prd(
     file_path: str,
     check_sprawl: bool = False,
@@ -295,232 +258,55 @@ def audit_prd(
 # --- Memory Tools ---
 
 
-@mcp.tool(
-    description=(
-        "Save a piece of knowledge for cross-session persistence. "
-        "Use this when the user says 'remember this' or when important decisions, "
-        "preferences, or facts should be preserved across conversations."
-    )
-)
-def remember(content: str, tags: list[str] | None = None) -> str:
-    """Save a memory for cross-session persistence."""
-    return core.remember(content, tags=tags)
-
-
-@mcp.tool(
-    description=(
-        "Search past memories from previous sessions. "
-        "Call this when the user asks 'what did I say about...', "
-        "'do you remember...', or references past conversations.\n\n"
-        "Supports time filters (since/until as ISO date, e.g. '2026-03-01') "
-        "and category filter (decision/preference/fact)."
-    )
-)
-def recall(
-    query: str,
-    top_k: int = 5,
-    since: str | None = None,
-    until: str | None = None,
-    category: str | None = None,
-) -> str:
-    """Search past memories with optional time and category filters."""
-    return core.recall(query, top_k=top_k, since=since, until=until, category=category)
-
-
-@mcp.tool(
-    description=(
-        "Auto-learn: save new knowledge and immediately index it for search. "
-        "Use this to capture insights, patterns, or facts discovered during conversation."
-    )
-)
-def learn(content: str, tags: list[str] | None = None, source: str = "auto-learn") -> str:
-    """Save and immediately index new knowledge."""
-    return core.learn(content, tags=tags, source=source)
-
-
 # --- Knowledge Graph Tools ---
 
 
-@mcp.tool(
-    description=(
-        "Build a knowledge graph from indexed documents showing relationships "
-        "between concepts, decisions, and entities. "
-        "Returns a Mermaid diagram of the document relationships.\n\n"
-        "scope: 'project' (single project) or 'all' (entire workspace)\n"
-        "max_nodes: limit the number of nodes in the graph (default 30)"
-    )
-)
-def knowledge_graph(
-    query: str | None = None,
-    project: str | None = None,
-    scope: str = "all",
-    max_nodes: int = 30,
-) -> str:
-    """Build and return a knowledge graph as Mermaid diagram."""
-    return core.knowledge_graph(query=query, project=project, scope=scope, max_nodes=max_nodes)
-
-
-@mcp.tool(
-    description=(
-        "Show connections for a specific document or concept in the knowledge graph. "
-        "Returns related documents, shared topics, and a focused Mermaid subgraph."
-    )
-)
-def explore_connections(query: str, top_k: int = 10) -> str:
-    """Explore connections around a specific topic or document."""
-    return core.explore_connections(query, top_k=top_k)
+# TODO: Remove?
+# @mcp.tool(
+#     description=(
+#         "Build a knowledge graph from indexed documents showing relationships "
+#         "between concepts, decisions, and entities. "
+#         "Returns a Mermaid diagram of the document relationships.\n\n"
+#         "scope: 'project' (single project) or 'all' (entire workspace)\n"
+#         "max_nodes: limit the number of nodes in the graph (default 30)"
+#     )
+# )
+# def knowledge_graph(
+#     query: str | None = None,
+#     project: str | None = None,
+#     scope: str = "all",
+#     max_nodes: int = 30,
+# ) -> str:
+#     """Build and return a knowledge graph as Mermaid diagram."""
+#     return core.knowledge_graph(query=query, project=project, scope=scope, max_nodes=max_nodes)
+#
+#
+# @mcp.tool(
+#     description=(
+#         "Show connections for a specific document or concept in the knowledge graph. "
+#         "Returns related documents, shared topics, and a focused Mermaid subgraph."
+#     )
+# )
+# def explore_connections(query: str, top_k: int = 10) -> str:
+#     """Explore connections around a specific topic or document."""
+#     return core.explore_connections(query, top_k=top_k)
 
 
 # --- Unified Search ---
 
 
-@mcp.tool(
-    description=(
-        "Search across BOTH indexed documents AND past memories in one call. "
-        "Returns combined results ranked by similarity. "
-        "Use this instead of calling search_documents + recall separately."
-    )
-)
-def unified_search(
-    query: str,
-    top_k: int = 5,
-    project: str | None = None,
-    doc_type: str | None = None,
-) -> str:
-    """Search documents and memories together."""
-    return core.unified_search(query, top_k=top_k, project=project, doc_type=doc_type)
-
-
 # --- Indexing Tools ---
-
-
-@mcp.tool(
-    description=(
-        "Index (or re-index) all workspace documents into the vector store. "
-        "Run this when setting up Tessera for the first time, or when you want to "
-        "rebuild the entire index from scratch. "
-        "Optionally pass specific directory paths to index only those."
-    )
-)
-def ingest_documents(paths: list[str] | None = None) -> str:
-    """Full ingestion of workspace documents."""
-    return core.ingest_documents(paths)
-
-
-@mcp.tool(
-    description=(
-        "Incrementally sync the index with your workspace. "
-        "Only processes new, changed, or deleted files since the last sync. "
-        "Much faster than full ingestion. Run this when you've updated some documents."
-    )
-)
-def sync_documents() -> str:
-    """Incremental sync — only new/changed/deleted files."""
-    return core.sync_documents()
 
 
 # --- Operations Tools ---
 
 
-@mcp.tool(
-    description=(
-        "Show Tessera server health: tracked files, sync history, "
-        "index size, cache stats, and watcher status. "
-        "Call this when asked about server status or troubleshooting."
-    )
-)
-def tessera_status() -> str:
-    """Return server health and operational status."""
-    return core.tessera_status()
-
-
-@mcp.tool(
-    description=(
-        "List saved memories with optional filtering. "
-        "Use to browse what Tessera has remembered across sessions."
-    )
-)
-def list_memories(limit: int = 20) -> str:
-    """List saved memory files."""
-    return core.list_memories(limit)
-
-
-@mcp.tool(
-    description=(
-        "Delete a specific memory by filename (without .md extension). "
-        "Use list_memories first to find the memory to delete."
-    )
-)
-def forget_memory(memory_name: str) -> str:
-    """Delete a saved memory file."""
-    return core.forget_memory(memory_name)
-
-
 # --- Freshness Tools ---
-
-
-@mcp.tool(
-    description=(
-        "Check for stale/outdated documents that haven't been modified recently. "
-        "Returns a list grouped by project showing file names and days since last update. "
-        "Use this proactively to suggest document reviews."
-    )
-)
-def check_document_freshness(days_threshold: int = 90) -> str:
-    """Check for stale documents exceeding the age threshold."""
-    return core.check_document_freshness(days_threshold)
-
-
-@mcp.tool(
-    description=(
-        "Run a comprehensive health check on the Tessera workspace. "
-        "Checks: config validity, dependencies, index status, stale documents, "
-        "zero-result query patterns. Returns actionable recommendations."
-    )
-)
-def health_check() -> str:
-    """Run workspace health diagnostics."""
-    return core.health_check()
 
 
 # --- Analytics Tools ---
 
-
-@mcp.tool(
-    description=(
-        "Show search usage analytics: total queries, top queries, zero-result queries, "
-        "response times, and daily trends. Use for understanding search patterns."
-    )
-)
-def search_analytics(days: int = 30) -> str:
-    """Return search analytics summary."""
-    return core.search_analytics(days)
-
-
 # --- Batch Memory Tools ---
-
-
-@mcp.tool(
-    description=(
-        "Export all saved memories as JSON for backup or transfer. "
-        "Returns a JSON string with all memories and their metadata."
-    )
-)
-def export_memories() -> str:
-    """Export all memories as JSON."""
-    return core.export_memories()
-
-
-@mcp.tool(
-    description=(
-        "Import memories from a JSON string (batch import). "
-        "Format: [{\"content\": \"...\", \"tags\": [\"...\"], \"source\": \"...\"}]. "
-        "Use export_memories to get the expected format."
-    )
-)
-def import_memories(data: str) -> str:
-    """Import memories from JSON."""
-    return core.import_memories(data)
 
 
 # --- Similarity Tools ---
@@ -541,282 +327,33 @@ def find_similar(source_path: str, top_k: int = 5) -> str:
 # --- Tag Tools ---
 
 
-@mcp.tool(
-    description=(
-        "List all unique tags across saved memories with their counts. "
-        "Useful for browsing memory categories."
-    )
-)
-def memory_tags() -> str:
-    """List all memory tags with counts."""
-    return core.memory_tags()
-
-
-@mcp.tool(
-    description=(
-        "Search memories by a specific tag. "
-        "Use memory_tags first to see available tags."
-    )
-)
-def search_by_tag(tag: str) -> str:
-    """Find all memories with a specific tag."""
-    return core.search_by_tag(tag)
-
-
-@mcp.tool(
-    description=(
-        "List all memory categories with counts. "
-        "Categories are auto-detected: decision, preference, fact, reference, context."
-    )
-)
-def memory_categories() -> str:
-    """List all memory categories with counts."""
-    return core.memory_categories()
-
-
-@mcp.tool(
-    description=(
-        "Search memories by category (e.g. 'decision', 'preference', 'fact'). "
-        "Use memory_categories first to see available categories."
-    )
-)
-def search_by_category(category: str) -> str:
-    """Find all memories with a specific category."""
-    return core.search_by_category(category)
-
-
-@mcp.tool(
-    description=(
-        "Show decision timeline — how decisions evolved over time, grouped by topic. "
-        "Detects when you changed your mind about something."
-    )
-)
-def decision_timeline() -> str:
-    """Show decision evolution timeline."""
-    return core.decision_timeline()
-
-
-@mcp.tool(
-    description=(
-        "Build an optimal context window for a query within a token budget. "
-        "Retrieves relevant memories and documents, assembles them in priority order, "
-        "and truncates to fit. Use this to prepare context for another AI tool."
-    )
-)
-def context_window(
-    query: str,
-    token_budget: int = 4000,
-    include_documents: bool = True,
-) -> str:
-    """Build context window for a query."""
-    return core.context_window(query, token_budget, include_documents)
-
-
-@mcp.tool(
-    description=(
-        "Get personalized query suggestions based on your past searches and memories. "
-        "Analyzes patterns to recommend what you might want to explore next."
-    )
-)
-def smart_suggest(max_suggestions: int = 5) -> str:
-    """Get personalized query suggestions."""
-    return core.smart_suggest(max_suggestions)
-
-
-@mcp.tool(
-    description=(
-        "Generate a topic map showing how your knowledge is organized. "
-        "Clusters memories by shared keywords and shows topic distribution. "
-        "Use format='mermaid' for a visual Mermaid mindmap diagram."
-    )
-)
-def topic_map(output_format: str = "text") -> str:
-    """Generate topic map of all memories."""
-    return core.topic_map(output_format)
-
-
-@mcp.tool(
-    description=(
-        "Get knowledge statistics — total memories, category breakdown, "
-        "tag distribution, growth by month, and date range. "
-        "A dashboard overview of everything Tessera knows."
-    )
-)
-def knowledge_stats() -> str:
-    """Get aggregate knowledge statistics."""
-    return core.knowledge_stats()
-
-
-@mcp.tool(
-    description=(
-        "View your user profile — preferences, decisions, top topics, "
-        "language preference, tool usage patterns, and knowledge areas."
-    )
-)
-def user_profile() -> str:
-    """Get user profile summary."""
-    return core.user_profile()
-
-
-@mcp.tool(
-    description=(
-        "Export all your knowledge in various formats. "
-        "Supported formats: 'markdown' (default), 'obsidian' (with wikilinks and frontmatter), "
-        "'csv' (spreadsheet-compatible), 'json' (machine-readable). "
-        "Use 'obsidian' to import into Obsidian vaults."
-    )
-)
-def export_knowledge(format: str = "markdown") -> str:
-    """Export knowledge in the specified format."""
-    return core.export_knowledge(format)
-
-
-@mcp.tool(
-    description=(
-        "Export memories for use in another AI tool. "
-        "Supported targets: 'chatgpt' (ChatGPT memory JSON), 'gemini' (Gemini context format), "
-        "'standard' (Tessera interchange format). "
-        "Use this when migrating knowledge to another AI platform."
-    )
-)
-def export_for_ai(target: str = "chatgpt") -> str:
-    """Export memories in another AI tool's format."""
-    return core.export_for_ai(target)
-
-
-@mcp.tool(
-    description=(
-        "Import memories from another AI tool. "
-        "Paste the exported JSON data and specify the source: 'chatgpt', 'gemini', or 'standard'. "
-        "Memories will be automatically categorized and stored in Tessera."
-    )
-)
-def import_from_ai(data: str, source: str = "chatgpt") -> str:
-    """Import memories from another AI tool's export."""
-    return core.import_from_ai(data, source)
-
-
-@mcp.tool(
-    description=(
-        "Import past conversations from ChatGPT, Claude, or Gemini exports. "
-        "Paste the exported JSON data and specify the source: 'chatgpt', 'claude', 'gemini', or 'text'. "
-        "Tessera extracts decisions, preferences, and facts from the conversations. "
-        "Use this to recover knowledge from past AI interactions."
-    )
-)
-def import_conversations(data: str, source: str = "chatgpt") -> str:
-    """Import conversations and extract knowledge."""
-    return core.import_conversations(data, source)
-
-
-@mcp.tool(
-    description=(
-        "Migrate Tessera data to the latest schema version. "
-        "Creates a backup before migration. Use dry_run=True to preview changes. "
-        "Handles v0.6.x through v1.0.0 data format upgrades."
-    )
-)
-def migrate_data(dry_run: bool = False) -> str:
-    """Run data migration."""
-    return core.migrate_data(dry_run)
-
-
-@mcp.tool(
-    description=(
-        "Check vault encryption status. "
-        "When TESSERA_VAULT_KEY is set, memories are encrypted at rest using AES-256-CBC. "
-        "All encryption is local — no cloud, no external services."
-    )
-)
-def vault_status() -> str:
-    """Get vault encryption status."""
-    return core.vault_status_info()
-
-
-@mcp.tool(
-    description=(
-        "Toggle or check auto-learning status. "
-        "When enabled, Tessera automatically extracts decisions, preferences, "
-        "and facts from conversations. Call without arguments to check status."
-    )
-)
-def toggle_auto_learn(enabled: bool | None = None) -> str:
-    """Toggle or check auto-learning on/off."""
-    return core.toggle_auto_learn(enabled)
-
-
-@mcp.tool(
-    description=(
-        "Review recently auto-learned memories. "
-        "Shows memories created by auto-extract, digest, or session summary."
-    )
-)
-def review_learned(limit: int = 20) -> str:
-    """Review auto-learned memories."""
-    return core.review_learned(limit)
-
-
 # --- MCP Resources ---
 
 
-@mcp.resource("docs://index")
-def document_index() -> str:
-    """Provide a browsable index of all indexed documents."""
-    return core.document_index()
-
-
-@mcp.resource("workspace://status")
-def workspace_status() -> str:
-    """Provide current workspace status across all projects."""
-    return core.workspace_status()
+# TODO: Remove?
+# @mcp.resource("docs://index")
+# def document_index() -> str:
+#     """Provide a browsable index of all indexed documents."""
+#     return core.document_index()
+#
+#
+# @mcp.resource("workspace://status")
+# def workspace_status() -> str:
+#     """Provide current workspace status across all projects."""
+#     return core.workspace_status()
 
 
 # --- Auto-Learn Tools ---
 
 
-@mcp.tool(
-    description=(
-        "Digest the current conversation: extract decisions, preferences, and facts "
-        "from this session's interactions and save them as memories automatically. "
-        "Call this at the end of a conversation to preserve important knowledge. "
-        "You can also pass a summary text to extract facts from."
-    )
-)
-def digest_conversation(summary: str = "") -> str:
-    """Extract and save knowledge from the current session."""
-    return core.digest_conversation(summary)
-
-
 # --- Interaction Log Tools ---
-
-
-@mcp.tool(
-    description=(
-        "View what happened in the current or past sessions. "
-        "Shows tool calls, queries, and results — useful for reviewing "
-        "what was discussed and decided."
-    )
-)
-def session_interactions(session_id: str | None = None, limit: int = 20) -> str:
-    """List tool interactions from a session."""
-    return core.session_interactions(session_id, limit)
-
-
-@mcp.tool(
-    description=(
-        "View summary of recent sessions — when they started, ended, "
-        "and how many tool calls were made. Useful for understanding "
-        "usage patterns over time."
-    )
-)
-def recent_sessions(limit: int = 10) -> str:
-    """List recent session summaries."""
-    return core.recent_sessions(limit)
 
 
 def main() -> None:
     """Entry point for the MCP server."""
-    mcp.run()
+    mcp.run(
+        transport="streamable-http",
+    )
 
 
 if __name__ == "__main__":
