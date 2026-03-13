@@ -1509,3 +1509,172 @@ def recent_sessions(limit: int = 10) -> str:
             f"({s['interaction_count']} interactions)"
         )
     return "\n".join(lines)
+
+
+# --- Insight Phase (v1.1.0) ---
+
+
+def detect_contradictions() -> str:
+    """Detect contradictions among stored memories.
+
+    Scans decision, preference, and fact memories for conflicting statements.
+    Returns a formatted report with severity levels.
+    """
+    from src.contradiction import detect_contradictions as _detect, format_contradictions
+    from src.memory import recall_memories
+
+    # Get all memories (broad recall)
+    memories = recall_memories("", top_k=200)
+    if not memories:
+        return "No memories to analyze."
+
+    contradictions = _detect(memories)
+    _log_interaction(
+        "detect_contradictions",
+        f"analyzed {len(memories)} memories",
+        f"{len(contradictions)} contradictions found",
+    )
+    return format_contradictions(contradictions)
+
+
+def multi_angle_search_documents(
+    query: str,
+    top_k: int = 5,
+    project: str | None = None,
+    doc_type: str | None = None,
+) -> str:
+    """Search documents using multiple query angles for better recall.
+
+    Decomposes the query into 2-4 perspectives, searches each angle,
+    and merges results keeping the best score per source.
+    """
+    if not query or not query.strip():
+        return "Please provide a search query."
+    from src.config import workspace
+    from src.multi_angle import multi_angle_search
+    from src.search_verdict import add_verdicts, compute_overall_verdict, format_verdict_label
+
+    max_k = workspace.search.max_top_k
+    top_k = max(1, min(top_k, max_k))
+
+    import time as _time
+    _t0 = _time.monotonic()
+
+    results = multi_angle_search(
+        query.strip(),
+        search_fn=search,
+        top_k=top_k,
+        max_angles=3,
+        project=project,
+        doc_type=doc_type,
+    )
+
+    add_verdicts(results)
+    overall = compute_overall_verdict(results)
+
+    _elapsed = (_time.monotonic() - _t0) * 1000
+    _get_analytics().log_query(query.strip(), top_k, len(results), _elapsed, project, doc_type, "multi_angle")
+    _log_interaction(
+        "multi_angle_search",
+        f"query={query.strip()!r} top_k={top_k}",
+        f"{len(results)} results [{overall}] in {_elapsed:.0f}ms",
+        int(_elapsed),
+    )
+
+    if not results:
+        msg = "I couldn't find anything matching that."
+        suggestions = suggest_alternative_queries(query.strip())
+        if suggestions:
+            msg += "\n\nTry these alternative queries:\n"
+            for s in suggestions:
+                msg += f"  - {s}\n"
+        return msg
+
+    text_limit = workspace.search.result_text_limit
+    output_parts = [f"**Overall: {format_verdict_label(overall)}** ({len(results)} results)"]
+
+    for i, r in enumerate(results, 1):
+        meta = r.get("metadata", {})
+        if isinstance(meta, str):
+            try:
+                meta = json.loads(meta)
+            except (json.JSONDecodeError, TypeError):
+                meta = {}
+
+        source = meta.get("source_path", "unknown")
+        section = meta.get("section", "")
+        similarity = r.get("similarity", 0.0)
+        verdict = r.get("verdict", "none")
+
+        header = f"[{i}] {source}"
+        if section:
+            header += f" > {section}"
+        header += f"  ({similarity * 100:.1f}% — {format_verdict_label(verdict)})"
+
+        text = r.get("text", "")
+        text = highlight_matches(text, query.strip())
+        if len(text) > text_limit:
+            text = text[:text_limit] + "…"
+
+        output_parts.append(f"{header}\n{text}")
+
+    return "\n\n---\n\n".join(output_parts)
+
+
+def multi_angle_recall(
+    query: str,
+    top_k: int = 5,
+    since: str | None = None,
+    until: str | None = None,
+    category: str | None = None,
+) -> str:
+    """Search memories using multiple query angles for better recall.
+
+    Decomposes the query into 2-4 perspectives, searches each,
+    and merges results keeping the best score per memory.
+    """
+    if not query or not query.strip():
+        return "Please provide a search query."
+    from src.config import workspace
+    from src.memory import recall_memories
+    from src.multi_angle import multi_angle_recall as _ma_recall
+    from src.search_verdict import add_verdicts, compute_overall_verdict, format_verdict_label
+
+    top_k = max(1, min(top_k, workspace.search.max_top_k))
+
+    memories = _ma_recall(
+        query.strip(),
+        recall_fn=recall_memories,
+        top_k=top_k,
+        max_angles=3,
+        since=since,
+        until=until,
+        category=category,
+    )
+
+    add_verdicts(memories)
+    overall = compute_overall_verdict(memories)
+
+    _log_interaction(
+        "multi_angle_recall",
+        f"query={query.strip()!r} top_k={top_k}",
+        f"{len(memories)} memories [{overall}]",
+    )
+
+    if not memories:
+        return "No memories found."
+
+    parts = [f"**Overall: {format_verdict_label(overall)}** ({len(memories)} memories)"]
+    for i, m in enumerate(memories, 1):
+        sim = m["similarity"] * 100
+        verdict = m.get("verdict", "none")
+        header = f"[{i}] ({sim:.1f}% — {format_verdict_label(verdict)})"
+        if m.get("category"):
+            header += f"  [{m['category']}]"
+        if m.get("date"):
+            header += f"  date: {m['date']}"
+        if m.get("tags"):
+            header += f"  tags: {m['tags']}"
+        parts.append(f"{header}\n{m['content']}")
+
+    return "\n\n---\n\n".join(parts)

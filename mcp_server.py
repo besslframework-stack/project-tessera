@@ -814,6 +814,61 @@ def recent_sessions(limit: int = 10) -> str:
     return core.recent_sessions(limit)
 
 
+# --- Insight Phase (v1.1.0) ---
+
+
+@mcp.tool(
+    description=(
+        "Detect contradictions among your stored memories. "
+        "Finds decisions, preferences, or facts that conflict with each other. "
+        "Shows severity (HIGH/MEDIUM) and which memory is newer. "
+        "Use periodically to keep your knowledge base consistent."
+    )
+)
+def detect_contradictions() -> str:
+    """Find conflicting memories."""
+    return core.detect_contradictions()
+
+
+@mcp.tool(
+    description=(
+        "Search documents using multiple query angles for better recall. "
+        "Decomposes your query into 2-4 perspectives (core keywords, "
+        "individual terms, reversed emphasis) and merges the best results. "
+        "Each result includes a verdict: confident match, possible match, "
+        "or low relevance. Use when standard search misses relevant results."
+    )
+)
+def deep_search(
+    query: str,
+    top_k: int = 5,
+    project: str | None = None,
+    doc_type: str | None = None,
+) -> str:
+    """Multi-angle document search with verdict scoring."""
+    core.search = search
+    return core.multi_angle_search_documents(query, top_k=top_k, project=project, doc_type=doc_type)
+
+
+@mcp.tool(
+    description=(
+        "Search memories using multiple query angles for better recall. "
+        "Like deep_search but for memories. Decomposes the query into "
+        "multiple perspectives and merges results. Each result includes "
+        "a confidence verdict. Use when recall misses relevant memories."
+    )
+)
+def deep_recall(
+    query: str,
+    top_k: int = 5,
+    since: str | None = None,
+    until: str | None = None,
+    category: str | None = None,
+) -> str:
+    """Multi-angle memory search with verdict scoring."""
+    return core.multi_angle_recall(query, top_k=top_k, since=since, until=until, category=category)
+
+
 def main() -> None:
     """Entry point for the MCP server."""
     mcp.run()

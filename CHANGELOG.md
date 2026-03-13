@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0] - 2026-03-14
+
+### Insight Phase — From passive storage to active knowledge intelligence
+
+Tessera now actively analyzes your memories, detects contradictions, and searches from multiple angles.
+Cross-project patterns adopted from Claudel (EvolutionEngine), Fleming (cross-consistency), Tether (drift detection), and channeltalk-mcp (multi-angle search).
+
+### Added
+- **Multi-angle Search** (`deep_search` MCP tool, `POST /deep-search`) — decomposes queries into 2-4 perspectives (core keywords, individual terms, reversed emphasis), searches each angle, merges best results per source
+- **Multi-angle Recall** (`deep_recall` MCP tool, `POST /deep-recall`) — same multi-angle approach for memories
+- **Search Verdict** — every search result now includes confidence label: "confident match" (≥45%), "possible match" (25-45%), "low relevance" (<25%)
+- **Contradiction Detection** (`detect_contradictions` MCP tool, `GET /contradictions`) — scans decision/preference/fact memories for conflicting statements, reports severity (HIGH/MEDIUM), identifies which memory is newer
+- **`src/multi_angle.py`** — query decomposition + result merging engine
+- **`src/search_verdict.py`** — verdict classification with configurable thresholds
+- **`src/contradiction.py`** — negation pattern detection (EN + KO), topic-based grouping, subject extraction
+- **71 new tests** across 3 test modules (test_search_verdict, test_multi_angle, test_contradiction)
+- Total: 50 MCP tools, 31 HTTP endpoints, 723 tests
+
 ## [1.0.1] - 2026-03-13
 
 ### Fixed

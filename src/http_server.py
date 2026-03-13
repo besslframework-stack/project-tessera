@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Tessera API",
     description="Personal Knowledge Layer for AI — REST API",
-    version="1.0.1",
+    version="1.1.0",
     openapi_tags=[
         {"name": "search", "description": "Document and memory search"},
         {"name": "memory", "description": "Cross-session memory management"},
@@ -357,6 +357,44 @@ def tessera_status():
 @app.get("/health-check", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def health_check():
     result = core.health_check()
+    return ApiResponse(data=result)
+
+
+# ---------------------------------------------------------------------------
+# Insight Phase (v1.1.0)
+# ---------------------------------------------------------------------------
+
+
+class DeepSearchRequest(BaseModel):
+    query: str
+    top_k: int = 5
+    project: str | None = None
+    doc_type: str | None = None
+
+
+class DeepRecallRequest(BaseModel):
+    query: str
+    top_k: int = 5
+    since: str | None = None
+    until: str | None = None
+    category: str | None = None
+
+
+@app.post("/deep-search", response_model=ApiResponse, tags=["search"], dependencies=[Depends(verify_api_key)])
+def deep_search_endpoint(req: DeepSearchRequest):
+    result = core.multi_angle_search_documents(req.query, top_k=req.top_k, project=req.project, doc_type=req.doc_type)
+    return ApiResponse(data=result)
+
+
+@app.post("/deep-recall", response_model=ApiResponse, tags=["memory"], dependencies=[Depends(verify_api_key)])
+def deep_recall_endpoint(req: DeepRecallRequest):
+    result = core.multi_angle_recall(req.query, top_k=req.top_k, since=req.since, until=req.until, category=req.category)
+    return ApiResponse(data=result)
+
+
+@app.get("/contradictions", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def contradictions_endpoint():
+    result = core.detect_contradictions()
     return ApiResponse(data=result)
 
 
