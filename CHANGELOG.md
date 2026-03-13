@@ -15,8 +15,14 @@ Cross-project patterns adopted from Claudel (EvolutionEngine), Fleming (cross-co
 - **`src/multi_angle.py`** — query decomposition + result merging engine
 - **`src/search_verdict.py`** — verdict classification with configurable thresholds
 - **`src/contradiction.py`** — negation pattern detection (EN + KO), topic-based grouping, subject extraction
-- **71 new tests** across 3 test modules (test_search_verdict, test_multi_angle, test_contradiction)
-- Total: 50 MCP tools, 31 HTTP endpoints, 723 tests
+- **Memory Confidence Score** (`memory_confidence` MCP tool, `GET /memory-confidence`) — rates each memory on repetition, source diversity, recency, and category stability. Labels: high/medium/low
+- **Memory Health Analytics** (`memory_health` MCP tool, `GET /memory-health`) — classifies memories as healthy/stale/orphaned, computes health score, generates cleanup recommendations and growth stats
+- **Plugin Hooks** (`list_plugin_hooks` MCP tool, `GET /hooks`) — extensibility system with 7 event types (on_memory_created, on_search, on_session_end, etc.), supports shell scripts and Python callables, configurable via workspace.yaml
+- **`src/memory_confidence.py`** — 4-factor scoring engine (repetition 35%, source diversity 20%, recency 25%, category weight 20%)
+- **`src/memory_health.py`** — health classification, growth statistics, recommendation engine
+- **`src/hooks.py`** — register/unregister/fire hooks, load from config, script execution with timeout
+- **132 new tests** across 6 test modules
+- Total: 53 MCP tools, 34 HTTP endpoints, 784 tests
 
 ## [1.0.1] - 2026-03-13
 

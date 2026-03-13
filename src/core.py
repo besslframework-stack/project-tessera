@@ -1621,6 +1621,74 @@ def multi_angle_search_documents(
     return "\n\n---\n\n".join(output_parts)
 
 
+def memory_confidence() -> str:
+    """Analyze confidence scores for all memories.
+
+    Scores each memory based on repetition, source diversity, recency,
+    and category stability. Returns a report with high/low confidence memories.
+    """
+    from src.memory import recall_memories
+    from src.memory_confidence import format_confidence_report, score_all_memories
+
+    memories = recall_memories("", top_k=200)
+    if not memories:
+        return "No memories to analyze."
+
+    scored = score_all_memories(memories)
+    _log_interaction(
+        "memory_confidence",
+        f"analyzed {len(scored)} memories",
+        f"scored: {sum(1 for m in scored if m['confidence']['label'] == 'high')} high, "
+        f"{sum(1 for m in scored if m['confidence']['label'] == 'low')} low",
+    )
+    return format_confidence_report(scored)
+
+
+def memory_health() -> str:
+    """Analyze memory health: healthy, stale, and orphaned memories.
+
+    Returns a health report with score, status breakdown, recommendations,
+    and growth statistics.
+    """
+    from src.memory import recall_memories
+    from src.memory_health import classify_health, compute_growth_stats, format_health_report
+
+    memories = recall_memories("", top_k=200)
+    if not memories:
+        return "No memories to analyze."
+
+    health = classify_health(memories)
+    growth = compute_growth_stats(memories)
+    _log_interaction(
+        "memory_health",
+        f"analyzed {len(memories)} memories",
+        f"health score: {health['summary']['health_score']:.0%}",
+    )
+    return format_health_report(health, growth)
+
+
+def list_plugin_hooks() -> str:
+    """List all registered plugin hooks."""
+    from src.hooks import EVENTS, list_hooks
+
+    hooks = list_hooks()
+    if not hooks:
+        lines = ["No hooks registered.", "", "Available events:"]
+        for event in EVENTS:
+            lines.append(f"  - {event}")
+        lines.append("")
+        lines.append("Register hooks in workspace.yaml under 'hooks:' section.")
+        return "\n".join(lines)
+
+    lines = ["## Registered Hooks"]
+    for event, names in hooks.items():
+        lines.append(f"\n**{event}**:")
+        for name in names:
+            lines.append(f"  - {name}")
+
+    return "\n".join(lines)
+
+
 def multi_angle_recall(
     query: str,
     top_k: int = 5,

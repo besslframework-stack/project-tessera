@@ -392,6 +392,24 @@ def deep_recall_endpoint(req: DeepRecallRequest):
     return ApiResponse(data=result)
 
 
+@app.get("/memory-confidence", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def memory_confidence_endpoint():
+    result = core.memory_confidence()
+    return ApiResponse(data=result)
+
+
+@app.get("/memory-health", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def memory_health_endpoint():
+    result = core.memory_health()
+    return ApiResponse(data=result)
+
+
+@app.get("/hooks", response_model=ApiResponse, tags=["workspace"], dependencies=[Depends(verify_api_key)])
+def hooks_endpoint():
+    result = core.list_plugin_hooks()
+    return ApiResponse(data=result)
+
+
 @app.get("/contradictions", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
 def contradictions_endpoint():
     result = core.detect_contradictions()

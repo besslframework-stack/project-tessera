@@ -869,6 +869,44 @@ def deep_recall(
     return core.multi_angle_recall(query, top_k=top_k, since=since, until=until, category=category)
 
 
+@mcp.tool(
+    description=(
+        "Analyze confidence scores for all memories. "
+        "Rates each memory based on repetition (confirmed by other memories), "
+        "source diversity, recency, and category stability. "
+        "Returns high-confidence memories you can trust and low-confidence "
+        "ones that may need review."
+    )
+)
+def memory_confidence() -> str:
+    """Score memory reliability."""
+    return core.memory_confidence()
+
+
+@mcp.tool(
+    description=(
+        "Analyze memory health: classify all memories as healthy, stale (90+ days old), "
+        "or orphaned (minimal metadata). Returns a health score, breakdown, "
+        "recommendations for cleanup, and growth statistics over time."
+    )
+)
+def memory_health() -> str:
+    """Memory health analytics."""
+    return core.memory_health()
+
+
+@mcp.tool(
+    description=(
+        "List all registered plugin hooks. "
+        "Shows which events have hooks attached and what scripts/functions "
+        "will be called. Configure hooks in workspace.yaml under 'hooks:' section."
+    )
+)
+def list_plugin_hooks() -> str:
+    """Show registered hooks."""
+    return core.list_plugin_hooks()
+
+
 def main() -> None:
     """Entry point for the MCP server."""
     mcp.run()
