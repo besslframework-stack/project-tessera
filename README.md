@@ -137,8 +137,8 @@ tessera setup
 ```
                     +--------------------------------------------+
                     |              src/core.py                    |
-                    |         55 orchestration functions          |
-                    |   48 specialized modules, 10.5k LOC        |
+                    |         58 orchestration functions          |
+                    |   54 specialized modules, 10.5k LOC        |
                     +--------------------------------------------+
                      /                |                \
     +---------------+  +-------------------+  +--------------+
@@ -598,7 +598,7 @@ Environment variables:
 | MCP tools | 53 |
 | HTTP endpoints | 34 |
 | CLI commands | 11 |
-| Core modules | 48 |
+| Core modules | 54 |
 | Lines of code | 10,500+ |
 | Tests | 784 |
 | File types | 40+ |
