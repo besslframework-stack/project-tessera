@@ -39,13 +39,13 @@ tessera setup
 
 ### What makes Tessera different
 
-**Cross-AI portability.** Export your knowledge to ChatGPT memory format. Import Gemini conversations. Move between AI tools without starting over. No other tool does this.
+Tessera can export your memories to ChatGPT format, import Gemini conversations, and move knowledge between AI tools. None of the alternatives in the table above do this.
 
-**Active intelligence, not passive storage.** Tessera detects contradictions in your memories, scores confidence based on repetition and source diversity, tracks how your decisions evolved over time, and flags stale knowledge. It does not just store -- it understands.
+It also does things most memory tools skip: scanning for contradictions between old and new memories, scoring how confident you should be in each memory based on how often it's been reinforced, and flagging knowledge that's gone stale. The comparison table above covers the details.
 
-**Zero infrastructure.** `pip install` and go. LanceDB (embedded columnar vector store) and fastembed (ONNX runtime) run locally. No Docker containers, no database servers, no API keys, no cloud accounts.
+Setup is `pip install` and go. LanceDB and fastembed run embedded -- no Docker, no database server, no API keys, no cloud account.
 
-**Encrypted by default.** Set one environment variable and all memories are AES-256-CBC encrypted at rest. Your knowledge, your keys.
+If you set `TESSERA_VAULT_KEY`, all memories are AES-256-CBC encrypted at rest.
 
 ---
 
@@ -200,11 +200,11 @@ Interactive Swagger docs at `http://127.0.0.1:8394/docs`.
 
 ---
 
-## Key capabilities
+## How it works
 
 ### Hybrid search with reranking
 
-Every search query runs through a 4-stage retrieval pipeline:
+Search queries go through a 4-stage retrieval pipeline:
 
 1. **Query decomposition** -- splits complex queries into 2-4 search angles (core keywords, individual terms, reversed emphasis)
 2. **Hybrid retrieval** -- vector similarity (LanceDB) + keyword matching (FTS/BM25) in parallel
@@ -225,15 +225,11 @@ curl -X POST http://127.0.0.1:8394/remember \
   -d '{"content": "Use PostgreSQL for production", "tags": ["db", "architecture"]}'
 ```
 
-Memories are:
-- **Auto-categorized** as decision, preference, or fact
-- **Deduplicated** via cosine similarity (0.92 threshold) -- no duplicates
-- **Confidence-scored** based on repetition (35%), recency (25%), source diversity (20%), and category weight (20%)
-- **Encrypted at rest** when `TESSERA_VAULT_KEY` is set (AES-256-CBC, pure Python, no external deps)
+Memories are auto-categorized (decision, preference, or fact), deduplicated via cosine similarity (0.92 threshold), and scored for confidence based on repetition (35%), recency (25%), source diversity (20%), and category weight (20%). If `TESSERA_VAULT_KEY` is set, they're AES-256-CBC encrypted at rest.
 
 ### Auto-learning
 
-Tessera extracts decisions, preferences, and facts from your conversations automatically. Toggle with `toggle_auto_learn`. Review what it learned with `review_learned`.
+Extracts decisions, preferences, and facts from conversations. Turn it on/off with `toggle_auto_learn`, see what it picked up with `review_learned`.
 
 ### Contradiction detection
 
@@ -266,7 +262,7 @@ curl http://127.0.0.1:8394/export?format=obsidian
 
 ### Memory health analytics
 
-Classifies every memory as **healthy**, **stale** (90+ days without reinforcement), or **orphaned** (minimal metadata, no category). Generates cleanup recommendations and growth statistics.
+Classifies memories as healthy, stale (90+ days without reinforcement), or orphaned (minimal metadata, no category). Suggests what to clean up and shows growth over time.
 
 ### Plugin hooks
 
@@ -583,12 +579,12 @@ Environment variables:
 
 | Component | Technology | Why |
 |-----------|-----------|-----|
-| Vector store | LanceDB | Embedded columnar store. Zero-config, no server process, handles vector + metadata queries natively |
+| Vector store | LanceDB | Embedded columnar store. No server process, handles vector + metadata queries natively |
 | Embeddings | fastembed/ONNX | Local inference, no API keys. `paraphrase-multilingual-MiniLM-L12-v2` (384-dim, 101 languages) |
 | Metadata | SQLite | File tracking, search analytics, interaction logging. Thread-safe with reentrant locks |
 | Memory storage | Filesystem (.md) | Human-readable, git-friendly, encryptable. YAML frontmatter for metadata |
 | Encryption | Pure Python AES-256-CBC | No OpenSSL dependency. PKCS7 padding, random IV per memory |
-| HTTP API | FastAPI | Auto-generated Swagger docs, Pydantic validation, async-capable |
+| HTTP API | FastAPI | Swagger docs, Pydantic validation, async-capable |
 | MCP | FastMCP (stdio) | Standard MCP protocol for Claude Desktop |
 
 ### Numbers
