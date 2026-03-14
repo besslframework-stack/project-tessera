@@ -16,13 +16,14 @@ from pydantic import BaseModel
 
 from src import core
 from src.api_auth import init_auth, is_auth_required, validate_key
+from src.chatgpt_actions import get_gpt_instructions, get_openapi_spec, get_setup_guide
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Tessera API",
     description="Personal Knowledge Layer for AI — REST API",
-    version="1.1.0",
+    version="1.1.1",
     openapi_tags=[
         {"name": "search", "description": "Document and memory search"},
         {"name": "memory", "description": "Cross-session memory management"},
@@ -414,6 +415,36 @@ def hooks_endpoint():
 def contradictions_endpoint():
     result = core.detect_contradictions()
     return ApiResponse(data=result)
+
+
+# ---------------------------------------------------------------------------
+# ChatGPT Custom GPT Actions
+# ---------------------------------------------------------------------------
+
+@app.get("/chatgpt-actions/openapi.json", tags=["workspace"])
+def chatgpt_openapi(server_url: str = Query(default=None)):
+    """Serve OpenAPI spec for ChatGPT Custom GPT Actions.
+
+    Pass ?server_url=https://your-tunnel.ngrok-free.app to set the server URL.
+    Defaults to the current request's base URL.
+    """
+    from starlette.responses import JSONResponse
+    if not server_url:
+        server_url = "http://localhost:8394"
+    spec = get_openapi_spec(server_url)
+    return JSONResponse(content=spec, headers={"Access-Control-Allow-Origin": "*"})
+
+
+@app.get("/chatgpt-actions/instructions", tags=["workspace"])
+def chatgpt_instructions():
+    """Return the GPT instruction template to paste into your Custom GPT."""
+    return {"instructions": get_gpt_instructions()}
+
+
+@app.get("/chatgpt-actions/setup", tags=["workspace"])
+def chatgpt_setup(tunnel_url: str = Query(default=None)):
+    """Return the full setup guide for connecting ChatGPT to Tessera."""
+    return {"guide": get_setup_guide(tunnel_url)}
 
 
 # ---------------------------------------------------------------------------

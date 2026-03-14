@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/project-tessera)](https://pypi.org/project/project-tessera/)
 [![Downloads](https://img.shields.io/pypi/dm/project-tessera)](https://pypi.org/project/project-tessera/)
-[![Tests](https://img.shields.io/badge/tests-784%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-806%20passing-brightgreen)]()
 [![Python](https://img.shields.io/pypi/pyversions/project-tessera)](https://pypi.org/project/project-tessera/)
 [![License](https://img.shields.io/pypi/l/project-tessera)](https://github.com/besslframework-stack/project-tessera/blob/main/LICENSE)
 
@@ -29,19 +29,19 @@ tessera setup
 | Works without API keys | Yes | No (needs OpenAI) | Yes | Partial |
 | Works without Docker | Yes | No | Yes | No |
 | Document search (40+ types) | Yes | No | Markdown only | No |
-| Cross-AI export/import | Yes | No | No | No |
+| ChatGPT live integration (Actions) | Yes | No | No | No |
 | Contradiction detection | Yes | No | No | No |
 | Memory confidence scoring | Yes | No | No | No |
 | Encrypted vault (AES-256) | Yes | No | No | No |
-| HTTP API for non-MCP tools | 34 endpoints | Yes | No | Yes |
+| HTTP API for non-MCP tools | 37 endpoints | Yes | No | Yes |
 | Auto-learning from conversations | Yes | Yes | No | No |
 | MCP tools | 53 | ~10 | ~15 | 24 |
 
 ### What makes Tessera different
 
-Tessera can export your memories to ChatGPT format, import Gemini conversations, and move knowledge between AI tools. None of the alternatives in the table above do this.
+ChatGPT can call Tessera's API directly through Custom GPT Actions -- same knowledge base, live access, no manual export. You build one knowledge base and both Claude (MCP) and ChatGPT (HTTP Actions) read and write to it.
 
-It also does things most memory tools skip: scanning for contradictions between old and new memories, scoring how confident you should be in each memory based on how often it's been reinforced, and flagging knowledge that's gone stale. The comparison table above covers the details.
+Tessera also does things most memory tools skip: scanning for contradictions between old and new memories, scoring how confident you should be in each memory based on how often it's been reinforced, and flagging knowledge that's gone stale.
 
 Setup is `pip install` and go. LanceDB and fastembed run embedded -- no Docker, no database server, no API keys, no cloud account.
 
@@ -138,13 +138,13 @@ If you set `TESSERA_VAULT_KEY`, all memories are AES-256-CBC encrypted at rest.
                     +--------------------------------------------+
                     |              src/core.py                    |
                     |         58 orchestration functions          |
-                    |   54 specialized modules, 10.5k LOC        |
+                    |   55 specialized modules, 10.5k LOC        |
                     +--------------------------------------------+
                      /                |                \
     +---------------+  +-------------------+  +--------------+
     | MCP Server    |  | HTTP API Server   |  | CLI          |
     | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
-    | 53 tools      |  | 34 endpoints      |  | setup, sync  |
+    | 53 tools      |  | 37 endpoints      |  | setup, sync  |
     | stdio         |  | port 8394         |  | ingest, api  |
     +---------------+  +-------------------+  +--------------+
            |                    |                     |
@@ -189,14 +189,15 @@ Creates workspace config, downloads embedding model (~220MB, first time only), c
 
 Ask Claude about your documents. It searches automatically.
 
-### Use with ChatGPT, Gemini, or any HTTP client
+### Use with ChatGPT (Custom GPT Actions)
 
 ```bash
-pip install project-tessera[api]
-tessera api  # Starts REST API on http://127.0.0.1:8394
+tessera api                     # Start REST API on localhost:8394
+ngrok http 8394                 # Expose to the internet
+# Then create a Custom GPT with the Actions spec from /chatgpt-actions/openapi.json
 ```
 
-Interactive Swagger docs at `http://127.0.0.1:8394/docs`.
+Full setup guide at `http://127.0.0.1:8394/chatgpt-actions/setup`. Swagger docs at `http://127.0.0.1:8394/docs`.
 
 ---
 
@@ -246,17 +247,38 @@ CONTRADICTION (HIGH severity):
 
 Supports both English and Korean negation patterns.
 
-### Cross-AI portability
+### Cross-AI: ChatGPT Custom GPT Actions
+
+ChatGPT can call Tessera's HTTP API directly through Custom GPT Actions. No export/import -- it reads and writes your knowledge base in real time, same as Claude does through MCP.
 
 ```bash
-# Export your knowledge for ChatGPT
-curl http://127.0.0.1:8394/export-for-ai?target=chatgpt
+# 1. Start Tessera API + tunnel
+tessera api
+ngrok http 8394
 
-# Import past conversations from ChatGPT
+# 2. Get the OpenAPI spec for your Custom GPT
+curl https://your-tunnel.ngrok-free.app/chatgpt-actions/openapi.json?server_url=https://your-tunnel.ngrok-free.app
+
+# 3. Get the GPT instruction template
+curl https://your-tunnel.ngrok-free.app/chatgpt-actions/instructions
+
+# 4. Full setup guide
+curl https://your-tunnel.ngrok-free.app/chatgpt-actions/setup
+```
+
+Create a Custom GPT, paste the instructions, import the OpenAPI spec as an Action, and ChatGPT can search your documents, save memories, recall past decisions -- all hitting the same knowledge base Claude uses.
+
+You can also import past ChatGPT conversations to extract knowledge from them:
+
+```bash
 curl -X POST http://127.0.0.1:8394/import-conversations \
-  -d '{"data": "<exported JSON>", "source": "chatgpt"}'
+  -H "Content-Type: application/json" \
+  -d '{"data": "<ChatGPT export JSON>", "source": "chatgpt"}'
+```
 
-# Export as Obsidian vault (wikilinks), Markdown, CSV, or JSON
+Export as Obsidian vault (wikilinks), Markdown, CSV, or JSON:
+
+```bash
 curl http://127.0.0.1:8394/export?format=obsidian
 ```
 
@@ -377,10 +399,12 @@ hooks:
 
 | Tool | What it does |
 |------|-------------|
-| `export_for_ai` | Export memories in ChatGPT or Gemini format |
-| `import_from_ai` | Import memories from ChatGPT or Gemini |
-| `import_conversations` | Extract knowledge from ChatGPT/Claude/Gemini conversation exports |
+| `export_for_ai` | Export memories in ChatGPT/Gemini-readable format |
+| `import_from_ai` | Import memories from external AI tools |
+| `import_conversations` | Extract knowledge from ChatGPT/Claude conversation exports |
 | `export_knowledge` | Export as Obsidian (wikilinks), Markdown, CSV, or JSON |
+
+ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup` for the full guide.
 
 </details>
 
@@ -415,7 +439,7 @@ hooks:
 
 ---
 
-## HTTP API (34 endpoints)
+## HTTP API (37 endpoints)
 
 ```bash
 pip install project-tessera[api]
@@ -463,6 +487,9 @@ Swagger UI at `http://127.0.0.1:8394/docs`. Optional auth via `TESSERA_API_KEY` 
 | GET | `/memory-confidence` | Memory reliability scores |
 | GET | `/memory-health` | Memory health analytics |
 | GET | `/hooks` | List plugin hooks |
+| GET | `/chatgpt-actions/openapi.json` | OpenAPI spec for ChatGPT Custom GPT Actions |
+| GET | `/chatgpt-actions/instructions` | GPT instruction template |
+| GET | `/chatgpt-actions/setup` | Full ChatGPT integration setup guide |
 
 </details>
 
@@ -592,11 +619,11 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
-| HTTP endpoints | 34 |
+| HTTP endpoints | 37 |
 | CLI commands | 11 |
-| Core modules | 54 |
-| Lines of code | 10,500+ |
-| Tests | 784 |
+| Core modules | 55 |
+| Lines of code | 12,300+ |
+| Tests | 806 |
 | File types | 40+ |
 
 ---

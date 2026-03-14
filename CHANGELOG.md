@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.1] - 2026-03-15
+
+### ChatGPT Custom GPT Actions — real cross-AI integration
+
+ChatGPT can now call Tessera's HTTP API directly through Custom GPT Actions. No export/import — live access to the same knowledge base Claude uses through MCP.
+
+### Added
+- **ChatGPT Actions OpenAPI spec** (`GET /chatgpt-actions/openapi.json`) — OpenAPI 3.1.0 spec optimized for ChatGPT Custom GPTs with 9 core operations
+- **GPT instruction template** (`GET /chatgpt-actions/instructions`) — paste-ready instructions for Custom GPTs that tell ChatGPT when to recall, remember, and search
+- **Setup guide** (`GET /chatgpt-actions/setup`) — full ngrok/tunnel setup + Custom GPT configuration walkthrough
+- **`src/chatgpt_actions.py`** — spec generator, instruction template, setup guide with dynamic server URL injection
+- **22 new tests** (`tests/test_chatgpt_actions.py`)
+- Total: 53 MCP tools, 37 HTTP endpoints, 806 tests
+
+### Changed
+- README: cross-AI section rewritten to reflect real ChatGPT Actions integration (not aspirational export formats)
+- Comparison table: "Cross-AI export/import" → "ChatGPT live integration (Actions)"
+
 ## [1.1.0] - 2026-03-14
 
 ### Insight Phase — From passive storage to active knowledge intelligence
