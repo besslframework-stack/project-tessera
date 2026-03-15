@@ -623,11 +623,11 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
-| HTTP endpoints | 41 |
+| HTTP endpoints | 42 |
 | CLI commands | 11 |
-| Core modules | 57 |
-| Lines of code | 13,500+ |
-| Tests | 901 |
+| Core modules | 58 |
+| Lines of code | 14,500+ |
+| Tests | 931 |
 | File types | 40+ |
 
 ---

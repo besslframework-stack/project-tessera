@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0] - 2026-03-16
+
+### Lens Phase — Web dashboard, Remote MCP, Browser extension
+
+Tessera now has a visual interface, network-accessible MCP, and a Chrome extension for capturing web knowledge.
+
+### Added
+- **Web Dashboard** (`GET /dashboard`) — dark-themed HTML dashboard with overview cards (memories, entities, health, contradictions, consolidation), entity knowledge graph (Mermaid), recent memories table, auto-refresh every 30s
+- **Remote MCP (SSE)** — `tessera-mcp --sse` runs MCP server over SSE transport on port 8395, enabling browser extensions and remote clients
+- **Chrome Extension** (`extension/`) — Manifest V3 extension with right-click "Save to Tessera", popup for quick save/search, toast notifications, configurable URL/API key
+- **`src/dashboard.py`** — HTML renderer with XSS prevention (html.escape)
+- **30 new tests** (9 dashboard + 7 remote MCP + 14 extension)
+- Total: 53 MCP tools, 42 HTTP endpoints, 931 tests
+
 ## [1.2.0] - 2026-03-15
 
 ### Nexus Phase — Knowledge graph, temporal validity, memory consolidation
