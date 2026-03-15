@@ -1980,4 +1980,181 @@ def multi_angle_recall(
             header += f"  tags: {m['tags']}"
         parts.append(f"{header}\n{m['content']}")
 
-    return "\n\n---\n\n".join(parts)
+    return "\n\n---\n\n".join(parts)  # end multi_angle_recall
+
+
+# ---------------------------------------------------------------------------
+# Phase 8a: Sleep-time Consolidation
+# ---------------------------------------------------------------------------
+
+
+def sleep_consolidate() -> str:
+    """Run a sleep-time consolidation cycle.
+
+    Automatically consolidates very similar memories and resolves
+    high-severity contradictions. Conservative thresholds ensure
+    only safe operations are performed.
+    """
+    from src.sleep_consolidation import run_sleep_cycle
+
+    result = run_sleep_cycle()
+
+    _log_interaction(
+        "sleep_consolidate",
+        "automatic sleep cycle",
+        f"consolidated={result['consolidated']} superseded={result['superseded']}",
+    )
+
+    lines = [
+        "# Sleep Consolidation Report",
+        "",
+        f"- Clusters found: {result['clusters_found']}",
+        f"- Auto-consolidated: {result['consolidated']}",
+        f"- Memories superseded: {result['superseded']}",
+        f"- Skipped (below threshold): {result['skipped']}",
+    ]
+
+    if result["consolidated"] == 0 and result["superseded"] == 0:
+        lines.append("")
+        lines.append("No action taken. Memory base is clean.")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Phase 8b: Retention Policy
+# ---------------------------------------------------------------------------
+
+
+def retention_policy(
+    max_age_days: int = 180,
+    min_confidence: float = 0.3,
+    dry_run: bool = True,
+) -> str:
+    """Apply retention policy to identify or archive stale memories.
+
+    Args:
+        max_age_days: Maximum age in days before a memory is a candidate.
+        min_confidence: Minimum confidence score threshold.
+        dry_run: If True, only report candidates without archiving.
+    """
+    from src.retention import apply_retention_policy
+
+    max_age_days = max(1, min(max_age_days, 3650))
+    min_confidence = max(0.0, min(min_confidence, 1.0))
+
+    result = apply_retention_policy(
+        max_age_days=max_age_days,
+        min_confidence=min_confidence,
+        dry_run=dry_run,
+    )
+
+    _log_interaction(
+        "retention_policy",
+        f"max_age={max_age_days}d min_conf={min_confidence} dry_run={dry_run}",
+        f"candidates={result['candidates']} archived={result['archived']}",
+    )
+
+    mode = "DRY RUN" if dry_run else "APPLIED"
+    lines = [
+        f"# Retention Policy Report ({mode})",
+        "",
+        f"- Candidates: {result['candidates']}",
+        f"- Archived: {result['archived']}",
+        "",
+    ]
+
+    reasons = result.get("reasons", [])
+    if reasons:
+        lines.append("## Candidates")
+        for r in reasons[:20]:
+            file_name = Path(r["file"]).name if r["file"] else "unknown"
+            lines.append(
+                f"- {file_name}: {r['reason']} "
+                f"(age={r['age_days']}d, confidence={r['confidence']:.2f})"
+            )
+        if len(reasons) > 20:
+            lines.append(f"  ...and {len(reasons) - 20} more")
+    else:
+        lines.append("No candidates found. Memory base is healthy.")
+
+    return "\n".join(lines)
+
+
+def retention_summary() -> str:
+    """Get a quick summary of retention status.
+
+    Shows age distribution and at-risk memory counts
+    without taking any action.
+    """
+    from src.retention import get_retention_summary
+
+    result = get_retention_summary()
+
+    _log_interaction(
+        "retention_summary",
+        "status check",
+        f"total={result['total']} at_risk={result['at_risk']}",
+    )
+
+    lines = [
+        "# Retention Summary",
+        "",
+        f"**{result['total']} total memories**",
+        "",
+        "## Age Distribution",
+    ]
+
+    for bucket, count in result.get("age_distribution", {}).items():
+        bar = "\u2588" * min(count, 30)
+        lines.append(f"  {bucket}: {bar} ({count})")
+
+    lines.append("")
+    lines.append(f"- At risk (180d+): {result['at_risk']}")
+    lines.append(f"- Orphaned: {result['orphaned']}")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Phase 8c: Agent Framework Adapters
+# ---------------------------------------------------------------------------
+
+
+def get_agent_adapter(framework: str) -> str:
+    """Get setup instructions and code snippet for an agent framework adapter.
+
+    Args:
+        framework: One of "langchain", "crewai", "autogen".
+    """
+    from src.adapters import get_adapter_info
+
+    info = get_adapter_info(framework)
+
+    if "error" in info:
+        supported = ", ".join(info.get("supported", []))
+        return f"Error: {info['error']}\nSupported frameworks: {supported}"
+
+    lines = [
+        f"# Tessera {info['framework']} Adapter",
+        "",
+        f"**{info['description']}**",
+        "",
+        "## Install",
+        f"```",
+        f"{info['install']}",
+        f"```",
+        "",
+        "## Usage",
+        f"```python",
+        f"{info['code']}",
+        f"```",
+    ]
+
+    _log_interaction(
+        "get_agent_adapter",
+        f"framework={framework}",
+        f"returned {info['framework']} adapter info",
+    )
+
+    return "\n".join(lines)

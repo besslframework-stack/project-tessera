@@ -455,6 +455,45 @@ def consolidate_endpoint(
 
 
 # ---------------------------------------------------------------------------
+# Phase 8: Cortex II
+# ---------------------------------------------------------------------------
+
+
+@app.post("/sleep-consolidate", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def sleep_consolidate_endpoint():
+    result = core.sleep_consolidate()
+    return ApiResponse(data=result)
+
+
+class RetentionPolicyRequest(BaseModel):
+    max_age_days: int = 180
+    min_confidence: float = 0.3
+    dry_run: bool = True
+
+
+@app.post("/retention-policy", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def retention_policy_endpoint(
+    max_age_days: int = Query(default=180, ge=1, le=3650),
+    min_confidence: float = Query(default=0.3, ge=0.0, le=1.0),
+    dry_run: bool = Query(default=True),
+):
+    result = core.retention_policy(max_age_days, min_confidence, dry_run)
+    return ApiResponse(data=result)
+
+
+@app.get("/retention-summary", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def retention_summary_endpoint():
+    result = core.retention_summary()
+    return ApiResponse(data=result)
+
+
+@app.get("/adapters/{framework}", response_model=ApiResponse, tags=["workspace"], dependencies=[Depends(verify_api_key)])
+def adapters_endpoint(framework: str):
+    result = core.get_agent_adapter(framework)
+    return ApiResponse(data=result)
+
+
+# ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------
 
