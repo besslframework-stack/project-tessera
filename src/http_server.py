@@ -485,6 +485,127 @@ def chatgpt_setup(tunnel_url: str = Query(default=None)):
 
 
 # ---------------------------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------------------------
+
+@app.get("/dashboard", tags=["workspace"], include_in_schema=False)
+def dashboard():
+    """Web dashboard — visual overview of Tessera's knowledge state."""
+    from starlette.responses import HTMLResponse
+
+    from src.dashboard import render_dashboard
+
+    stats = _gather_dashboard_stats()
+    html = render_dashboard(stats)
+    return HTMLResponse(content=html)
+
+
+def _gather_dashboard_stats() -> dict:
+    """Collect stats from various core modules for the dashboard."""
+    stats: dict = {"version": "dev"}
+
+    # Version
+    try:
+        from importlib.metadata import version as pkg_version
+        stats["version"] = pkg_version("project-tessera")
+    except Exception:
+        pass
+
+    # Memory count
+    try:
+        from src.memory import _memory_dir
+        mem_dir = _memory_dir()
+        stats["memory_count"] = len(list(mem_dir.glob("*.md")))
+    except Exception:
+        stats["memory_count"] = 0
+
+    # Entity count
+    try:
+        from src.entity_store import EntityStore
+        store = EntityStore()
+        stats["entity_count"] = store.entity_count()
+        stats["relationship_count"] = store.relationship_count()
+    except Exception:
+        stats["entity_count"] = 0
+        stats["relationship_count"] = 0
+
+    # Health score
+    try:
+        health_text = core.memory_health()
+        # Extract score from text like "Health Score: 85/100"
+        import re
+        m = re.search(r"(?:score|Score)[:\s]+(\d+)", health_text)
+        stats["health_score"] = f"{m.group(1)}/100" if m else "—"
+    except Exception:
+        stats["health_score"] = "—"
+
+    # Contradictions
+    try:
+        contra_text = core.detect_contradictions()
+        import re
+        m = re.search(r"(\d+)\s+contradiction", contra_text)
+        stats["contradiction_count"] = int(m.group(1)) if m else 0
+    except Exception:
+        stats["contradiction_count"] = 0
+
+    # Consolidation clusters
+    try:
+        from src.consolidation import find_similar_clusters
+        clusters = find_similar_clusters(threshold=0.85, max_clusters=10)
+        stats["cluster_count"] = len(clusters)
+    except Exception:
+        stats["cluster_count"] = 0
+
+    # Recent memories
+    try:
+        memories_text = core.list_memories(10)
+        # Parse the text output into structured data
+        stats["recent_memories"] = _parse_memories_text(memories_text)
+    except Exception:
+        stats["recent_memories"] = []
+
+    # Entity graph mermaid
+    try:
+        graph_text = core.entity_graph(max_nodes=20)
+        import re
+        m = re.search(r"```mermaid\n(.*?)```", graph_text, re.DOTALL)
+        stats["entity_graph_mermaid"] = m.group(1).strip() if m else ""
+    except Exception:
+        stats["entity_graph_mermaid"] = ""
+
+    return stats
+
+
+def _parse_memories_text(text: str) -> list[dict]:
+    """Parse the text output from list_memories into structured dicts."""
+    if not text or "no memories" in text.lower():
+        return []
+
+    memories = []
+    for block in text.split("\n\n---\n\n"):
+        block = block.strip()
+        if not block:
+            continue
+        lines = block.split("\n", 1)
+        header = lines[0] if lines else ""
+        content = lines[1].strip() if len(lines) > 1 else ""
+
+        import re
+        date_m = re.search(r"date:\s*(\S+)", header)
+        cat_m = re.search(r"\[([a-zA-Z]\w+)\]", header)
+        tags_m = re.search(r"tags:\s*(.+?)(?:\s*$|\s+date:)", header)
+
+        memories.append({
+            "date": date_m.group(1) if date_m else "",
+            "category": cat_m.group(1) if cat_m else "",
+            "tags": tags_m.group(1).strip() if tags_m else "",
+            "content": content[:200],
+        })
+
+    return memories
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
