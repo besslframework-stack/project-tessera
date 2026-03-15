@@ -344,6 +344,7 @@ def recall(
     since: str | None = None,
     until: str | None = None,
     category: str | None = None,
+    include_superseded: bool = False,
 ) -> str:
     """Search past memories using semantic similarity with optional filters.
 
@@ -353,6 +354,7 @@ def recall(
         since: Only memories after this date (e.g. '2026-03-01').
         until: Only memories before this date (e.g. '2026-03-10').
         category: Filter by category (decision, preference, fact).
+        include_superseded: Include superseded (outdated) memories.
     """
     if not query or not query.strip():
         return "Please provide a search query."
@@ -363,6 +365,7 @@ def recall(
 
     memories = recall_memories(
         query.strip(), top_k=top_k, since=since, until=until, category=category,
+        include_superseded=include_superseded,
     )
     filters = []
     if since:
@@ -713,6 +716,15 @@ def forget_memory(memory_name: str) -> str:
         return "Invalid memory path."
 
     target.unlink()
+
+    # Clean up entity relationships
+    try:
+        from src.entity_store import EntityStore
+        store = EntityStore()
+        store.delete_memory_relationships(memory_name.strip())
+    except Exception:
+        pass  # Entity store may not exist yet
+
     return f"Deleted memory: {memory_name}"
 
 
@@ -1518,23 +1530,42 @@ def detect_contradictions() -> str:
     """Detect contradictions among stored memories.
 
     Scans decision, preference, and fact memories for conflicting statements.
+    High-severity contradictions auto-supersede the older memory.
     Returns a formatted report with severity levels.
     """
     from src.contradiction import detect_contradictions as _detect, format_contradictions
-    from src.memory import recall_memories
+    from src.memory import recall_memories, supersede_memory
 
-    # Get all memories (broad recall)
-    memories = recall_memories("", top_k=200)
+    # Get all memories including superseded (to avoid re-processing)
+    memories = recall_memories("", top_k=200, include_superseded=True)
     if not memories:
         return "No memories to analyze."
 
     contradictions = _detect(memories)
+
+    # Auto-supersede older memory in high-severity contradictions
+    superseded_count = 0
+    for c in contradictions:
+        if c["severity"] == "high":
+            older = c["memory_a"]
+            newer = c["memory_b"]
+            older_path = older.get("file_path", "")
+            newer_name = Path(newer.get("file_path", "")).stem if newer.get("file_path") else ""
+            if older_path:
+                from pathlib import Path as _Path
+                if supersede_memory(_Path(older_path), superseded_by=newer_name):
+                    superseded_count += 1
+
     _log_interaction(
         "detect_contradictions",
         f"analyzed {len(memories)} memories",
-        f"{len(contradictions)} contradictions found",
+        f"{len(contradictions)} contradictions found, {superseded_count} auto-superseded",
     )
-    return format_contradictions(contradictions)
+
+    report = format_contradictions(contradictions)
+    if superseded_count:
+        report += f"\n\n---\n**Auto-superseded {superseded_count} older memories** (high-severity contradictions). Superseded memories are excluded from recall by default."
+    return report
 
 
 def multi_angle_search_documents(

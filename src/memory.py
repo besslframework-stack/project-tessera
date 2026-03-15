@@ -139,6 +139,7 @@ def save_memory(
     md_content = (
         f"---\n"
         f"date: {now.isoformat()}\n"
+        f"valid_from: {now.isoformat()}\n"
         f"source: {source}\n"
         f"category: {category}\n"
         f"tags: [{tag_str}]\n"
@@ -148,6 +149,26 @@ def save_memory(
 
     file_path.write_text(md_content, encoding="utf-8")
     logger.info("Saved memory [%s]: %s", category, file_path)
+
+    # Extract entities and relationships (Nexus phase)
+    try:
+        from src.entity_extraction import extract_triples
+        from src.entity_store import EntityStore
+
+        triples = extract_triples(content)
+        if triples:
+            store = EntityStore()
+            memory_id = file_path.stem
+            for triple in triples:
+                subj_id = store.upsert_entity(triple.subject.name, triple.subject.entity_type)
+                obj_id = store.upsert_entity(triple.object.name, triple.object.entity_type)
+                store.add_relationship(
+                    subj_id, triple.predicate, obj_id, memory_id, triple.confidence
+                )
+            logger.debug("Extracted %d triples from memory %s", len(triples), file_path.name)
+    except Exception as exc:
+        logger.debug("Entity extraction skipped: %s", exc)
+
     return file_path
 
 
@@ -157,6 +178,7 @@ def recall_memories(
     since: str | None = None,
     until: str | None = None,
     category: str | None = None,
+    include_superseded: bool = False,
 ) -> list[dict]:
     """Search memories using vector similarity with optional time and category filters.
 
@@ -166,6 +188,7 @@ def recall_memories(
         since: ISO date string (e.g. '2026-03-01'). Only return memories after this date.
         until: ISO date string (e.g. '2026-03-10'). Only return memories before this date.
         category: Filter by category (decision, preference, fact, etc.).
+        include_superseded: If False (default), exclude superseded memories.
 
     Returns:
         List of dicts with 'content', 'date', 'category', 'tags', 'source', 'similarity'.
@@ -186,7 +209,8 @@ def recall_memories(
     vector = embed_query(query)
 
     # Fetch more results when filtering, to compensate for post-filter reduction
-    fetch_k = top_k * 3 if (since or until or category) else top_k
+    has_filters = since or until or category or (not include_superseded)
+    fetch_k = top_k * 3 if has_filters else top_k
 
     try:
         results = table.search(vector).limit(fetch_k).to_list()
@@ -208,6 +232,12 @@ def recall_memories(
         # Category filter
         if category and cat_val.lower() != category.lower():
             continue
+
+        # Superseded filter
+        if not include_superseded:
+            superseded_at = row.get("superseded_at", "")
+            if superseded_at:
+                continue
 
         dist = row.get("_distance", 1.0)
         similarity = max(0.0, min(1.0, 1.0 - float(dist)))
@@ -249,6 +279,8 @@ def index_memory(file_path: Path) -> int:
     source = ""
     category = ""
     tags = ""
+    valid_from = ""
+    superseded_at = ""
     body = text
     if text.startswith("---"):
         parts = text.split("---", 2)
@@ -264,6 +296,10 @@ def index_memory(file_path: Path) -> int:
                     category = line.split(":", 1)[1].strip()
                 elif line.startswith("tags:"):
                     tags = line.split(":", 1)[1].strip()
+                elif line.startswith("valid_from:"):
+                    valid_from = line.split(":", 1)[1].strip()
+                elif line.startswith("superseded_at:"):
+                    superseded_at = line.split(":", 1)[1].strip()
 
     if not body.strip():
         return 0
@@ -280,6 +316,8 @@ def index_memory(file_path: Path) -> int:
         "category": category,
         "tags": tags,
         "file_path": str(file_path),
+        "valid_from": valid_from,
+        "superseded_at": superseded_at,
     }
 
     db_path = str(settings.data.lancedb_path)
@@ -306,6 +344,53 @@ def index_all_memories() -> int:
     for md_file in sorted(mem_dir.glob("*.md")):
         count += index_memory(md_file)
     return count
+
+
+def supersede_memory(file_path: Path, superseded_by: str = "") -> bool:
+    """Mark a memory as superseded by updating its YAML frontmatter.
+
+    Adds a superseded_at timestamp and optional superseded_by reference.
+    Re-indexes the memory so the superseded_at field is searchable.
+
+    Args:
+        file_path: Path to the .md memory file.
+        superseded_by: Name/ID of the newer memory that supersedes this one.
+
+    Returns:
+        True if successfully superseded, False otherwise.
+    """
+    if not file_path.exists():
+        return False
+
+    text = file_path.read_text(encoding="utf-8")
+    now = datetime.now().isoformat()
+
+    if "superseded_at:" in text:
+        # Already superseded
+        return True
+
+    # Insert superseded_at into frontmatter
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            frontmatter = parts[1].rstrip()
+            body = parts[2]
+            supersede_line = f"\nsuperseded_at: {now}"
+            if superseded_by:
+                supersede_line += f"\nsuperseded_by: {superseded_by}"
+            new_text = f"---{frontmatter}{supersede_line}\n---{body}"
+            file_path.write_text(new_text, encoding="utf-8")
+
+            # Re-index to update LanceDB record
+            try:
+                index_memory(file_path)
+            except Exception as exc:
+                logger.debug("Re-index after supersede failed: %s", exc)
+
+            logger.info("Superseded memory: %s", file_path.name)
+            return True
+
+    return False
 
 
 def learn_and_index(content: str, tags: list[str] | None = None, source: str = "auto-learn") -> dict:

@@ -90,6 +90,7 @@ class RecallRequest(BaseModel):
     since: str | None = None
     until: str | None = None
     category: str | None = None
+    include_superseded: bool = False
 
     model_config = {"str_max_length": 2000}
 
@@ -164,6 +165,7 @@ def recall(req: RecallRequest):
     result = core.recall(
         req.query, req.top_k,
         since=req.since, until=req.until, category=req.category,
+        include_superseded=req.include_superseded,
     )
     return ApiResponse(data=result)
 

@@ -50,7 +50,7 @@ class TestMemory:
     def test_recall(self, mock_recall):
         resp = client.post("/recall", json={"query": "database", "top_k": 3})
         assert resp.status_code == 200
-        mock_recall.assert_called_once_with("database", 3, since=None, until=None, category=None)
+        mock_recall.assert_called_once_with("database", 3, since=None, until=None, category=None, include_superseded=False)
 
     @patch("src.core.recall", return_value="Found 1 memory")
     def test_recall_with_filters(self, mock_recall):
@@ -62,6 +62,7 @@ class TestMemory:
         assert resp.status_code == 200
         mock_recall.assert_called_once_with(
             "database", 5, since="2026-03-01", until=None, category="decision",
+            include_superseded=False,
         )
 
     @patch("src.core.learn", return_value="Learned and indexed")
