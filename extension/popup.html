@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 320px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+    }
+    .header {
+      padding: 16px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .header .dot {
+      color: #3b82f6;
+      font-size: 18px;
+    }
+    .status {
+      padding: 12px 16px;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+    }
+    .status-dot.ok { background: #10b981; }
+    .status-dot.err { background: #ef4444; }
+    .section {
+      padding: 16px;
+    }
+    .section h2 {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #e2e8f0;
+      padding: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    input[type="text"] {
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #e2e8f0;
+      padding: 6px 8px;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover { background: #2563eb; }
+    button:disabled { background: #334155; cursor: not-allowed; }
+    .settings {
+      padding: 12px 16px;
+      border-top: 1px solid #1e293b;
+    }
+    .settings label {
+      display: block;
+      color: #94a3b8;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .msg {
+      padding: 8px;
+      margin-top: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+    }
+    .msg.ok { background: #064e3b; color: #6ee7b7; display: block; }
+    .msg.err { background: #7f1d1d; color: #fca5a5; display: block; }
+    a { color: #60a5fa; text-decoration: none; font-size: 12px; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="dot">&#9670;</span>
+    <h1>Tessera</h1>
+  </div>
+
+  <div class="status" id="status">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Checking...</span>
+  </div>
+
+  <div class="section">
+    <h2>Quick Save</h2>
+    <textarea id="content" placeholder="Type or paste something to remember..."></textarea>
+    <input type="text" id="tags" placeholder="Tags (comma-separated)">
+    <button id="save-btn">Save to Tessera</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="section">
+    <h2>Quick Search</h2>
+    <input type="text" id="query" placeholder="Search your knowledge...">
+    <button id="search-btn">Search</button>
+    <div id="results" style="margin-top:8px;font-size:12px;color:#94a3b8"></div>
+  </div>
+
+  <div class="settings">
+    <label>Tessera URL</label>
+    <input type="text" id="url" placeholder="http://localhost:8394">
+    <label style="margin-top:8px">API Key (optional)</label>
+    <input type="text" id="apikey" placeholder="Leave empty if not set">
+    <button id="save-settings" style="background:#334155;margin-top:8px">Save Settings</button>
+    <div style="margin-top:8px;text-align:center">
+      <a href="http://localhost:8394/dashboard" target="_blank">Open Dashboard</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
