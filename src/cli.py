@@ -579,8 +579,13 @@ def cmd_install_mcp(args: argparse.Namespace) -> None:
     print("Restart Claude Desktop to apply changes.")
 
 
-def cmd_serve(_args: argparse.Namespace) -> None:
+def cmd_serve(args: argparse.Namespace) -> None:
     """Start the MCP server."""
+    sse_port = getattr(args, "sse", None)
+    if sse_port is not None:
+        # Inject --sse arg for mcp_server.main() to parse
+        import sys
+        sys.argv = ["tessera-mcp", "--sse", str(sse_port)]
     from mcp_server import main as mcp_main
     mcp_main()
 
@@ -612,6 +617,8 @@ def cli() -> None:
 
     # serve
     serve_parser = subparsers.add_parser("serve", help="Start MCP server")
+    serve_parser.add_argument("--sse", nargs="?", const=8395, type=int, metavar="PORT",
+                              help="Run in SSE mode for remote access (default port: 8395)")
     serve_parser.set_defaults(func=cmd_serve)
 
     # setup

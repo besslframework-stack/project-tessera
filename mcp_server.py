@@ -908,8 +908,36 @@ def list_plugin_hooks() -> str:
 
 
 def main() -> None:
-    """Entry point for the MCP server."""
-    mcp.run()
+    """Entry point for the MCP server.
+
+    Supports two transports:
+    - stdio (default): for Claude Desktop local integration
+    - sse: for remote/network access (e.g., browser extensions, remote clients)
+
+    Usage:
+        tessera-mcp              # stdio (default)
+        tessera-mcp --sse        # SSE on port 8395
+        tessera-mcp --sse 9000   # SSE on custom port
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Tessera MCP Server")
+    parser.add_argument(
+        "--sse",
+        nargs="?",
+        const=8395,
+        type=int,
+        metavar="PORT",
+        help="Run in SSE mode (default port: 8395)",
+    )
+    args = parser.parse_args()
+
+    if args.sse is not None:
+        port = args.sse
+        logger.info("Starting Tessera MCP server in SSE mode on port %d", port)
+        mcp.run(transport="sse", sse_params={"host": "127.0.0.1", "port": port})
+    else:
+        mcp.run()
 
 
 if __name__ == "__main__":
