@@ -33,7 +33,7 @@ tessera setup
 | Contradiction detection | Yes | No | No | No |
 | Memory confidence scoring | Yes | No | No | No |
 | Encrypted vault (AES-256) | Yes | No | No | No |
-| HTTP API for non-MCP tools | 37 endpoints | Yes | No | Yes |
+| HTTP API for non-MCP tools | 41 endpoints | Yes | No | Yes |
 | Auto-learning from conversations | Yes | Yes | No | No |
 | MCP tools | 53 | ~10 | ~15 | 24 |
 
@@ -144,7 +144,7 @@ If you set `TESSERA_VAULT_KEY`, all memories are AES-256-CBC encrypted at rest.
     +---------------+  +-------------------+  +--------------+
     | MCP Server    |  | HTTP API Server   |  | CLI          |
     | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
-    | 53 tools      |  | 37 endpoints      |  | setup, sync  |
+    | 53 tools      |  | 41 endpoints      |  | setup, sync  |
     | stdio         |  | port 8394         |  | ingest, api  |
     +---------------+  +-------------------+  +--------------+
            |                    |                     |
@@ -439,7 +439,7 @@ ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup`
 
 ---
 
-## HTTP API (37 endpoints)
+## HTTP API (41 endpoints)
 
 ```bash
 pip install project-tessera[api]
@@ -487,6 +487,10 @@ Swagger UI at `http://127.0.0.1:8394/docs`. Optional auth via `TESSERA_API_KEY` 
 | GET | `/memory-confidence` | Memory reliability scores |
 | GET | `/memory-health` | Memory health analytics |
 | GET | `/hooks` | List plugin hooks |
+| GET | `/entity-search` | Search entity knowledge graph |
+| POST | `/entity-graph` | Mermaid diagram from entities |
+| GET | `/consolidation-candidates` | Find similar memory clusters |
+| POST | `/consolidate` | Merge similar memories |
 | GET | `/chatgpt-actions/openapi.json` | OpenAPI spec for ChatGPT Custom GPT Actions |
 | GET | `/chatgpt-actions/instructions` | GPT instruction template |
 | GET | `/chatgpt-actions/setup` | Full ChatGPT integration setup guide |
@@ -619,11 +623,11 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
-| HTTP endpoints | 37 |
+| HTTP endpoints | 41 |
 | CLI commands | 11 |
-| Core modules | 55 |
-| Lines of code | 12,300+ |
-| Tests | 806 |
+| Core modules | 57 |
+| Lines of code | 13,500+ |
+| Tests | 901 |
 | File types | 40+ |
 
 ---

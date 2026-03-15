@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-tessera"
-version = "1.1.1"
-description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool. 53 MCP tools, REST API, ChatGPT Actions, encryption, local-first."
+version = "1.2.0"
+description = "Tessera — Personal Knowledge Layer for AI. Own your memory across every AI tool. 53 MCP tools, REST API, knowledge graph, memory consolidation, ChatGPT Actions, encryption, local-first."
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
 authors = [

@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0] - 2026-03-15
+
+### Nexus Phase — Knowledge graph, temporal validity, memory consolidation
+
+Tessera now extracts entities and relationships from memories, tracks when knowledge becomes outdated, and merges duplicate memories automatically.
+
+### Added
+- **Entity Extraction** (`src/entity_extraction.py`) — regex-based subject-predicate-object triple extraction from memory text (EN + KO patterns, 16 pattern categories)
+- **Entity Store** (`src/entity_store.py`) — SQLite-backed entity-relationship storage with thread-safe RLock, auto-extract on memory save
+- **Entity Search** (`GET /entity-search`) — search entities with their relationships from the knowledge graph
+- **Entity Graph** (`POST /entity-graph`) — Mermaid diagram from entity-relationship data, filtered by query
+- **Temporal Validity** — `valid_from`/`superseded_at` fields in memory YAML frontmatter
+- **Auto-supersede** — `detect_contradictions()` automatically marks older conflicting memories as superseded
+- **Superseded filter** — `recall()` excludes superseded memories by default (`include_superseded=False`)
+- **`supersede_memory()`** — manually mark a memory as superseded with optional `superseded_by` reference
+- **Memory Consolidation** (`src/consolidation.py`) — find clusters of similar memories and merge them
+- **Consolidation Candidates** (`GET /consolidation-candidates`) — discover similar memory clusters
+- **Consolidate** (`POST /consolidate`) — merge a cluster into one memory, supersede the rest
+- **107 new tests** (32 entity extraction + 22 entity store + 12 temporal validity + 16 entity graph + 13 consolidation + 12 HTTP)
+- Total: 53 MCP tools, 41 HTTP endpoints, 62 core functions, 901 tests
+
+### Changed
+- `recall()` and `/recall` now accept `include_superseded` parameter
+- `index_memory()` parses and stores `valid_from`/`superseded_at` in LanceDB
+- `forget_memory()` cleans up entity relationships
+- New modules: `entity_extraction.py`, `entity_store.py`, `consolidation.py`
+
 ## [1.1.1] - 2026-03-15
 
 ### ChatGPT Custom GPT Actions — real cross-AI integration
