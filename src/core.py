@@ -447,6 +447,138 @@ def explore_connections(query: str, top_k: int = 10) -> str:
     return _explore(query=query.strip(), top_k=top_k)
 
 
+def entity_search(query: str, limit: int = 10) -> str:
+    """Search the entity knowledge graph for entities and their relationships.
+
+    Args:
+        query: Entity name or keyword to search.
+        limit: Max entities to return.
+    """
+    if not query or not query.strip():
+        return "Please provide an entity name or keyword."
+    from src.entity_store import EntityStore
+
+    limit = max(1, min(limit, 50))
+    store = EntityStore()
+    results = store.search_entities_with_memories(query.strip(), limit=limit)
+    if not results:
+        return f"No entities found matching '{query}'."
+
+    parts = []
+    for r in results:
+        ent = r["entity"]
+        rels = r["relationships"]
+        header = f"**{ent['name']}** ({ent['entity_type']}, {ent['mention_count']} mentions)"
+        rel_lines = []
+        for rel in rels[:10]:
+            rel_lines.append(
+                f"  - {rel['subject_name']} → {rel['predicate']} → {rel['object_name']}"
+            )
+        entry = header
+        if rel_lines:
+            entry += "\n" + "\n".join(rel_lines)
+        parts.append(entry)
+
+    return f"Found {len(results)} entities:\n\n" + "\n\n".join(parts)
+
+
+def entity_graph(query: str | None = None, max_nodes: int = 30) -> str:
+    """Build a Mermaid diagram from the entity-relationship knowledge graph.
+
+    Args:
+        query: Optional filter — only entities related to this query.
+        max_nodes: Max entity nodes to include.
+    """
+    from src.entity_store import EntityStore
+
+    max_nodes = max(1, min(max_nodes, 100))
+    store = EntityStore()
+
+    if store.entity_count() == 0:
+        return "No entities in the knowledge graph yet. Remember some facts first."
+
+    if query and query.strip():
+        results = store.search_entities_with_memories(query.strip(), limit=max_nodes)
+        if not results:
+            return f"No entities found matching '{query}'."
+        entity_ids = [r["entity"]["id"] for r in results]
+        relationships = []
+        for r in results:
+            relationships.extend(r["relationships"])
+    else:
+        relationships = store.get_all_relationships(limit=max_nodes * 5)
+
+    if not relationships:
+        count = store.entity_count()
+        return f"{count} entities exist but no relationships recorded yet."
+
+    # Deduplicate relationships
+    seen = set()
+    unique_rels = []
+    for rel in relationships:
+        key = (rel["subject_name"], rel["predicate"], rel["object_name"])
+        if key not in seen:
+            seen.add(key)
+            unique_rels.append(rel)
+
+    # Build Mermaid
+    from src.knowledge_graph import _sanitize_mermaid_id, _truncate_label
+
+    type_styles = {
+        "person": ":::person",
+        "technology": ":::tech",
+        "project": ":::project",
+        "organization": ":::org",
+        "concept": ":::concept",
+    }
+
+    lines = ["graph LR"]
+    lines.append("    classDef person fill:#e3f2fd,stroke:#1565c0")
+    lines.append("    classDef tech fill:#e8f5e9,stroke:#2e7d32")
+    lines.append("    classDef project fill:#fff3e0,stroke:#ef6c00")
+    lines.append("    classDef org fill:#fce4ec,stroke:#c62828")
+    lines.append("    classDef concept fill:#f3e5f5,stroke:#6a1b9a")
+
+    node_ids: dict[str, str] = {}
+    node_types: dict[str, str] = {}
+
+    for rel in unique_rels[:max_nodes * 3]:
+        for name, etype in [
+            (rel["subject_name"], rel.get("subject_type", "concept")),
+            (rel["object_name"], rel.get("object_type", "concept")),
+        ]:
+            if name not in node_ids:
+                nid = _sanitize_mermaid_id(name) + f"_{len(node_ids)}"
+                node_ids[name] = nid
+                node_types[name] = etype
+
+    # Limit total nodes
+    all_names = list(node_ids.keys())[:max_nodes]
+    allowed = set(all_names)
+
+    for name in all_names:
+        nid = node_ids[name]
+        label = _truncate_label(name)
+        style = type_styles.get(node_types.get(name, "concept"), ":::concept")
+        lines.append(f'    {nid}["{label}"]{style}')
+
+    edge_count = 0
+    for rel in unique_rels:
+        subj = rel["subject_name"]
+        obj = rel["object_name"]
+        if subj in allowed and obj in allowed:
+            pred = _truncate_label(rel["predicate"], 15)
+            lines.append(f"    {node_ids[subj]} -->|{pred}| {node_ids[obj]}")
+            edge_count += 1
+
+    mermaid = "\n".join(lines)
+    summary = (
+        f"Entity Graph: {len(all_names)} entities, {edge_count} relationships\n\n"
+        f"```mermaid\n{mermaid}\n```"
+    )
+    return summary
+
+
 # --- Unified Search ---
 
 

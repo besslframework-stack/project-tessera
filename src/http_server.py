@@ -419,6 +419,23 @@ def contradictions_endpoint():
     return ApiResponse(data=result)
 
 
+@app.get("/entity-search", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def entity_search_endpoint(query: str = Query(...), limit: int = Query(default=10, ge=1, le=50)):
+    result = core.entity_search(query, limit)
+    return ApiResponse(data=result)
+
+
+class EntityGraphRequest(BaseModel):
+    query: str | None = None
+    max_nodes: int = 30
+
+
+@app.post("/entity-graph", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def entity_graph_endpoint(req: EntityGraphRequest):
+    result = core.entity_graph(req.query, req.max_nodes)
+    return ApiResponse(data=result)
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------
