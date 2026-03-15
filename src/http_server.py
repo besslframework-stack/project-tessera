@@ -436,6 +436,24 @@ def entity_graph_endpoint(req: EntityGraphRequest):
     return ApiResponse(data=result)
 
 
+@app.get("/consolidation-candidates", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def consolidation_candidates_endpoint(
+    threshold: float = Query(default=0.85, ge=0.5, le=0.99),
+    max_clusters: int = Query(default=20, ge=1, le=50),
+):
+    result = core.find_consolidation_candidates(threshold, max_clusters)
+    return ApiResponse(data=result)
+
+
+@app.post("/consolidate", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def consolidate_endpoint(
+    cluster_index: int = Query(default=1, ge=1),
+    threshold: float = Query(default=0.85, ge=0.5, le=0.99),
+):
+    result = core.consolidate_memories(cluster_index, threshold)
+    return ApiResponse(data=result)
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------

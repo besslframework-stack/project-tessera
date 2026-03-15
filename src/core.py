@@ -579,6 +579,78 @@ def entity_graph(query: str | None = None, max_nodes: int = 30) -> str:
     return summary
 
 
+# --- Memory Consolidation ---
+
+
+def find_consolidation_candidates(
+    threshold: float = 0.85,
+    max_clusters: int = 20,
+) -> str:
+    """Find clusters of similar memories that could be consolidated.
+
+    Args:
+        threshold: Similarity threshold (0.0-1.0). Higher = stricter matching.
+        max_clusters: Max clusters to return.
+    """
+    from src.consolidation import find_similar_clusters
+
+    threshold = max(0.5, min(threshold, 0.99))
+    max_clusters = max(1, min(max_clusters, 50))
+
+    clusters = find_similar_clusters(threshold=threshold, max_clusters=max_clusters)
+    if not clusters:
+        return "No similar memory clusters found. Your memories are well-differentiated."
+
+    parts = [f"Found {len(clusters)} clusters of similar memories:\n"]
+    for i, cluster in enumerate(clusters, 1):
+        mems = cluster["memories"]
+        sim = cluster["similarity"] * 100
+        parts.append(f"**Cluster {i}** ({len(mems)} memories, {sim:.0f}% similar)")
+        for m in mems[:5]:
+            content = m.get("content", "")[:80]
+            date = m.get("date", "")[:10]
+            parts.append(f"  - [{date}] {content}...")
+        if len(mems) > 5:
+            parts.append(f"  ...and {len(mems) - 5} more")
+        parts.append("")
+
+    parts.append(
+        "Use consolidate_memories(cluster_index) to merge a cluster into one memory."
+    )
+    return "\n".join(parts)
+
+
+def consolidate_memories(cluster_index: int = 1, threshold: float = 0.85) -> str:
+    """Consolidate a cluster of similar memories into one.
+
+    Args:
+        cluster_index: Which cluster to consolidate (1-based, from find_consolidation_candidates).
+        threshold: Similarity threshold used to find clusters.
+    """
+    from src.consolidation import consolidate_cluster, find_similar_clusters
+
+    threshold = max(0.5, min(threshold, 0.99))
+    clusters = find_similar_clusters(threshold=threshold, max_clusters=50)
+
+    if not clusters:
+        return "No similar memory clusters found."
+
+    idx = max(0, cluster_index - 1)
+    if idx >= len(clusters):
+        return f"Cluster {cluster_index} not found. Only {len(clusters)} clusters available."
+
+    cluster = clusters[idx]
+    result = consolidate_cluster(cluster)
+
+    superseded = result["superseded_count"]
+    content = result["merged_content"]
+    return (
+        f"Consolidated {len(cluster['memories'])} memories into one.\n"
+        f"Superseded: {superseded} old memories\n"
+        f"New memory: {content[:200]}..."
+    )
+
+
 # --- Unified Search ---
 
 
