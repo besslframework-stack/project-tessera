@@ -505,6 +505,13 @@ def auto_insights_endpoint(days: int = Query(default=7, ge=1, le=365)):
     return ApiResponse(data=result)
 
 
+@app.get("/health-pulse", response_model=ApiResponse, tags=["intelligence"])
+def health_pulse_endpoint():
+    from src.quiet_curation import get_health_pulse
+    pulse = get_health_pulse()
+    return ApiResponse(data=pulse or "No maintenance activity since last restart.")
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------

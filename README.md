@@ -629,7 +629,7 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
-| HTTP endpoints | 48 |
+| HTTP endpoints | 49 |
 | CLI commands | 11 |
 | Core modules | 61 |
 | Lines of code | 16,000+ |

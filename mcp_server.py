@@ -87,6 +87,16 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
             loop.run_in_executor(None, _do_background_sync)
             logger.info("Auto-sync started in background")
 
+            # Run quiet curation after sync (non-blocking)
+            def _do_quiet_curation() -> None:
+                try:
+                    from src.quiet_curation import run_quiet_curation
+                    run_quiet_curation()
+                except Exception as exc:
+                    logger.debug("Quiet curation skipped: %s", exc)
+
+            loop.run_in_executor(None, _do_quiet_curation)
+
             ctx["meta_db"] = meta_db
 
             # Start file watcher for continuous auto-sync
