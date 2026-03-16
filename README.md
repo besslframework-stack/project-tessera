@@ -10,9 +10,9 @@
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" />
 </a>
 
-**Your AI conversations generate knowledge that vanishes when the session ends. Tessera keeps it.**
+**Every AI conversation produces knowledge. When the session ends, it's gone. Tessera keeps it.**
 
-One knowledge base across Claude, ChatGPT, Gemini, and Copilot. No API keys. No Docker. No data leaves your machine.
+One knowledge base shared across Claude, ChatGPT, Gemini, and Copilot. Runs locally. No API keys, no Docker, no data leaving your machine.
 
 ```bash
 pip install project-tessera
@@ -37,15 +37,14 @@ tessera setup
 | Auto-learning from conversations | Yes | Yes | No | No |
 | MCP tools | 53 | ~10 | ~15 | 24 |
 
-### What makes Tessera different
+### The short version
 
-ChatGPT can call Tessera's API directly through Custom GPT Actions -- same knowledge base, live access, no manual export. You build one knowledge base and both Claude (MCP) and ChatGPT (HTTP Actions) read and write to it.
+Most memory tools store text and search it. Tessera does that, plus:
 
-Tessera also does things most memory tools skip: scanning for contradictions between old and new memories, scoring how confident you should be in each memory based on how often it's been reinforced, and flagging knowledge that's gone stale.
-
-Setup is `pip install` and go. LanceDB and fastembed run embedded -- no Docker, no database server, no API keys, no cloud account.
-
-If you set `TESSERA_VAULT_KEY`, all memories are AES-256-CBC encrypted at rest.
+- **Cross-AI**: ChatGPT calls Tessera's API through Custom GPT Actions. One knowledge base, two AIs reading and writing to it live.
+- **Self-maintaining**: finds contradictions between old and new memories, scores confidence by reinforcement frequency, flags stale knowledge, auto-merges near-duplicates.
+- **Zero infrastructure**: `pip install` and go. LanceDB and fastembed are embedded -- no Docker, no database server, no API keys.
+- **Encrypted**: set `TESSERA_VAULT_KEY` and all memories are AES-256-CBC encrypted at rest.
 
 ---
 
@@ -144,7 +143,7 @@ If you set `TESSERA_VAULT_KEY`, all memories are AES-256-CBC encrypted at rest.
     +---------------+  +-------------------+  +--------------+
     | MCP Server    |  | HTTP API Server   |  | CLI          |
     | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
-    | 53 tools      |  | 41 endpoints      |  | setup, sync  |
+    | 53 tools      |  | 47 endpoints      |  | setup, sync  |
     | stdio         |  | port 8394         |  | ingest, api  |
     +---------------+  +-------------------+  +--------------+
            |                    |                     |
@@ -205,14 +204,14 @@ Full setup guide at `http://127.0.0.1:8394/chatgpt-actions/setup`. Swagger docs 
 
 ### Hybrid search with reranking
 
-Search queries go through a 4-stage retrieval pipeline:
+Every search goes through four stages:
 
-1. **Query decomposition** -- splits complex queries into 2-4 search angles (core keywords, individual terms, reversed emphasis)
-2. **Hybrid retrieval** -- vector similarity (LanceDB) + keyword matching (FTS/BM25) in parallel
-3. **Reranking** -- LinearCombinationReranker merges results (70% semantic, 30% keyword weight)
-4. **Verdict scoring** -- each result labeled as `confident match` (>= 45%), `possible match` (25-45%), or `low relevance` (< 25%)
+1. Query decomposition -- the query is split into 2-4 search angles (core keywords, individual terms, reversed emphasis)
+2. Hybrid retrieval -- vector similarity (LanceDB) and keyword matching (FTS/BM25) run in parallel
+3. Reranking -- a LinearCombinationReranker merges the two result sets (70% semantic, 30% keyword weight)
+4. Verdict scoring -- each result gets a label: `confident match` (>= 45%), `possible match` (25-45%), or `low relevance` (< 25%)
 
-Version-aware: when multiple versions of the same document exist, Tessera automatically prefers the latest.
+When multiple versions of the same document exist, Tessera prefers the latest.
 
 ### Cross-session memory
 
@@ -226,15 +225,15 @@ curl -X POST http://127.0.0.1:8394/remember \
   -d '{"content": "Use PostgreSQL for production", "tags": ["db", "architecture"]}'
 ```
 
-Memories are auto-categorized (decision, preference, or fact), deduplicated via cosine similarity (0.92 threshold), and scored for confidence based on repetition (35%), recency (25%), source diversity (20%), and category weight (20%). If `TESSERA_VAULT_KEY` is set, they're AES-256-CBC encrypted at rest.
+Each memory gets a category (decision, preference, or fact), is checked for duplicates against existing memories (cosine similarity, 0.92 threshold), and receives a confidence score -- weighted by repetition (35%), recency (25%), source diversity (20%), and category (20%). Set `TESSERA_VAULT_KEY` to encrypt all memories with AES-256-CBC.
 
 ### Auto-learning
 
-Extracts decisions, preferences, and facts from conversations. Turn it on/off with `toggle_auto_learn`, see what it picked up with `review_learned`.
+Tessera picks up decisions, preferences, and facts from your conversations without being asked. `toggle_auto_learn` turns it on or off; `review_learned` shows what it caught.
 
 ### Contradiction detection
 
-Scans your memories for conflicting statements:
+Memories contradict each other over time. Tessera finds them:
 
 ```
 CONTRADICTION (HIGH severity):
@@ -245,11 +244,11 @@ CONTRADICTION (HIGH severity):
   The newer memory (2026-03-10) likely reflects the current state.
 ```
 
-Supports both English and Korean negation patterns.
+Works with both English and Korean negation patterns.
 
 ### Cross-AI: ChatGPT Custom GPT Actions
 
-ChatGPT can call Tessera's HTTP API directly through Custom GPT Actions. No export/import -- it reads and writes your knowledge base in real time, same as Claude does through MCP.
+ChatGPT talks to Tessera's HTTP API through Custom GPT Actions. No export/import step -- it reads and writes the same knowledge base Claude uses through MCP, in real time.
 
 ```bash
 # 1. Start Tessera API + tunnel
@@ -266,7 +265,7 @@ curl https://your-tunnel.ngrok-free.app/chatgpt-actions/instructions
 curl https://your-tunnel.ngrok-free.app/chatgpt-actions/setup
 ```
 
-Create a Custom GPT, paste the instructions, import the OpenAPI spec as an Action, and ChatGPT can search your documents, save memories, recall past decisions -- all hitting the same knowledge base Claude uses.
+Create a Custom GPT, paste the instructions, import the OpenAPI spec as an Action. ChatGPT can then search your documents, save memories, and recall past decisions from the same knowledge base.
 
 You can also import past ChatGPT conversations to extract knowledge from them:
 
@@ -282,13 +281,13 @@ Export as Obsidian vault (wikilinks), Markdown, CSV, or JSON:
 curl http://127.0.0.1:8394/export?format=obsidian
 ```
 
-### Memory health analytics
+### Memory health
 
-Classifies memories as healthy, stale (90+ days without reinforcement), or orphaned (minimal metadata, no category). Suggests what to clean up and shows growth over time.
+Each memory is healthy, stale (90+ days without reinforcement), or orphaned (no metadata, no category). The health report tells you what to clean up and tracks growth over time.
 
 ### Plugin hooks
 
-Extend Tessera with custom scripts triggered on events:
+Run your own scripts when things happen:
 
 ```yaml
 # workspace.yaml
@@ -370,9 +369,9 @@ hooks:
 
 | Tool | What it does |
 |------|-------------|
-| `decision_timeline` | Track how decisions evolved over time, grouped by topic |
-| `context_window` | Build optimal context within a token budget |
-| `smart_suggest` | Personalized query suggestions based on past patterns |
+| `decision_timeline` | How your decisions changed over time, by topic |
+| `context_window` | Pack the best context into a token budget |
+| `smart_suggest` | Query suggestions based on your past searches |
 | `topic_map` | Cluster memories by topic with Mermaid mindmap |
 | `knowledge_stats` | Aggregate statistics (categories, tags, growth) |
 | `user_profile` | Auto-built profile (language, preferences, expertise) |
@@ -385,12 +384,12 @@ hooks:
 
 | Tool | What it does |
 |------|-------------|
-| `deep_search` | Multi-angle search: decomposes query into 2-4 perspectives, merges best results |
+| `deep_search` | Breaks a query into 2-4 angles, searches each, merges best results |
 | `deep_recall` | Multi-angle memory recall with verdict labels |
-| `detect_contradictions` | Scan memories for conflicting statements with severity rating |
-| `memory_confidence` | Rate each memory's reliability (repetition, recency, source diversity) |
-| `memory_health` | Classify memories as healthy/stale/orphaned with cleanup recommendations |
-| `list_plugin_hooks` | View registered event hooks and extensibility points |
+| `detect_contradictions` | Find conflicting memories with severity rating |
+| `memory_confidence` | How reliable is each memory (repetition, recency, source diversity) |
+| `memory_health` | Which memories are healthy, stale, or orphaned |
+| `list_plugin_hooks` | See what hooks are registered |
 
 </details>
 
@@ -431,7 +430,7 @@ ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup`
 | `organize_files` | Move, rename, archive files |
 | `suggest_cleanup` | Detect backup files, empty dirs, misplaced files |
 | `tessera_status` | Server health: tracked files, sync history, cache |
-| `health_check` | Comprehensive workspace diagnostics |
+| `health_check` | Full workspace diagnostics |
 | `search_analytics` | Search usage patterns, top queries, response times |
 | `check_document_freshness` | Detect stale documents older than N days |
 
@@ -439,7 +438,7 @@ ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup`
 
 ---
 
-## HTTP API (41 endpoints)
+## HTTP API (47 endpoints)
 
 ```bash
 pip install project-tessera[api]
@@ -491,9 +490,15 @@ Swagger UI at `http://127.0.0.1:8394/docs`. Optional auth via `TESSERA_API_KEY` 
 | POST | `/entity-graph` | Mermaid diagram from entities |
 | GET | `/consolidation-candidates` | Find similar memory clusters |
 | POST | `/consolidate` | Merge similar memories |
-| GET | `/chatgpt-actions/openapi.json` | OpenAPI spec for ChatGPT Custom GPT Actions |
+| GET | `/dashboard` | Web dashboard (dark theme, entity graph, stats) |
+| POST | `/sleep-consolidate` | Auto-merge near-duplicate memories |
+| POST | `/retention-policy` | Flag old or low-quality memories |
+| GET | `/retention-summary` | Age distribution and at-risk counts |
+| GET | `/adapters/{framework}` | Setup code for LangChain, CrewAI, AutoGen |
+| POST | `/auto-curate` | Classify, tag, deduplicate, and clean up memories |
+| GET | `/chatgpt-actions/openapi.json` | OpenAPI spec for Custom GPT Actions |
 | GET | `/chatgpt-actions/instructions` | GPT instruction template |
-| GET | `/chatgpt-actions/setup` | Full ChatGPT integration setup guide |
+| GET | `/chatgpt-actions/setup` | ChatGPT integration setup guide |
 
 </details>
 
@@ -627,7 +632,7 @@ Environment variables:
 | CLI commands | 11 |
 | Core modules | 61 |
 | Lines of code | 16,000+ |
-| Tests | 976 |
+| Tests | 996 |
 | File types | 40+ |
 
 ---
