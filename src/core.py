@@ -2210,3 +2210,22 @@ def auto_curate() -> str:
         lines.append("Memory base is clean. No curation needed.")
 
     return "\n".join(lines)
+
+
+def auto_insights(days: int = 7) -> str:
+    """Generate auto-insights from accumulated memories.
+
+    Finds trending topics, decision patterns, hidden connections,
+    and builds a digest of recent activity.
+    """
+    from src.auto_insight import format_insights, generate_insights
+
+    result = generate_insights(days=days)
+
+    _log_interaction(
+        "auto_insights",
+        f"days={days}",
+        f"recent={result['recent_count']} trends={len(result['trending_topics'])}",
+    )
+
+    return format_insights(result)

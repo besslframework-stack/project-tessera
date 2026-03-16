@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/project-tessera)](https://pypi.org/project/project-tessera/)
 [![Downloads](https://img.shields.io/pypi/dm/project-tessera)](https://pypi.org/project/project-tessera/)
-[![Tests](https://img.shields.io/badge/tests-996%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-1016%20passing-brightgreen)]()
 [![Python](https://img.shields.io/pypi/pyversions/project-tessera)](https://pypi.org/project/project-tessera/)
 [![License](https://img.shields.io/pypi/l/project-tessera)](https://github.com/besslframework-stack/project-tessera/blob/main/LICENSE)
 
@@ -33,7 +33,7 @@ tessera setup
 | Contradiction detection | Yes | No | No | No |
 | Memory confidence scoring | Yes | No | No | No |
 | Encrypted vault (AES-256) | Yes | No | No | No |
-| HTTP API for non-MCP tools | 47 endpoints | Yes | No | Yes |
+| HTTP API for non-MCP tools | 48 endpoints | Yes | No | Yes |
 | Auto-learning from conversations | Yes | Yes | No | No |
 | MCP tools | 53 | ~10 | ~15 | 24 |
 
@@ -143,7 +143,7 @@ Most memory tools store text and search it. Tessera does that, plus:
     +---------------+  +-------------------+  +--------------+
     | MCP Server    |  | HTTP API Server   |  | CLI          |
     | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
-    | 53 tools      |  | 47 endpoints      |  | setup, sync  |
+    | 53 tools      |  | 48 endpoints      |  | setup, sync  |
     | stdio         |  | port 8394         |  | ingest, api  |
     +---------------+  +-------------------+  +--------------+
            |                    |                     |
@@ -438,7 +438,7 @@ ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup`
 
 ---
 
-## HTTP API (47 endpoints)
+## HTTP API (48 endpoints)
 
 ```bash
 pip install project-tessera[api]
@@ -496,6 +496,7 @@ Swagger UI at `http://127.0.0.1:8394/docs`. Optional auth via `TESSERA_API_KEY` 
 | GET | `/retention-summary` | Age distribution and at-risk counts |
 | GET | `/adapters/{framework}` | Setup code for LangChain, CrewAI, AutoGen |
 | POST | `/auto-curate` | Classify, tag, deduplicate, and clean up memories |
+| GET | `/auto-insights` | Trending topics, decision patterns, hidden connections |
 | GET | `/chatgpt-actions/openapi.json` | OpenAPI spec for Custom GPT Actions |
 | GET | `/chatgpt-actions/instructions` | GPT instruction template |
 | GET | `/chatgpt-actions/setup` | ChatGPT integration setup guide |
@@ -628,11 +629,11 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
-| HTTP endpoints | 47 |
+| HTTP endpoints | 48 |
 | CLI commands | 11 |
 | Core modules | 61 |
 | Lines of code | 16,000+ |
-| Tests | 996 |
+| Tests | 1016 |
 | File types | 40+ |
 
 ---

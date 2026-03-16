@@ -499,6 +499,12 @@ def auto_curate_endpoint():
     return ApiResponse(data=result)
 
 
+@app.get("/auto-insights", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def auto_insights_endpoint(days: int = Query(default=7, ge=1, le=365)):
+    result = core.auto_insights(days=days)
+    return ApiResponse(data=result)
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------
