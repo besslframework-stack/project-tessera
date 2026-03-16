@@ -1,8 +1,8 @@
 # Changelog
 
-## [1.4.1] - 2026-03-16
+## [1.5.0] - 2026-03-17
 
-### Auto-curation pipeline, NL time query, pre-commit integrity hook
+### Moat Phase — 5 strategic directions for competitive defensibility
 
 - **Quiet Curation** (`src/quiet_curation.py`) -- background maintenance on MCP server startup: classify, tag, extract entities, resolve contradictions, consolidate, flag retention
 - **Health Pulse** (`GET /health-pulse`) -- compact summary of last background maintenance
