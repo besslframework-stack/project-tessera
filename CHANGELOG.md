@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1] - 2026-03-16
+
+### Auto-curation pipeline, pre-commit integrity hook, README cleanup
+
+- **Auto-Curation** (`POST /auto-curate`) -- classify uncategorized memories, extract tags, resolve contradictions, consolidate duplicates, flag stale memories in one call
+- **Pre-commit hook** -- 6 automated checks (syntax, version consistency, endpoint count, sensitive files, imports, full test suite) before every commit
+- **README humanized** -- removed AI writing patterns, fixed stale endpoint/test counts
+- 20 new tests (996 total)
+- Total: 53 MCP tools, 47 HTTP endpoints, 996 tests
+
 ## [1.4.0] - 2026-03-16
 
 ### Cortex II Phase — Sleep consolidation, retention policy, agent adapters, auto-curation
