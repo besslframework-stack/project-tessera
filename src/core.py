@@ -2158,3 +2158,55 @@ def get_agent_adapter(framework: str) -> str:
     )
 
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Auto-Curation
+# ---------------------------------------------------------------------------
+
+
+def auto_curate() -> str:
+    """Run the automatic curation pipeline.
+
+    Classifies, tags, extracts entities, resolves contradictions,
+    consolidates duplicates, and flags stale memories — all in one call.
+    """
+    from src.auto_curator import run_auto_curation
+
+    result = run_auto_curation()
+
+    _log_interaction(
+        "auto_curate",
+        "full pipeline",
+        f"classified={result['classified']} tagged={result['tagged']} "
+        f"entities={result['entities_extracted']} "
+        f"contradictions={result['contradictions_resolved']} "
+        f"consolidated={result['consolidated']}",
+    )
+
+    lines = [
+        "# Auto-Curation Report",
+        "",
+        f"- Classified: {result['classified']} memories categorized",
+        f"- Tagged: {result['tagged']} memories got new tags",
+        f"- Entities extracted: {result['entities_extracted']} new relationships",
+        f"- Contradictions resolved: {result['contradictions_resolved']}",
+        f"- Consolidated: {result['consolidated']} duplicate memories merged",
+        f"- Retention flagged: {result['retention_flagged']} at-risk memories",
+    ]
+
+    errs = result.get("errors", [])
+    if errs:
+        lines.append("")
+        lines.append(f"Errors ({len(errs)}): {'; '.join(errs)}")
+
+    total_actions = (
+        result["classified"] + result["tagged"]
+        + result["entities_extracted"] + result["contradictions_resolved"]
+        + result["consolidated"]
+    )
+    if total_actions == 0:
+        lines.append("")
+        lines.append("Memory base is clean. No curation needed.")
+
+    return "\n".join(lines)

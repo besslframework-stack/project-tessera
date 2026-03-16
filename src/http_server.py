@@ -493,6 +493,12 @@ def adapters_endpoint(framework: str):
     return ApiResponse(data=result)
 
 
+@app.post("/auto-curate", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def auto_curate_endpoint():
+    result = core.auto_curate()
+    return ApiResponse(data=result)
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------

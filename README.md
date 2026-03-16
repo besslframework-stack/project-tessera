@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/project-tessera)](https://pypi.org/project/project-tessera/)
 [![Downloads](https://img.shields.io/pypi/dm/project-tessera)](https://pypi.org/project/project-tessera/)
-[![Tests](https://img.shields.io/badge/tests-806%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-996%20passing-brightgreen)]()
 [![Python](https://img.shields.io/pypi/pyversions/project-tessera)](https://pypi.org/project/project-tessera/)
 [![License](https://img.shields.io/pypi/l/project-tessera)](https://github.com/besslframework-stack/project-tessera/blob/main/LICENSE)
 
@@ -33,7 +33,7 @@ tessera setup
 | Contradiction detection | Yes | No | No | No |
 | Memory confidence scoring | Yes | No | No | No |
 | Encrypted vault (AES-256) | Yes | No | No | No |
-| HTTP API for non-MCP tools | 41 endpoints | Yes | No | Yes |
+| HTTP API for non-MCP tools | 47 endpoints | Yes | No | Yes |
 | Auto-learning from conversations | Yes | Yes | No | No |
 | MCP tools | 53 | ~10 | ~15 | 24 |
 
@@ -623,7 +623,7 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 53 |
-| HTTP endpoints | 46 |
+| HTTP endpoints | 47 |
 | CLI commands | 11 |
 | Core modules | 61 |
 | Lines of code | 16,000+ |
