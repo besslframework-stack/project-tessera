@@ -2,13 +2,16 @@
 
 ## [1.4.1] - 2026-03-16
 
-### Auto-curation pipeline, pre-commit integrity hook, README cleanup
+### Auto-curation pipeline, NL time query, pre-commit integrity hook
 
-- **Auto-Curation** (`POST /auto-curate`) -- classify uncategorized memories, extract tags, resolve contradictions, consolidate duplicates, flag stale memories in one call
+- **Quiet Curation** (`src/quiet_curation.py`) -- background maintenance on MCP server startup: classify, tag, extract entities, resolve contradictions, consolidate, flag retention
+- **Health Pulse** (`GET /health-pulse`) -- compact summary of last background maintenance
+- **Auto-Insights** (`GET /auto-insights`) -- trending topics, decision patterns, hidden connections, weekly digest
+- **NL Time Query** (`src/time_parser.py`) -- bilingual (EN+KO) natural language time expressions auto-detected in recall/unified-search queries ("yesterday", "지난주", "3월 초")
 - **Pre-commit hook** -- 6 automated checks (syntax, version consistency, endpoint count, sensitive files, imports, full test suite) before every commit
-- **README humanized** -- removed AI writing patterns, fixed stale endpoint/test counts
-- 20 new tests (996 total)
-- Total: 53 MCP tools, 47 HTTP endpoints, 996 tests
+- **README humanized** -- removed AI writing patterns
+- 60 new tests (1056 total)
+- Total: 53 MCP tools, 49 HTTP endpoints, 1056 tests
 
 ## [1.4.0] - 2026-03-16
 

@@ -360,11 +360,23 @@ def recall(
         return "Please provide a search query."
     from src.config import workspace
     from src.memory import recall_memories
+    from src.time_parser import parse_time_expression, strip_time_expression
 
     top_k = max(1, min(top_k, workspace.search.max_top_k))
 
+    # Auto-detect time expressions when no explicit date filters given
+    search_query = query.strip()
+    if since is None and until is None:
+        time_range = parse_time_expression(search_query)
+        if time_range is not None:
+            since = time_range.start
+            until = time_range.end
+            stripped = strip_time_expression(search_query)
+            if stripped:
+                search_query = stripped
+
     memories = recall_memories(
-        query.strip(), top_k=top_k, since=since, until=until, category=category,
+        search_query, top_k=top_k, since=since, until=until, category=category,
         include_superseded=include_superseded,
     )
     filters = []
@@ -672,12 +684,24 @@ def unified_search(
     import time as _time
     _t0 = _time.monotonic()
 
+    # Auto-detect time expressions for memory filtering
+    from src.time_parser import parse_time_expression, strip_time_expression
+    time_range = parse_time_expression(query)
+    mem_since = mem_until = None
+    search_query = query
+    if time_range is not None:
+        mem_since = time_range.start
+        mem_until = time_range.end
+        stripped = strip_time_expression(query)
+        if stripped:
+            search_query = stripped
+
     parts = []
     mem_count = 0
 
     # 1. Document search
     try:
-        doc_results = search(query, top_k=top_k, project=project, doc_type=doc_type)
+        doc_results = search(search_query, top_k=top_k, project=project, doc_type=doc_type)
     except Exception as exc:
         logger.error("Document search failed: %s", exc)
         doc_results = []
@@ -702,7 +726,7 @@ def unified_search(
     try:
         from src.memory import recall_memories
 
-        memories = recall_memories(query, top_k=min(top_k, 5))
+        memories = recall_memories(search_query, top_k=min(top_k, 5), since=mem_since, until=mem_until)
         if memories:
             mem_count = len(memories)
             parts.append(f"\n## Memories ({mem_count} results)")
