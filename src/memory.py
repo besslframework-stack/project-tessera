@@ -96,6 +96,7 @@ def save_memory(
     parent_ids: list[str] | None = None,
     source_document: str | None = None,
     tool_name: str | None = None,
+    project: str | None = None,
 ) -> Path:
     """Save a memory as a timestamped markdown file.
 
@@ -161,6 +162,8 @@ def save_memory(
         f"category: {category}",
         f"tags: [{tag_str}]",
     ]
+    if project:
+        frontmatter_lines.append(f"project: {project}")
     if prov_yaml:
         frontmatter_lines.append(prov_yaml)
     frontmatter_lines.append("---")
@@ -199,6 +202,7 @@ def recall_memories(
     until: str | None = None,
     category: str | None = None,
     include_superseded: bool = False,
+    project: str | None = None,
 ) -> list[dict]:
     """Search memories using vector similarity with optional time and category filters.
 
@@ -229,7 +233,7 @@ def recall_memories(
     vector = embed_query(query)
 
     # Fetch more results when filtering, to compensate for post-filter reduction
-    has_filters = since or until or category or (not include_superseded)
+    has_filters = since or until or category or project or (not include_superseded)
     fetch_k = top_k * 3 if has_filters else top_k
 
     try:
@@ -253,6 +257,12 @@ def recall_memories(
         if category and cat_val.lower() != category.lower():
             continue
 
+        # Project filter
+        if project:
+            proj_val = row.get("project", "")
+            if proj_val.lower() != project.lower():
+                continue
+
         # Superseded filter
         if not include_superseded:
             superseded_at = row.get("superseded_at", "")
@@ -269,6 +279,7 @@ def recall_memories(
             "tags": row.get("tags", ""),
             "source": row.get("source", ""),
             "file_path": row.get("file_path", ""),
+            "project": row.get("project", ""),
             "similarity": similarity,
         })
 
@@ -301,6 +312,7 @@ def index_memory(file_path: Path) -> int:
     tags = ""
     valid_from = ""
     superseded_at = ""
+    project = ""
     body = text
     if text.startswith("---"):
         parts = text.split("---", 2)
@@ -320,6 +332,8 @@ def index_memory(file_path: Path) -> int:
                     valid_from = line.split(":", 1)[1].strip()
                 elif line.startswith("superseded_at:"):
                     superseded_at = line.split(":", 1)[1].strip()
+                elif line.startswith("project:"):
+                    project = line.split(":", 1)[1].strip()
 
     if not body.strip():
         return 0
@@ -338,6 +352,7 @@ def index_memory(file_path: Path) -> int:
         "file_path": str(file_path),
         "valid_from": valid_from,
         "superseded_at": superseded_at,
+        "project": project,
     }
 
     db_path = str(settings.data.lancedb_path)
@@ -413,7 +428,7 @@ def supersede_memory(file_path: Path, superseded_by: str = "") -> bool:
     return False
 
 
-def learn_and_index(content: str, tags: list[str] | None = None, source: str = "auto-learn") -> dict:
+def learn_and_index(content: str, tags: list[str] | None = None, source: str = "auto-learn", project: str | None = None) -> dict:
     """Save new knowledge and immediately index it for search.
 
     Dedup is enabled by default — if identical or near-identical content
@@ -431,7 +446,7 @@ def learn_and_index(content: str, tags: list[str] | None = None, source: str = "
             "similarity": existing["similarity"],
         }
 
-    file_path = save_memory(content, tags=tags, source=source, dedup=False)
+    file_path = save_memory(content, tags=tags, source=source, dedup=False, project=project)
     indexed = index_memory(file_path)
     return {
         "file_path": str(file_path),

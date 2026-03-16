@@ -312,9 +312,9 @@ def audit_prd(
         "preferences, or facts should be preserved across conversations."
     )
 )
-def remember(content: str, tags: list[str] | None = None) -> str:
+def remember(content: str, tags: list[str] | None = None, project: str | None = None) -> str:
     """Save a memory for cross-session persistence."""
-    return core.remember(content, tags=tags)
+    return core.remember(content, tags=tags, project=project)
 
 
 @mcp.tool(
@@ -332,9 +332,10 @@ def recall(
     since: str | None = None,
     until: str | None = None,
     category: str | None = None,
+    project: str | None = None,
 ) -> str:
-    """Search past memories with optional time and category filters."""
-    return core.recall(query, top_k=top_k, since=since, until=until, category=category)
+    """Search past memories with optional time, category, and project filters."""
+    return core.recall(query, top_k=top_k, since=since, until=until, category=category, project=project)
 
 
 @mcp.tool(
@@ -700,6 +701,28 @@ def memory_lineage(memory_id: str) -> str:
 def provenance_stats() -> str:
     """Get provenance statistics."""
     return core.provenance_stats()
+
+
+@mcp.tool(
+    description=(
+        "List all project spaces with memory counts, latest activity, "
+        "and top tags. Shows how knowledge is distributed across projects."
+    )
+)
+def list_projects() -> str:
+    """List all project spaces."""
+    return core.list_projects()
+
+
+@mcp.tool(
+    description=(
+        "Assign a memory to a project space. Use this to organize memories "
+        "by project context (e.g., 'tessera', 'frontend-app', 'api-design')."
+    )
+)
+def assign_memory_project(memory_id: str, project: str) -> str:
+    """Assign a memory to a project."""
+    return core.assign_memory_project(memory_id, project)
 
 
 @mcp.tool(

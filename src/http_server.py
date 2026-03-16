@@ -91,6 +91,7 @@ class RecallRequest(BaseModel):
     until: str | None = None
     category: str | None = None
     include_superseded: bool = False
+    project: str | None = None
 
     model_config = {"str_max_length": 2000}
 
@@ -165,7 +166,7 @@ def recall(req: RecallRequest):
     result = core.recall(
         req.query, req.top_k,
         since=req.since, until=req.until, category=req.category,
-        include_superseded=req.include_superseded,
+        include_superseded=req.include_superseded, project=req.project,
     )
     return ApiResponse(data=result)
 
@@ -527,6 +528,18 @@ def memory_lineage_endpoint(memory_id: str):
 @app.get("/provenance-stats", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
 def provenance_stats_endpoint():
     result = core.provenance_stats()
+    return ApiResponse(data=result)
+
+
+@app.get("/projects", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def list_projects_endpoint():
+    result = core.list_projects()
+    return ApiResponse(data=result)
+
+
+@app.post("/assign-project", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def assign_project_endpoint(memory_id: str = Query(...), project: str = Query(...)):
+    result = core.assign_memory_project(memory_id, project)
     return ApiResponse(data=result)
 
 

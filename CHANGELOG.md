@@ -13,8 +13,10 @@
 - **Context Priming** (`src/context_primer.py`, `session_prime` MCP tool, `GET /session-prime`) -- session-start briefing with recent decisions, preferences, active topics, last session summary
 - **Provenance Chain** (`src/provenance.py`, `memory_lineage` + `provenance_stats` MCP tools, `GET /provenance/{id}` + `GET /provenance-stats`) -- track origin, session, and parent lineage of every memory
 - `save_memory()` now auto-attaches provenance metadata (session_id, parent_ids, source_document) to frontmatter
-- 95 new tests (1091 total)
-- Total: 56 MCP tools, 52 HTTP endpoints, 1091 tests
+- **Project Spaces** (`src/project_spaces.py`, `list_projects` + `assign_memory_project` MCP tools, `GET /projects` + `POST /assign-project`) -- project-scoped memory isolation, recall filtering by project, memory reassignment
+- `save_memory()`, `recall_memories()`, `remember()` now support `project` parameter
+- 106 new tests (1102 total)
+- Total: 58 MCP tools, 54 HTTP endpoints, 1102 tests
 
 ## [1.4.0] - 2026-03-16
 

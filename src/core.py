@@ -317,7 +317,7 @@ def audit_prd(
 # --- Memory Tools ---
 
 
-def remember(content: str, tags: list[str] | None = None) -> str:
+def remember(content: str, tags: list[str] | None = None, project: str | None = None) -> str:
     """Save a memory for cross-session persistence."""
     if not content or not content.strip():
         return "What should I remember? Tell me what you'd like to save."
@@ -328,7 +328,7 @@ def remember(content: str, tags: list[str] | None = None) -> str:
     extracted = should_auto_learn(content.strip())
     if extracted and not tags:
         tags = [extracted[0].category]
-    result = learn_and_index(content.strip(), tags=tags, source="user-request")
+    result = learn_and_index(content.strip(), tags=tags, source="user-request", project=project)
     if result.get("deduplicated"):
         sim = result.get("similarity", 0) * 100
         _log_interaction("remember", f"content={content.strip()[:100]!r} tags={tags}", f"dedup ({sim:.0f}%)")
@@ -345,6 +345,7 @@ def recall(
     until: str | None = None,
     category: str | None = None,
     include_superseded: bool = False,
+    project: str | None = None,
 ) -> str:
     """Search past memories using semantic similarity with optional filters.
 
@@ -377,7 +378,7 @@ def recall(
 
     memories = recall_memories(
         search_query, top_k=top_k, since=since, until=until, category=category,
-        include_superseded=include_superseded,
+        include_superseded=include_superseded, project=project,
     )
     filters = []
     if since:
@@ -386,6 +387,8 @@ def recall(
         filters.append(f"until={until}")
     if category:
         filters.append(f"category={category}")
+    if project:
+        filters.append(f"project={project}")
     filter_str = f" [{', '.join(filters)}]" if filters else ""
     _log_interaction("recall", f"query={query.strip()!r} top_k={top_k}{filter_str}", f"{len(memories)} memories found")
 
@@ -1581,6 +1584,24 @@ def provenance_stats() -> str:
     if stats["by_session"]:
         parts.append(f"\n### Sessions: {len(stats['by_session'])} unique")
     return "\n".join(parts)
+
+
+def list_projects() -> str:
+    """List all project spaces with memory counts."""
+    from src.project_spaces import format_project_spaces, list_project_spaces
+    spaces = list_project_spaces()
+    _log_interaction("list_projects", "", f"{len(spaces)} projects")
+    return format_project_spaces(spaces)
+
+
+def assign_memory_project(memory_id: str, project: str) -> str:
+    """Assign a memory to a project space."""
+    from src.project_spaces import assign_project
+    ok = assign_project(memory_id, project)
+    _log_interaction("assign_project", f"id={memory_id} project={project}", "ok" if ok else "not found")
+    if ok:
+        return f"Memory {memory_id} assigned to project '{project}'."
+    return f"Memory {memory_id} not found."
 
 
 def session_prime(days: int = 7) -> str:
