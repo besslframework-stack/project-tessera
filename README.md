@@ -5,6 +5,7 @@
 [![Tests](https://img.shields.io/badge/tests-1102%20passing-brightgreen)]()
 [![Python](https://img.shields.io/pypi/pyversions/project-tessera)](https://pypi.org/project/project-tessera/)
 [![License](https://img.shields.io/pypi/l/project-tessera)](https://github.com/besslframework-stack/project-tessera/blob/main/LICENSE)
+[![Website](https://img.shields.io/badge/website-tessera--dev.vercel.app-blue)](https://tessera-dev.vercel.app)
 
 <a href="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@besslframework-stack/project-tessera/badge" />
@@ -137,7 +138,7 @@ Most memory tools store text and search it. Tessera does that, plus:
                     +--------------------------------------------+
                     |              src/core.py                    |
                     |         58 orchestration functions          |
-                    |   55 specialized modules, 10.5k LOC        |
+                    |   69 specialized modules, 31k LOC           |
                     +--------------------------------------------+
                      /                |                \
     +---------------+  +-------------------+  +--------------+
@@ -631,8 +632,8 @@ Environment variables:
 | MCP tools | 58 |
 | HTTP endpoints | 54 |
 | CLI commands | 11 |
-| Core modules | 61 |
-| Lines of code | 16,000+ |
+| Core modules | 69 |
+| Lines of code | 31,000+ |
 | Tests | 1102 |
 | File types | 40+ |
 
