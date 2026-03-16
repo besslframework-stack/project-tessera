@@ -512,6 +512,12 @@ def health_pulse_endpoint():
     return ApiResponse(data=pulse or "No maintenance activity since last restart.")
 
 
+@app.get("/session-prime", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def session_prime_endpoint(days: int = Query(default=7, ge=1, le=90)):
+    result = core.session_prime(days=days)
+    return ApiResponse(data=result)
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------

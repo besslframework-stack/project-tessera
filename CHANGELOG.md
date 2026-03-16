@@ -10,8 +10,9 @@
 - **NL Time Query** (`src/time_parser.py`) -- bilingual (EN+KO) natural language time expressions auto-detected in recall/unified-search queries ("yesterday", "지난주", "3월 초")
 - **Pre-commit hook** -- 6 automated checks (syntax, version consistency, endpoint count, sensitive files, imports, full test suite) before every commit
 - **README humanized** -- removed AI writing patterns
-- 60 new tests (1056 total)
-- Total: 53 MCP tools, 49 HTTP endpoints, 1056 tests
+- **Context Priming** (`src/context_primer.py`, `session_prime` MCP tool, `GET /session-prime`) -- session-start briefing with recent decisions, preferences, active topics, last session summary
+- 73 new tests (1069 total)
+- Total: 54 MCP tools, 50 HTTP endpoints, 1069 tests
 
 ## [1.4.0] - 2026-03-16
 

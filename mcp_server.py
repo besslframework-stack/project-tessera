@@ -670,6 +670,18 @@ def user_profile() -> str:
 
 @mcp.tool(
     description=(
+        "Get a session-start context briefing with recent decisions, preferences, "
+        "active topics, and last session summary. Call this at the beginning of a "
+        "conversation to prime your context with the user's recent knowledge."
+    )
+)
+def session_prime(days: int = 7) -> str:
+    """Prime the session with recent context."""
+    return core.session_prime(days=days)
+
+
+@mcp.tool(
+    description=(
         "Export all your knowledge in various formats. "
         "Supported formats: 'markdown' (default), 'obsidian' (with wikilinks and frontmatter), "
         "'csv' (spreadsheet-compatible), 'json' (machine-readable). "

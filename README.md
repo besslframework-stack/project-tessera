@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/project-tessera)](https://pypi.org/project/project-tessera/)
 [![Downloads](https://img.shields.io/pypi/dm/project-tessera)](https://pypi.org/project/project-tessera/)
-[![Tests](https://img.shields.io/badge/tests-1056%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-1069%20passing-brightgreen)]()
 [![Python](https://img.shields.io/pypi/pyversions/project-tessera)](https://pypi.org/project/project-tessera/)
 [![License](https://img.shields.io/pypi/l/project-tessera)](https://github.com/besslframework-stack/project-tessera/blob/main/LICENSE)
 
@@ -33,9 +33,9 @@ tessera setup
 | Contradiction detection | Yes | No | No | No |
 | Memory confidence scoring | Yes | No | No | No |
 | Encrypted vault (AES-256) | Yes | No | No | No |
-| HTTP API for non-MCP tools | 49 endpoints | Yes | No | Yes |
+| HTTP API for non-MCP tools | 50 endpoints | Yes | No | Yes |
 | Auto-learning from conversations | Yes | Yes | No | No |
-| MCP tools | 53 | ~10 | ~15 | 24 |
+| MCP tools | 54 | ~10 | ~15 | 24 |
 
 ### The short version
 
@@ -143,7 +143,7 @@ Most memory tools store text and search it. Tessera does that, plus:
     +---------------+  +-------------------+  +--------------+
     | MCP Server    |  | HTTP API Server   |  | CLI          |
     | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
-    | 53 tools      |  | 49 endpoints      |  | setup, sync  |
+    | 54 tools      |  | 50 endpoints      |  | setup, sync  |
     | stdio         |  | port 8394         |  | ingest, api  |
     +---------------+  +-------------------+  +--------------+
            |                    |                     |
@@ -315,7 +315,7 @@ hooks:
 
 ---
 
-## MCP tools (53)
+## MCP tools (54)
 
 <details>
 <summary><strong>Search (5)</strong></summary>
@@ -438,7 +438,7 @@ ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup`
 
 ---
 
-## HTTP API (49 endpoints)
+## HTTP API (50 endpoints)
 
 ```bash
 pip install project-tessera[api]
@@ -628,12 +628,12 @@ Environment variables:
 
 | Metric | Count |
 |--------|-------|
-| MCP tools | 53 |
-| HTTP endpoints | 49 |
+| MCP tools | 54 |
+| HTTP endpoints | 50 |
 | CLI commands | 11 |
 | Core modules | 61 |
 | Lines of code | 16,000+ |
-| Tests | 1016 |
+| Tests | 1069 |
 | File types | 40+ |
 
 ---

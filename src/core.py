@@ -1554,6 +1554,18 @@ def user_profile() -> str:
     return format_profile(profile)
 
 
+def session_prime(days: int = 7) -> str:
+    """Generate a session-start context briefing from recent knowledge."""
+    from src.context_primer import format_primer, prime_context
+
+    ctx = prime_context(days=days)
+    _log_interaction(
+        "session_prime", f"days={days}",
+        f"decisions={len(ctx['recent_decisions'])} prefs={len(ctx['recent_preferences'])} topics={len(ctx['active_topics'])}",
+    )
+    return format_primer(ctx)
+
+
 def export_knowledge(fmt: str = "markdown") -> str:
     """Export all memories in the specified format.
 
