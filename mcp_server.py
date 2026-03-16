@@ -682,6 +682,28 @@ def session_prime(days: int = 7) -> str:
 
 @mcp.tool(
     description=(
+        "Trace the provenance lineage of a memory — where it came from, "
+        "which session created it, and what parent memories it was derived from."
+    )
+)
+def memory_lineage(memory_id: str) -> str:
+    """Trace a memory's origin chain."""
+    return core.memory_lineage(memory_id)
+
+
+@mcp.tool(
+    description=(
+        "Get aggregate provenance statistics — how many memories have provenance, "
+        "breakdown by source type and session."
+    )
+)
+def provenance_stats() -> str:
+    """Get provenance statistics."""
+    return core.provenance_stats()
+
+
+@mcp.tool(
+    description=(
         "Export all your knowledge in various formats. "
         "Supported formats: 'markdown' (default), 'obsidian' (with wikilinks and frontmatter), "
         "'csv' (spreadsheet-compatible), 'json' (machine-readable). "

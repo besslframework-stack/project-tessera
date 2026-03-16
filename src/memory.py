@@ -93,6 +93,9 @@ def save_memory(
     category: str | None = None,
     dedup: bool = True,
     dedup_threshold: float = 0.92,
+    parent_ids: list[str] | None = None,
+    source_document: str | None = None,
+    tool_name: str | None = None,
 ) -> Path:
     """Save a memory as a timestamped markdown file.
 
@@ -136,16 +139,33 @@ def save_memory(
     file_path = mem_dir / filename
 
     tag_str = ", ".join(tags) if tags else "general"
-    md_content = (
-        f"---\n"
-        f"date: {now.isoformat()}\n"
-        f"valid_from: {now.isoformat()}\n"
-        f"source: {source}\n"
-        f"category: {category}\n"
-        f"tags: [{tag_str}]\n"
-        f"---\n\n"
-        f"{content}\n"
-    )
+
+    # Build provenance chain
+    try:
+        from src.provenance import build_provenance, format_provenance_yaml
+        prov = build_provenance(
+            source=source,
+            parent_ids=parent_ids,
+            source_document=source_document,
+            tool_name=tool_name,
+        )
+        prov_yaml = format_provenance_yaml(prov)
+    except Exception:
+        prov_yaml = ""
+
+    frontmatter_lines = [
+        "---",
+        f"date: {now.isoformat()}",
+        f"valid_from: {now.isoformat()}",
+        f"source: {source}",
+        f"category: {category}",
+        f"tags: [{tag_str}]",
+    ]
+    if prov_yaml:
+        frontmatter_lines.append(prov_yaml)
+    frontmatter_lines.append("---")
+
+    md_content = "\n".join(frontmatter_lines) + f"\n\n{content}\n"
 
     file_path.write_text(md_content, encoding="utf-8")
     logger.info("Saved memory [%s]: %s", category, file_path)

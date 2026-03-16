@@ -1554,6 +1554,35 @@ def user_profile() -> str:
     return format_profile(profile)
 
 
+def memory_lineage(memory_id: str) -> str:
+    """Trace the provenance lineage of a memory."""
+    from src.provenance import format_lineage, trace_lineage
+    chain = trace_lineage(memory_id)
+    _log_interaction("memory_lineage", f"id={memory_id}", f"{len(chain)} entries")
+    return format_lineage(chain)
+
+
+def provenance_stats() -> str:
+    """Get aggregate provenance statistics."""
+    from src.provenance import get_provenance_stats
+    stats = get_provenance_stats()
+    _log_interaction("provenance_stats", "", f"{stats['total_memories']} memories")
+    parts = [
+        f"## Provenance Statistics",
+        f"Total memories: {stats['total_memories']}",
+        f"With provenance: {stats['with_provenance']}",
+        f"Without provenance: {stats['without_provenance']}",
+        f"Derived (from other memories): {stats['derived_count']}",
+    ]
+    if stats["by_source"]:
+        parts.append("\n### By Source")
+        for src, count in sorted(stats["by_source"].items(), key=lambda x: -x[1]):
+            parts.append(f"- {src}: {count}")
+    if stats["by_session"]:
+        parts.append(f"\n### Sessions: {len(stats['by_session'])} unique")
+    return "\n".join(parts)
+
+
 def session_prime(days: int = 7) -> str:
     """Generate a session-start context briefing from recent knowledge."""
     from src.context_primer import format_primer, prime_context

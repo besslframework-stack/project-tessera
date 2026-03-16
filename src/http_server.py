@@ -518,6 +518,18 @@ def session_prime_endpoint(days: int = Query(default=7, ge=1, le=90)):
     return ApiResponse(data=result)
 
 
+@app.get("/provenance/{memory_id}", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def memory_lineage_endpoint(memory_id: str):
+    result = core.memory_lineage(memory_id)
+    return ApiResponse(data=result)
+
+
+@app.get("/provenance-stats", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def provenance_stats_endpoint():
+    result = core.provenance_stats()
+    return ApiResponse(data=result)
+
+
 # ---------------------------------------------------------------------------
 # ChatGPT Custom GPT Actions
 # ---------------------------------------------------------------------------

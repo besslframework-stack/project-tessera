@@ -11,8 +11,10 @@
 - **Pre-commit hook** -- 6 automated checks (syntax, version consistency, endpoint count, sensitive files, imports, full test suite) before every commit
 - **README humanized** -- removed AI writing patterns
 - **Context Priming** (`src/context_primer.py`, `session_prime` MCP tool, `GET /session-prime`) -- session-start briefing with recent decisions, preferences, active topics, last session summary
-- 73 new tests (1069 total)
-- Total: 54 MCP tools, 50 HTTP endpoints, 1069 tests
+- **Provenance Chain** (`src/provenance.py`, `memory_lineage` + `provenance_stats` MCP tools, `GET /provenance/{id}` + `GET /provenance-stats`) -- track origin, session, and parent lineage of every memory
+- `save_memory()` now auto-attaches provenance metadata (session_id, parent_ids, source_document) to frontmatter
+- 95 new tests (1091 total)
+- Total: 56 MCP tools, 52 HTTP endpoints, 1091 tests
 
 ## [1.4.0] - 2026-03-16
 
