@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Tessera API",
     description="Personal Knowledge Layer for AI — REST API",
-    version="1.3.0",
+    version="1.4.0",
     openapi_tags=[
         {"name": "search", "description": "Document and memory search"},
         {"name": "memory", "description": "Cross-session memory management"},

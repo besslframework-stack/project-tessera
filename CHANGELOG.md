@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.0] - 2026-03-16
+
+### Cortex II Phase — Sleep consolidation, retention policy, agent adapters
+
+Tessera now maintains itself: automatic memory cleanup, aging policies, and integration with LangChain/CrewAI/AutoGen.
+
+### Added
+- **Sleep-time Consolidation** (`POST /sleep-consolidate`) — background cycle that auto-merges 92%+ similar memories and auto-supersedes high-severity contradictions
+- **Retention Policy** (`POST /retention-policy`) — identify and archive old (180d+), low-confidence, or orphaned memories with dry-run support
+- **Retention Summary** (`GET /retention-summary`) — age distribution and at-risk memory counts
+- **Agent Framework Adapters** (`GET /adapters/{framework}`) — LangChain retriever, CrewAI tool, AutoGen function schema with setup instructions
+- **`src/sleep_consolidation.py`** — conservative auto-consolidation engine
+- **`src/retention.py`** — age/confidence/orphan detection, archive management
+- **`src/adapters.py`** — framework-agnostic adapter factory
+- **45 new tests** (11 sleep + 14 retention + 13+7 adapters)
+- Total: 53 MCP tools, 46 HTTP endpoints, 976 tests
+
 ## [1.3.0] - 2026-03-16
 
 ### Lens Phase — Web dashboard, Remote MCP, Browser extension
