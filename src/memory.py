@@ -753,3 +753,116 @@ def search_memories_by_category(category: str) -> list[dict]:
 
     results.sort(key=lambda m: m["date"], reverse=True)
     return results
+
+
+def update_memory(memory_id: str, changes: dict) -> dict:
+    """Update an existing memory's content, tags, and/or category.
+
+    Finds the memory .md file by its stem (memory_id), applies the requested
+    changes to the YAML frontmatter and/or body, re-indexes the memory, and
+    re-extracts entities if the content changed.
+
+    Args:
+        memory_id: The file stem (filename without .md extension) identifying
+            the memory to update.
+        changes: Dict with optional keys ``content``, ``tags``, ``category``.
+            Only provided keys are updated; omitted keys are left unchanged.
+
+    Returns:
+        Dict with ``updated`` (bool), ``file_path`` (str), and ``changes``
+        (list of field names that were actually modified).
+
+    Raises:
+        ValueError: If no memory file matches the given *memory_id*.
+    """
+    mem_dir = _memory_dir()
+    file_path = mem_dir / f"{memory_id}.md"
+
+    if not file_path.exists():
+        raise ValueError(f"Memory not found: {memory_id}")
+
+    text = file_path.read_text(encoding="utf-8")
+
+    # Parse frontmatter and body
+    frontmatter_lines: list[str] = []
+    body = text
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            frontmatter_lines = parts[1].strip().splitlines()
+            body = parts[2].strip()
+
+    changed_fields: list[str] = []
+
+    # Update tags in frontmatter
+    if "tags" in changes:
+        new_tags = changes["tags"]
+        if isinstance(new_tags, list):
+            tag_str = ", ".join(new_tags)
+        else:
+            tag_str = str(new_tags)
+        new_tag_line = f"tags: [{tag_str}]"
+        replaced = False
+        for i, line in enumerate(frontmatter_lines):
+            if line.startswith("tags:"):
+                frontmatter_lines[i] = new_tag_line
+                replaced = True
+                break
+        if not replaced:
+            frontmatter_lines.append(new_tag_line)
+        changed_fields.append("tags")
+
+    # Update category in frontmatter
+    if "category" in changes:
+        new_cat = str(changes["category"])
+        new_cat_line = f"category: {new_cat}"
+        replaced = False
+        for i, line in enumerate(frontmatter_lines):
+            if line.startswith("category:"):
+                frontmatter_lines[i] = new_cat_line
+                replaced = True
+                break
+        if not replaced:
+            frontmatter_lines.append(new_cat_line)
+        changed_fields.append("category")
+
+    # Update body content
+    if "content" in changes:
+        body = str(changes["content"])
+        changed_fields.append("content")
+
+    # Rebuild the file
+    new_text = "---\n" + "\n".join(frontmatter_lines) + "\n---\n\n" + body + "\n"
+    file_path.write_text(new_text, encoding="utf-8")
+
+    logger.info("Updated memory %s: %s", memory_id, changed_fields)
+
+    # Re-index the memory
+    try:
+        index_memory(file_path)
+    except Exception as exc:
+        logger.debug("Re-index after update failed: %s", exc)
+
+    # Re-extract entities if content changed
+    if "content" in changes:
+        try:
+            from src.entity_extraction import extract_triples
+            from src.entity_store import EntityStore
+
+            triples = extract_triples(body)
+            if triples:
+                store = EntityStore()
+                for triple in triples:
+                    subj_id = store.upsert_entity(triple.subject.name, triple.subject.entity_type)
+                    obj_id = store.upsert_entity(triple.object.name, triple.object.entity_type)
+                    store.add_relationship(
+                        subj_id, triple.predicate, obj_id, memory_id, triple.confidence
+                    )
+                logger.debug(
+                    "Re-extracted %d triples from updated memory %s",
+                    len(triples), memory_id,
+                )
+        except Exception as exc:
+            logger.debug("Entity re-extraction skipped: %s", exc)
+
+    return {"updated": True, "file_path": str(file_path), "changes": changed_fields}

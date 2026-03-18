@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -2315,3 +2316,386 @@ def auto_insights(days: int = 7) -> str:
     )
 
     return format_insights(result)
+
+
+# ---------------------------------------------------------------------------
+# Timeline View (HTTP API)
+# ---------------------------------------------------------------------------
+
+
+def timeline_view(
+    offset: int = 0,
+    limit: int = 20,
+    since: str | None = None,
+    until: str | None = None,
+    record_type: str | None = None,
+    tag: str | None = None,
+    category: str | None = None,
+) -> dict:
+    """Build a paginated, date-grouped timeline of all knowledge records.
+
+    Collects memories (including decisions) and indexed documents into a
+    unified chronological view suitable for the HTTP API / web dashboard.
+
+    Args:
+        offset: Number of date groups to skip (pagination).
+        limit: Maximum number of date groups to return.
+        since: ISO date string lower bound (inclusive), e.g. '2026-03-01'.
+        until: ISO date string upper bound (inclusive), e.g. '2026-03-18'.
+        record_type: Filter by record type ('memory', 'decision', 'document').
+        tag: Filter to records containing this tag.
+        category: Filter by category value.
+
+    Returns:
+        Dict with 'dates' (list of date-grouped records), 'total_records',
+        'total_dates', 'offset', and 'limit'.
+    """
+    from src.memory import _memory_dir
+
+    records: list[dict] = []
+
+    # ------------------------------------------------------------------
+    # 1. Collect memories from .md files
+    # ------------------------------------------------------------------
+    mem_dir = _memory_dir()
+    for md_file in sorted(mem_dir.glob("*.md"), reverse=True):
+        try:
+            raw = md_file.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        # Parse frontmatter (delimited by "---")
+        meta: dict[str, str] = {}
+        body = raw
+        if raw.startswith("---"):
+            parts = raw.split("---", 2)
+            if len(parts) >= 3:
+                for line in parts[1].strip().splitlines():
+                    if ":" in line:
+                        key, _, val = line.partition(":")
+                        meta[key.strip()] = val.strip()
+                body = parts[2].strip()
+
+        # Parse tags from frontmatter value like "[tag1, tag2]"
+        raw_tags = meta.get("tags", "")
+        if raw_tags.startswith("[") and raw_tags.endswith("]"):
+            parsed_tags = [
+                t.strip() for t in raw_tags[1:-1].split(",") if t.strip()
+            ]
+        elif raw_tags:
+            parsed_tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
+        else:
+            parsed_tags = []
+
+        rec_category = meta.get("category", "general")
+        rec_type = "decision" if rec_category == "decision" else "memory"
+
+        records.append({
+            "type": rec_type,
+            "id": md_file.stem,
+            "date": meta.get("date", ""),
+            "category": rec_category,
+            "tags": parsed_tags,
+            "content": body[:200],
+            "source": meta.get("source", ""),
+        })
+
+    # ------------------------------------------------------------------
+    # 2. Collect indexed documents (if available)
+    # ------------------------------------------------------------------
+    try:
+        from src.search import list_indexed_sources
+
+        sources = list_indexed_sources()
+        for src_path in sources:
+            p = Path(src_path)
+            try:
+                stat = p.stat()
+                date_str = datetime.fromtimestamp(stat.st_mtime).isoformat()
+            except Exception:
+                date_str = ""
+
+            records.append({
+                "type": "document",
+                "id": p.stem,
+                "date": date_str,
+                "category": "document",
+                "tags": [],
+                "content": f"Indexed file: {p.name}",
+                "source": str(p),
+            })
+    except Exception:
+        pass
+
+    # ------------------------------------------------------------------
+    # 3. Apply filters
+    # ------------------------------------------------------------------
+    if record_type:
+        records = [r for r in records if r["type"] == record_type]
+
+    if tag:
+        tag_lower = tag.lower()
+        records = [
+            r for r in records
+            if any(t.lower() == tag_lower for t in r["tags"])
+        ]
+
+    if category:
+        cat_lower = category.lower()
+        records = [r for r in records if r["category"].lower() == cat_lower]
+
+    if since:
+        records = [r for r in records if r["date"] >= since]
+
+    if until:
+        # Compare date prefix so "2026-03-18" matches "2026-03-18T..."
+        records = [r for r in records if r["date"][:10] <= until[:10]]
+
+    # ------------------------------------------------------------------
+    # 4. Enrich records with entity/relation/contradiction data
+    # ------------------------------------------------------------------
+    try:
+        from src.entity_store import EntityStore
+
+        entity_store = EntityStore()
+        _enrich_timeline_records(records, entity_store)
+    except Exception:
+        # Entity store unavailable — add empty defaults so schema is stable
+        for rec in records:
+            rec.setdefault("entities", [])
+            rec.setdefault("related", [])
+            rec.setdefault("contradiction", None)
+
+    # ------------------------------------------------------------------
+    # 5. Sort by date descending
+    # ------------------------------------------------------------------
+    records.sort(key=lambda r: r["date"], reverse=True)
+
+    # ------------------------------------------------------------------
+    # 6. Group by date (YYYY-MM-DD)
+    # ------------------------------------------------------------------
+    from collections import OrderedDict
+
+    grouped: OrderedDict[str, list[dict]] = OrderedDict()
+    for rec in records:
+        day = rec["date"][:10] if rec["date"] else "unknown"
+        grouped.setdefault(day, []).append(rec)
+
+    total_records = len(records)
+    total_dates = len(grouped)
+
+    # ------------------------------------------------------------------
+    # 7. Paginate on date groups
+    # ------------------------------------------------------------------
+    date_keys = list(grouped.keys())
+    paginated_keys = date_keys[offset : offset + limit]
+
+    dates_result = [
+        {"date": dk, "records": grouped[dk]} for dk in paginated_keys
+    ]
+
+    return {
+        "dates": dates_result,
+        "total_records": total_records,
+        "total_dates": total_dates,
+        "offset": offset,
+        "limit": limit,
+    }
+
+
+def _enrich_timeline_records(
+    records: list[dict],
+    entity_store: "EntityStore",  # type: ignore[name-defined]  # noqa: F821
+) -> None:
+    """Add entities, related memories, and contradiction info to timeline records.
+
+    Modifies *records* in-place. Wrapped by the caller in try/except so a
+    failure here never breaks the timeline.
+    """
+    from collections import defaultdict
+
+    # Build memory_id → entity names mapping  +  entity_name → memory_ids index
+    entity_names_by_memory: dict[str, list[str]] = {}
+    memories_by_entity: dict[str, set[str]] = defaultdict(set)
+
+    all_memory_ids = [r["id"] for r in records]
+
+    for mid in all_memory_ids:
+        try:
+            rels = entity_store.get_memory_entities(mid)
+        except Exception:
+            rels = []
+
+        names: set[str] = set()
+        for rel in rels:
+            names.add(rel["subject_name"])
+            names.add(rel["object_name"])
+
+        sorted_names = sorted(names)
+        entity_names_by_memory[mid] = sorted_names
+        for name in sorted_names:
+            memories_by_entity[name].add(mid)
+
+    # Build a quick content-preview lookup
+    content_by_id: dict[str, str] = {r["id"]: r.get("content", "")[:80] for r in records}
+
+    # ------------------------------------------------------------------
+    # Detect contradictions among decision records
+    # ------------------------------------------------------------------
+    decision_records = [r for r in records if r["type"] == "decision"]
+    contradiction_map: dict[str, dict] = {}
+    if len(decision_records) >= 2:
+        try:
+            from src.contradiction import detect_contradictions as _detect
+
+            # Build the format detect_contradictions expects
+            mem_dicts = [
+                {
+                    "id": r["id"],
+                    "content": r.get("content", ""),
+                    "date": r.get("date", ""),
+                    "category": r.get("category", "decision"),
+                }
+                for r in decision_records
+            ]
+            contradictions = _detect(mem_dicts)
+            for c in contradictions:
+                a_id = c.get("memory_a", {}).get("id", "")
+                b_id = c.get("memory_b", {}).get("id", "")
+                if a_id:
+                    contradiction_map[a_id] = {
+                        "conflicting_id": b_id,
+                        "content_preview": content_by_id.get(b_id, ""),
+                    }
+                if b_id:
+                    contradiction_map[b_id] = {
+                        "conflicting_id": a_id,
+                        "content_preview": content_by_id.get(a_id, ""),
+                    }
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------
+    # Attach enrichment fields to each record
+    # ------------------------------------------------------------------
+    for rec in records:
+        mid = rec["id"]
+        my_entities = entity_names_by_memory.get(mid, [])
+        rec["entities"] = my_entities
+
+        # Find related memories via shared entities
+        related: list[dict] = []
+        related_scores: dict[str, set[str]] = defaultdict(set)
+        for ename in my_entities:
+            for other_mid in memories_by_entity.get(ename, set()):
+                if other_mid != mid:
+                    related_scores[other_mid].add(ename)
+
+        # Sort by number of shared entities descending, cap at 5
+        for other_mid, shared in sorted(
+            related_scores.items(), key=lambda x: len(x[1]), reverse=True
+        )[:5]:
+            related.append({
+                "id": other_mid,
+                "content_preview": content_by_id.get(other_mid, ""),
+                "shared_entities": sorted(shared),
+            })
+        rec["related"] = related
+
+        rec["contradiction"] = contradiction_map.get(mid)
+
+
+# ---------------------------------------------------------------------------
+# Related memories lookup (HTTP API helper)
+# ---------------------------------------------------------------------------
+
+
+def find_related_memories(memory_id: str, limit: int = 10) -> dict:
+    """Find memories related to a given memory via shared entities.
+
+    Args:
+        memory_id: The ID of the source memory.
+        limit: Maximum number of related memories to return.
+
+    Returns:
+        Dict with 'memory_id', 'entities', 'related' list sorted by
+        number of shared entities (most related first), and 'total'.
+    """
+    from collections import defaultdict
+
+    from src.entity_store import EntityStore
+    from src.memory import _memory_dir
+
+    store = EntityStore()
+
+    # 1. Get entities for the given memory_id
+    rels = store.get_memory_entities(memory_id)
+    my_entity_names: set[str] = set()
+    my_entity_ids: set[int] = set()
+    for rel in rels:
+        my_entity_names.add(rel["subject_name"])
+        my_entity_names.add(rel["object_name"])
+
+    if not my_entity_names:
+        return {
+            "memory_id": memory_id,
+            "entities": [],
+            "related": [],
+            "total": 0,
+        }
+
+    # 2. For each entity, find other memories sharing it
+    # We need entity IDs — look them up
+    related_scores: dict[str, set[str]] = defaultdict(set)
+    for name in my_entity_names:
+        entity = store.find_entity(name)
+        if not entity:
+            continue
+        entity_rels = store.get_entity_relationships(entity["id"])
+        for er in entity_rels:
+            other_mid = er["memory_id"]
+            if other_mid != memory_id:
+                related_scores[other_mid].add(name)
+
+    # 3. Sort by number of shared entities descending
+    sorted_related = sorted(
+        related_scores.items(), key=lambda x: len(x[1]), reverse=True
+    )[:limit]
+
+    # 4. Build content previews from memory files
+    mem_dir = _memory_dir()
+    related_list: list[dict] = []
+    for other_mid, shared in sorted_related:
+        preview = ""
+        try:
+            md_file = mem_dir / f"{other_mid}.md"
+            if md_file.exists():
+                raw = md_file.read_text(encoding="utf-8")
+                body = raw
+                if raw.startswith("---"):
+                    parts = raw.split("---", 2)
+                    if len(parts) >= 3:
+                        body = parts[2].strip()
+                preview = body[:80]
+        except Exception:
+            pass
+
+        related_list.append({
+            "id": other_mid,
+            "content_preview": preview,
+            "shared_entities": sorted(shared),
+            "shared_count": len(shared),
+        })
+
+    _log_interaction(
+        "find_related_memories",
+        f"memory_id={memory_id}",
+        f"entities={len(my_entity_names)} related={len(related_list)}",
+    )
+
+    return {
+        "memory_id": memory_id,
+        "entities": sorted(my_entity_names),
+        "related": related_list,
+        "total": len(related_list),
+    }

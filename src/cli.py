@@ -8,6 +8,7 @@ Usage:
     tessera status [PROJECT_ID]           Show project status
     tessera version                       Show version
     tessera check                         Check workspace health
+    tessera companion install|start|stop|status|persona  Manage Companion (macOS)
 """
 
 from __future__ import annotations
@@ -581,10 +582,12 @@ def cmd_install_mcp(args: argparse.Namespace) -> None:
 
 def cmd_serve(args: argparse.Namespace) -> None:
     """Start the MCP server."""
+    import sys
+    http_port = getattr(args, "http", None)
     sse_port = getattr(args, "sse", None)
-    if sse_port is not None:
-        # Inject --sse arg for mcp_server.main() to parse
-        import sys
+    if http_port is not None:
+        sys.argv = ["tessera-mcp", "--http", str(http_port)]
+    elif sse_port is not None:
         sys.argv = ["tessera-mcp", "--sse", str(sse_port)]
     from mcp_server import main as mcp_main
     mcp_main()
@@ -607,6 +610,119 @@ def cmd_migrate(args: argparse.Namespace) -> None:
     print(format_migration_result(result))
 
 
+def cmd_companion(args: argparse.Namespace) -> None:
+    """Manage the Tessera Companion (macOS menu bar assistant)."""
+    import platform
+
+    if platform.system() != "Darwin":
+        print("Tessera Companion is currently macOS only.")
+        return
+
+    action = args.companion_action
+
+    if action == "install":
+        from src.companion.install import install
+        print(install())
+
+    elif action == "uninstall":
+        from src.companion.install import uninstall
+        print(uninstall())
+
+    elif action == "start":
+        from src.companion.install import start
+        print(start())
+
+    elif action == "stop":
+        from src.companion.install import stop
+        print(stop())
+
+    elif action == "status":
+        from src.companion.install import status
+        s = status()
+        print(f"Installed: {s['installed']}")
+        print(f"Running:   {s['running']}")
+        if s['plist_path']:
+            print(f"Plist:     {s['plist_path']}")
+        print(f"Log:       {s['log_path']}")
+
+    elif action == "run":
+        # Direct foreground run (for development)
+        from src.companion import start_companion
+        start_companion()
+
+    elif action == "persona":
+        from src.companion.persona import load_persona, update_persona
+        sub = getattr(args, "persona_action", "show")
+        if sub == "show":
+            p = load_persona()
+            for k, v in p.items():
+                print(f"  {k}: {v}")
+        elif sub == "set":
+            updates = {}
+            if args.name:
+                updates["name"] = args.name
+            if args.tone:
+                updates["tone"] = args.tone
+            if args.avatar:
+                updates["avatar"] = args.avatar
+            if args.locale:
+                updates["locale"] = args.locale
+            if args.greeting:
+                updates["greeting"] = args.greeting
+            if not updates:
+                print("No changes specified. Use --name, --tone, --avatar, --locale, or --greeting.")
+                return
+            p = update_persona(**updates)
+            print("Persona updated:")
+            for k, v in p.items():
+                print(f"  {k}: {v}")
+    elif action == "schedule":
+        from src.companion.scheduler import DEFAULT_SCHEDULE, SCHEDULE_FILE
+        import json
+        sub = getattr(args, "schedule_action", "show")
+
+        # Load current schedule
+        current = dict(DEFAULT_SCHEDULE)
+        if SCHEDULE_FILE.exists():
+            try:
+                data = json.loads(SCHEDULE_FILE.read_text(encoding="utf-8"))
+                current.update(data)
+            except Exception:
+                pass
+
+        if sub == "show":
+            print("Current schedule:")
+            for k, v in current.items():
+                print(f"  {k}: {v}")
+            print(f"\nConfig: {SCHEDULE_FILE}")
+        elif sub == "set":
+            updates = {}
+            if args.insight_interval is not None:
+                updates["insight_interval_min"] = args.insight_interval
+            if args.summary_hour is not None:
+                updates["daily_summary_hour"] = args.summary_hour
+            if args.summary_min is not None:
+                updates["daily_summary_min"] = args.summary_min
+            if args.reminder_interval is not None:
+                updates["reminder_interval_min"] = args.reminder_interval
+            if args.notification_level is not None:
+                updates["notification_level"] = args.notification_level
+            if not updates:
+                print("No changes. Use --insight-interval, --summary-hour, --notification-level, etc.")
+                return
+            current.update(updates)
+            SCHEDULE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            SCHEDULE_FILE.write_text(
+                json.dumps(current, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            print("Schedule updated:")
+            for k, v in current.items():
+                print(f"  {k}: {v}")
+    else:
+        print(f"Unknown companion action: {action}")
+
+
 def cli() -> None:
     """Main CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -617,8 +733,11 @@ def cli() -> None:
 
     # serve
     serve_parser = subparsers.add_parser("serve", help="Start MCP server")
-    serve_parser.add_argument("--sse", nargs="?", const=8395, type=int, metavar="PORT",
-                              help="Run in SSE mode for remote access (default port: 8395)")
+    serve_group = serve_parser.add_mutually_exclusive_group()
+    serve_group.add_argument("--sse", nargs="?", const=8395, type=int, metavar="PORT",
+                             help="SSE mode for remote MCP clients (default: 8395)")
+    serve_group.add_argument("--http", nargs="?", const=8395, type=int, metavar="PORT",
+                             help="Streamable HTTP mode for ChatGPT MCP (default: 8395)")
     serve_parser.set_defaults(func=cmd_serve)
 
     # setup
@@ -672,6 +791,45 @@ def cli() -> None:
         "--force", action="store_true", help="Overwrite existing config without prompting"
     )
     install_parser.set_defaults(func=cmd_install_mcp)
+
+    # companion
+    comp_parser = subparsers.add_parser("companion", help="Manage Tessera Companion (macOS menu bar)")
+    comp_sub = comp_parser.add_subparsers(dest="companion_action", required=True)
+
+    comp_sub.add_parser("install", help="Install LaunchAgent (auto-start on login)")
+    comp_sub.add_parser("uninstall", help="Remove LaunchAgent")
+    comp_sub.add_parser("start", help="Start companion")
+    comp_sub.add_parser("stop", help="Stop companion")
+    comp_sub.add_parser("status", help="Show companion status")
+    comp_sub.add_parser("run", help="Run companion in foreground (dev)")
+
+    persona_parser = comp_sub.add_parser("persona", help="Manage persona settings")
+    persona_sub = persona_parser.add_subparsers(dest="persona_action")
+    persona_show = persona_sub.add_parser("show", help="Show current persona")
+    persona_set = persona_sub.add_parser("set", help="Update persona settings")
+    persona_set.add_argument("--name", help="Persona name")
+    persona_set.add_argument("--tone", choices=["friendly", "formal", "casual", "minimal"], help="Tone")
+    persona_set.add_argument("--avatar", help="Avatar image path")
+    persona_set.add_argument("--locale", choices=["ko", "en"], help="Locale")
+    persona_set.add_argument("--greeting", help="Custom greeting message")
+    persona_parser.set_defaults(func=cmd_companion, persona_action="show")
+
+    schedule_parser = comp_sub.add_parser("schedule", help="Manage schedule settings")
+    schedule_sub = schedule_parser.add_subparsers(dest="schedule_action")
+    schedule_sub.add_parser("show", help="Show current schedule")
+    schedule_set = schedule_sub.add_parser("set", help="Update schedule settings")
+    schedule_set.add_argument("--insight-interval", type=int, dest="insight_interval",
+                              help="Insight check interval (minutes)")
+    schedule_set.add_argument("--summary-hour", type=int, help="Daily summary hour (0-23)")
+    schedule_set.add_argument("--summary-min", type=int, help="Daily summary minute (0-59)")
+    schedule_set.add_argument("--reminder-interval", type=int, dest="reminder_interval",
+                              help="Reminder check interval (minutes)")
+    schedule_set.add_argument("--notification-level", dest="notification_level",
+                              choices=["many", "normal", "few", "off"],
+                              help="Notification frequency level")
+    schedule_parser.set_defaults(func=cmd_companion, schedule_action="show")
+
+    comp_parser.set_defaults(func=cmd_companion)
 
     args = parser.parse_args()
     args.func(args)

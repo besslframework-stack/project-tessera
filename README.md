@@ -13,7 +13,7 @@
 
 **Every AI conversation produces knowledge. When the session ends, it's gone. Tessera keeps it.**
 
-One knowledge base shared across Claude, ChatGPT, Gemini, and Copilot. Runs locally. No API keys, no Docker, no data leaving your machine.
+One knowledge base for Claude Desktop, with an HTTP API for scripts and automation. Runs locally. No API keys, no Docker, no data leaving your machine.
 
 ```bash
 pip install project-tessera
@@ -30,11 +30,11 @@ tessera setup
 | Works without API keys | Yes | No (needs OpenAI) | Yes | Partial |
 | Works without Docker | Yes | No | Yes | No |
 | Document search (40+ types) | Yes | No | Markdown only | No |
-| ChatGPT live integration (Actions) | Yes | No | No | No |
+| ChatGPT integration (via tunnel) | Yes | No | No | No |
 | Contradiction detection | Yes | No | No | No |
 | Memory confidence scoring | Yes | No | No | No |
 | Encrypted vault (AES-256) | Yes | No | No | No |
-| HTTP API for non-MCP tools | 54 endpoints | Yes | No | Yes |
+| HTTP API for non-MCP tools | 58 endpoints | Yes | No | Yes |
 | Auto-learning from conversations | Yes | Yes | No | No |
 | MCP tools | 58 | ~10 | ~15 | 24 |
 
@@ -42,7 +42,7 @@ tessera setup
 
 Most memory tools store text and search it. Tessera does that, plus:
 
-- **Cross-AI**: ChatGPT calls Tessera's API through Custom GPT Actions. One knowledge base, two AIs reading and writing to it live.
+- **HTTP API**: 58 REST endpoints let scripts, ChatGPT (via tunnel + Custom GPT Actions), and local LLMs read and write the same knowledge base.
 - **Self-maintaining**: finds contradictions between old and new memories, scores confidence by reinforcement frequency, flags stale knowledge, auto-merges near-duplicates.
 - **Zero infrastructure**: `pip install` and go. LanceDB and fastembed are embedded -- no Docker, no database server, no API keys.
 - **Encrypted**: set `TESSERA_VAULT_KEY` and all memories are AES-256-CBC encrypted at rest.
@@ -144,7 +144,7 @@ Most memory tools store text and search it. Tessera does that, plus:
     +---------------+  +-------------------+  +--------------+
     | MCP Server    |  | HTTP API Server   |  | CLI          |
     | Claude Desktop|  | FastAPI + Swagger |  | 11 commands  |
-    | 58 tools      |  | 54 endpoints      |  | setup, sync  |
+    | 58 tools      |  | 58 endpoints      |  | setup, sync  |
     | stdio         |  | port 8394         |  | ingest, api  |
     +---------------+  +-------------------+  +--------------+
            |                    |                     |
@@ -220,7 +220,7 @@ When multiple versions of the same document exist, Tessera prefers the latest.
 # Via MCP (Claude)
 "Remember that we chose PostgreSQL for the production database"
 
-# Via HTTP API (ChatGPT, Gemini, scripts)
+# Via HTTP API (scripts, local LLMs, ChatGPT via tunnel)
 curl -X POST http://127.0.0.1:8394/remember \
   -H "Content-Type: application/json" \
   -d '{"content": "Use PostgreSQL for production", "tags": ["db", "architecture"]}'
@@ -247,26 +247,25 @@ CONTRADICTION (HIGH severity):
 
 Works with both English and Korean negation patterns.
 
-### Cross-AI: ChatGPT Custom GPT Actions
+### ChatGPT integration (requires tunnel)
 
-ChatGPT talks to Tessera's HTTP API through Custom GPT Actions. No export/import step -- it reads and writes the same knowledge base Claude uses through MCP, in real time.
+ChatGPT can talk to Tessera through Custom GPT Actions, but since ChatGPT's servers need to reach your machine, you need a tunnel (ngrok, Cloudflare Tunnel, etc.) to expose your local API.
+
+**Requirements:** Your computer must be on, the API server running, and the tunnel active. When any of these stop, ChatGPT loses access.
 
 ```bash
 # 1. Start Tessera API + tunnel
 tessera api
-ngrok http 8394
+ngrok http 8394   # or: cloudflared tunnel --url http://localhost:8394
 
 # 2. Get the OpenAPI spec for your Custom GPT
-curl https://your-tunnel.ngrok-free.app/chatgpt-actions/openapi.json?server_url=https://your-tunnel.ngrok-free.app
+curl https://your-tunnel-url/chatgpt-actions/openapi.json?server_url=https://your-tunnel-url
 
 # 3. Get the GPT instruction template
-curl https://your-tunnel.ngrok-free.app/chatgpt-actions/instructions
-
-# 4. Full setup guide
-curl https://your-tunnel.ngrok-free.app/chatgpt-actions/setup
+curl https://your-tunnel-url/chatgpt-actions/instructions
 ```
 
-Create a Custom GPT, paste the instructions, import the OpenAPI spec as an Action. ChatGPT can then search your documents, save memories, and recall past decisions from the same knowledge base.
+Create a Custom GPT, paste the instructions, import the OpenAPI spec as an Action.
 
 You can also import past ChatGPT conversations to extract knowledge from them:
 
@@ -395,16 +394,16 @@ hooks:
 </details>
 
 <details>
-<summary><strong>Cross-AI (4)</strong></summary>
+<summary><strong>Import/Export (4)</strong></summary>
 
 | Tool | What it does |
 |------|-------------|
-| `export_for_ai` | Export memories in ChatGPT/Gemini-readable format |
-| `import_from_ai` | Import memories from external AI tools |
+| `export_for_ai` | Export memories in portable format |
+| `import_from_ai` | Import memories from external sources |
 | `import_conversations` | Extract knowledge from ChatGPT/Claude conversation exports |
 | `export_knowledge` | Export as Obsidian (wikilinks), Markdown, CSV, or JSON |
 
-ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup` for the full guide.
+ChatGPT can connect via Custom GPT Actions (requires tunnel). See `/chatgpt-actions/setup`.
 
 </details>
 
@@ -439,7 +438,7 @@ ChatGPT connects via Custom GPT Actions (HTTP API). See `/chatgpt-actions/setup`
 
 ---
 
-## HTTP API (54 endpoints)
+## HTTP API (58 endpoints)
 
 ```bash
 pip install project-tessera[api]
@@ -473,8 +472,8 @@ Swagger UI at `http://127.0.0.1:8394/docs`. Optional auth via `TESSERA_API_KEY` 
 | GET | `/knowledge-stats` | Stats dashboard |
 | POST | `/batch` | Multiple operations in one call |
 | GET | `/export` | Export as Obsidian/MD/CSV/JSON |
-| GET | `/export-for-ai` | Export for ChatGPT/Gemini |
-| POST | `/import-from-ai` | Import from ChatGPT/Gemini |
+| GET | `/export-for-ai` | Export memories in portable format |
+| POST | `/import-from-ai` | Import memories from external sources |
 | POST | `/import-conversations` | Import past conversations |
 | POST | `/migrate` | Run data migration |
 | GET | `/vault-status` | Encryption status |
@@ -517,7 +516,7 @@ curl -X POST http://127.0.0.1:8394/remember \
   -H "Content-Type: application/json" \
   -d '{"content": "Use PostgreSQL for production", "tags": ["db"]}'
 
-# Export for ChatGPT
+# Export memories
 curl http://127.0.0.1:8394/export-for-ai?target=chatgpt
 
 # Batch (multiple operations, single request)
@@ -630,7 +629,7 @@ Environment variables:
 | Metric | Count |
 |--------|-------|
 | MCP tools | 58 |
-| HTTP endpoints | 54 |
+| HTTP endpoints | 58 |
 | CLI commands | 11 |
 | Core modules | 69 |
 | Lines of code | 31,000+ |

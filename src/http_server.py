@@ -189,6 +189,16 @@ def forget_memory(memory_id: str):
     return ApiResponse(data=result)
 
 
+@app.get("/memories/{memory_id}/related", response_model=ApiResponse, tags=["memory"], dependencies=[Depends(verify_api_key)])
+def memory_related_endpoint(
+    memory_id: str,
+    limit: int = Query(default=10, ge=1, le=50),
+):
+    """Find records related to a given memory via shared entities."""
+    result = core.find_related_memories(memory_id, limit=limit)
+    return ApiResponse(data=result)
+
+
 @app.get("/memories/categories", response_model=ApiResponse, dependencies=[Depends(verify_api_key)])
 def memory_categories():
     result = core.memory_categories()
@@ -437,6 +447,56 @@ def entity_graph_endpoint(req: EntityGraphRequest):
     return ApiResponse(data=result)
 
 
+@app.get("/entity-graph-data", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
+def entity_graph_data_endpoint(
+    max_nodes: int = Query(default=100, ge=1, le=500),
+    entity_type: str | None = Query(default=None),
+):
+    """Get entity graph as JSON nodes + edges for visualization."""
+    from src.entity_store import EntityStore
+    store = EntityStore()
+    entities = store.get_all_entities(limit=max_nodes)
+    relationships = store.get_all_relationships(limit=max_nodes * 5)
+
+    if entity_type:
+        entity_ids = {e["id"] for e in entities if e.get("entity_type") == entity_type}
+        entities = [e for e in entities if e["id"] in entity_ids]
+        relationships = [
+            r for r in relationships
+            if r["subject_entity_id"] in entity_ids or r["object_entity_id"] in entity_ids
+        ]
+
+    nodes = []
+    for e in entities:
+        nodes.append({
+            "id": e["id"],
+            "name": e["name"],
+            "type": e.get("entity_type", "unknown"),
+            "mentions": e.get("mention_count", 1),
+            "first_seen": e.get("first_seen", ""),
+            "last_seen": e.get("last_seen", ""),
+        })
+
+    node_ids = {n["id"] for n in nodes}
+    edges = []
+    for r in relationships:
+        if r["subject_entity_id"] in node_ids and r["object_entity_id"] in node_ids:
+            edges.append({
+                "source": r["subject_entity_id"],
+                "target": r["object_entity_id"],
+                "predicate": r.get("predicate", ""),
+                "confidence": r.get("confidence", 1.0),
+                "memory_id": r.get("memory_id", ""),
+            })
+
+    return ApiResponse(data={
+        "nodes": nodes,
+        "edges": edges,
+        "total_entities": store.entity_count(),
+        "total_relationships": store.relationship_count(),
+    })
+
+
 @app.get("/consolidation-candidates", response_model=ApiResponse, tags=["intelligence"], dependencies=[Depends(verify_api_key)])
 def consolidation_candidates_endpoint(
     threshold: float = Query(default=0.85, ge=0.5, le=0.99),
@@ -571,6 +631,61 @@ def chatgpt_instructions():
 def chatgpt_setup(tunnel_url: str = Query(default=None)):
     """Return the full setup guide for connecting ChatGPT to Tessera."""
     return {"guide": get_setup_guide(tunnel_url)}
+
+
+# ---------------------------------------------------------------------------
+# Timeline Dashboard API (v1.6.0)
+# ---------------------------------------------------------------------------
+
+
+class UpdateMemoryRequest(BaseModel):
+    content: str | None = None
+    tags: list[str] | None = None
+    category: str | None = None
+
+    model_config = {"str_max_length": 10000}
+
+
+@app.patch("/memories/{memory_id}", response_model=ApiResponse, tags=["memory"], dependencies=[Depends(verify_api_key)])
+def update_memory_endpoint(memory_id: str, req: UpdateMemoryRequest):
+    """Update an existing memory's content, tags, or category."""
+    from src.memory import update_memory
+
+    changes = {}
+    if req.content is not None:
+        changes["content"] = req.content
+    if req.tags is not None:
+        changes["tags"] = req.tags
+    if req.category is not None:
+        changes["category"] = req.category
+
+    if not changes:
+        raise HTTPException(status_code=400, detail="No changes provided")
+
+    try:
+        result = update_memory(memory_id, changes)
+        return ApiResponse(data=result)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/memories/timeline", response_model=ApiResponse, tags=["memory"], dependencies=[Depends(verify_api_key)])
+def memories_timeline_endpoint(
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    since: str | None = Query(default=None),
+    until: str | None = Query(default=None),
+    record_type: str | None = Query(default=None),
+    tag: str | None = Query(default=None),
+    category: str | None = Query(default=None),
+):
+    """Get date-grouped timeline of all records (memories, decisions, documents)."""
+    result = core.timeline_view(
+        offset=offset, limit=limit,
+        since=since, until=until,
+        record_type=record_type, tag=tag, category=category,
+    )
+    return ApiResponse(data=result)
 
 
 # ---------------------------------------------------------------------------

@@ -982,9 +982,11 @@ def main() -> None:
     - sse: for remote/network access (e.g., browser extensions, remote clients)
 
     Usage:
-        tessera-mcp              # stdio (default)
-        tessera-mcp --sse        # SSE on port 8395
+        tessera-mcp              # stdio (default, for Claude Desktop)
+        tessera-mcp --sse        # SSE on port 8395 (for remote MCP clients)
         tessera-mcp --sse 9000   # SSE on custom port
+        tessera-mcp --http       # Streamable HTTP on port 8395 (for ChatGPT MCP)
+        tessera-mcp --http 9000  # Streamable HTTP on custom port
     """
     import argparse
 
@@ -997,12 +999,28 @@ def main() -> None:
         metavar="PORT",
         help="Run in SSE mode (default port: 8395)",
     )
+    parser.add_argument(
+        "--http",
+        nargs="?",
+        const=8395,
+        type=int,
+        metavar="PORT",
+        help="Run in Streamable HTTP mode (default port: 8395)",
+    )
     args = parser.parse_args()
 
-    if args.sse is not None:
+    if args.http is not None:
+        port = args.http
+        logger.info("Starting Tessera MCP server in Streamable HTTP mode on port %d", port)
+        mcp.settings.host = "0.0.0.0"
+        mcp.settings.port = port
+        mcp.run(transport="streamable-http")
+    elif args.sse is not None:
         port = args.sse
         logger.info("Starting Tessera MCP server in SSE mode on port %d", port)
-        mcp.run(transport="sse", sse_params={"host": "127.0.0.1", "port": port})
+        mcp.settings.host = "0.0.0.0"
+        mcp.settings.port = port
+        mcp.run(transport="sse")
     else:
         mcp.run()
 
