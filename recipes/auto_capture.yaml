@@ -1,0 +1,32 @@
+name: auto_capture
+description: "소스에서 들어온 텍스트를 자동 분류·저장·연결"
+version: 1
+
+steps:
+  - id: classify
+    primitive: llm_classify
+    params:
+      text: "{{ input.text }}"
+      model: "{{ config.llm_model }}"
+
+  - id: save
+    primitive: save_memory
+    params:
+      content: "{{ input.text }}"
+      category: "{{ classify.result.category }}"
+      tags: "{{ classify.result.tags }}"
+      source: "{{ input.source }}"
+
+  - id: recall_related
+    primitive: recall_memories
+    params:
+      query: "{{ input.text }}"
+      top_k: 5
+
+  - id: check_contradiction
+    primitive: detect_contradictions
+    params:
+      memories: "{{ recall_related.result }}"
+    when: "{{ classify.result.category in ['decision', 'preference'] }}"
+
+output: "{{ save.result }}"

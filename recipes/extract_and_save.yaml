@@ -1,0 +1,18 @@
+name: extract_and_save
+description: "텍스트에서 사실을 추출하고 각각 메모리로 저장"
+version: 1
+
+steps:
+  - id: extract
+    primitive: extract_facts
+    params:
+      text: "{{ input.text }}"
+
+  - id: save
+    primitive: save_memory
+    params:
+      content: "{{ input.text }}"
+      source: "{{ input.source }}"
+      tags: "{{ input.tags }}"
+
+output: "{{ extract.result }}"
