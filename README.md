@@ -643,3 +643,8 @@ Environment variables:
 AGPL-3.0 -- see [LICENSE](LICENSE).
 
 Commercial licensing: bessl.framework@gmail.com
+
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/besslframework-stack-project-tessera).
+
